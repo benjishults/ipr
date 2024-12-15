@@ -1,6 +1,5 @@
 package bps.ipr.terms
 
-import bps.ipr.terms.TptpFofTermParser.parseTptpFofTermOrNull
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -23,6 +22,17 @@ class TptpTermParserTest : FreeSpec() {
                             term.shouldBeInstanceOf<ProperFunction>()
                             term.arguments.size shouldBe 1
                             term.arguments[0].shouldBeInstanceOf<Constant>()
+                        }
+                }
+                "invalid terms" - {
+                    listOf("f(a,)", "F(a)", "a, b", "_", "", " ", "()", "(a)", "f()", "f( )", "f(", "f)")
+                        .forEach { invalidTermInput ->
+                            "test '$invalidTermInput'" {
+                                invalidTermInput.parseTptpFofTermOrNull()
+                                    .asClue { invalidTerm ->
+                                        invalidTerm.shouldBeNull()
+                                    }
+                            }
                         }
                 }
                 tptpStringInput = "f(A)"
@@ -70,17 +80,6 @@ class TptpTermParserTest : FreeSpec() {
                             term.arguments.size shouldBe 2
                         }
                 }
-            }
-            "invalid terms" - {
-                listOf("F(a)", "a, b", "_", "", " ", "()", "(a)", "f()", "f(a,)", "f( )", "f(", "f)")
-                    .forEach { invalidTermInput ->
-                        "test '$invalidTermInput'" {
-                            invalidTermInput.parseTptpFofTermOrNull()
-                                .asClue { invalidTerm ->
-                                    invalidTerm.shouldBeNull()
-                                }
-                        }
-                    }
             }
         }
 
