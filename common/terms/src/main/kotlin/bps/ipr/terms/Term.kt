@@ -1,6 +1,5 @@
 package bps.ipr.terms
 
-import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.sign
 
 sealed interface Term {
@@ -10,7 +9,7 @@ sealed interface Term {
      */
     val freeVariables: Set<Variable>
 
-    fun unify(term: Term): Substitution?
+    fun unifyOrNull(term: Term): Substitution?
 
     fun apply(substitution: Substitution): Term
 
@@ -20,25 +19,14 @@ sealed interface Term {
 
 sealed interface Variable : Term {
 
-    val symbol: VariableSymbol
+    val symbol: String
 
     fun occursFreeIn(term: Term): Boolean =
         this in term.freeVariables
 
-    data class VariableSymbol(
-        val displaySymbol: String,
-        val order: Long,
-    ) : Comparable<VariableSymbol> {
-        init {
-            require(displaySymbol.isNotEmpty())
-        }
-
-        override fun compareTo(other: VariableSymbol): Int =
-            order.compareTo(other.order)
-    }
-
 }
 
+// NOTE KISS for now
 //@@ConsistentCopyVisibility
 //data class BoundVariable private constructor(
 //    override val symbol: Variable.VariableSymbol,
@@ -58,12 +46,12 @@ sealed interface Variable : Term {
 //}
 
 @ConsistentCopyVisibility
-data class FreeVariable private constructor(
-    override val symbol: Variable.VariableSymbol,
+data class FreeVariable(
+    override val symbol: String,
 ) : Variable, Comparable<FreeVariable> {
     override val freeVariables: Set<FreeVariable> = setOf(this)
 
-    override fun unify(term: Term): Substitution? =
+    override fun unifyOrNull(term: Term): Substitution? =
         when (term) {
             is ProperFunction -> {
                 if (this.occursFreeIn(term))
@@ -72,26 +60,19 @@ data class FreeVariable private constructor(
                     SingletonSubstitution(this, term)
             }
             is Constant -> SingletonSubstitution(this, term)
-//            is BoundVariable -> null
             is FreeVariable -> if (this == term) EmptySubstitution else makeSubstitution(this, term)
-//            else -> null
         }
 
     override fun apply(substitution: Substitution): Term =
         substitution.map(this)
 
     override fun display(): String =
-        symbol.displaySymbol
+        symbol
 
     override fun compareTo(other: FreeVariable): Int =
         symbol.compareTo(other.symbol)
 
-    companion object : Comparator<FreeVariable> {
-        //        private object VariableSymbolTable : Comparator<FreeVariable> {
-//        @Volatile
-//        private var count: Long = 0L
-//        private val variables = ConcurrentHashMap<String, Variable>()
-        private val namesToCounts = ConcurrentHashMap<String, Long>()
+    companion object {
 
         fun makeSubstitution(var1: FreeVariable, var2: FreeVariable): Substitution =
             when (var1.compareTo(var2).sign) {
@@ -100,40 +81,57 @@ data class FreeVariable private constructor(
                 else -> SingletonSubstitution(var1, var2)
             }
 
-        override fun compare(o1: FreeVariable, o2: FreeVariable): Int =
-            o1.symbol.compareTo(o2.symbol)
-
-        //    fun intern(displaySymbol: String): Variable {
-//        return variables.getOrPut(displaySymbol) {
-//            Variable(displaySymbol)
-//        }
-//    }
-        operator fun invoke(displaySymbol: String) =
-            FreeVariable(
-                Variable.VariableSymbol(
-                    displaySymbol,
-                    namesToCounts.compute(displaySymbol) { _, count: Long? ->
-                        1L
-                            .takeIf { count === null }
-                            ?: (count!! + 1)
-                    }!!,
-                ),
-            )
-
     }
+
 }
 
-data class FunctionSymbol(
-    val displaySymbol: String,
-)
-
 sealed class Function(
-    val symbol: FunctionSymbol,
+    val symbol: String,
     val arity: Int,
-    val arguments: List<Term>,
 ) : Term {
+
+    override fun toString(): String =
+        display()
+
+}
+
+/**
+ * A [List] with equality defined by its members.
+ *
+ * These are not suitable hash-map keys.
+ */
+class ArgumentList(arguments: List<Term>) : List<Term> by arguments {
+
+    override fun equals(other: Any?): Boolean =
+        this === other ||
+                (other is ArgumentList &&
+                        other.size == this.size &&
+                        // kotlin doesn't seem to have an allIndexed function.
+                        other.foldIndexed(true) { i, _, t ->
+                            if (t != get(i))
+                                return false
+                            else
+                                true
+                        })
+
+    override fun hashCode(): Int {
+        return javaClass.hashCode()
+    }
+
+}
+
+// TODO consider making specialty classes up to a certain arity to avoid using a list
+//     in many cases.  Might be interesting to measure performance differences.  UnaryFunction, BinaryFunction, Arity5Function.
+class ProperFunction(
+    symbol: String,
+    /**
+     * For performance, this argument is not protected from mutilation by the caller.  We're assuming the caller is not
+     * trying to break us.
+     */
+    val arguments: ArgumentList,
+) : Function(symbol, arguments.size) {
     init {
-        require(arguments.size == arity)
+        require(arguments.isNotEmpty())
     }
 
     override val freeVariables: Set<Variable> =
@@ -142,58 +140,55 @@ sealed class Function(
             .toSet()
 
     override fun display(): String {
-        return "${symbol.displaySymbol}${
+        return "$symbol${
             arguments
                 .map { it.display() }
                 .joinToString(", ", "(", ")") { it }
         }"
     }
 
-    override fun toString(): String =
-        display()
-
-}
-
-// TODO consider making specialty classes up to a certain arity to avoid using a list
-//     in many cases.  Might be interesting to measure performance differences.
-class ProperFunction(
-    symbol: FunctionSymbol,
-    arity: Int,
-    arguments: List<Term>,
-) : Function(symbol, arity, arguments) {
-    init {
-        require(arity > 0)
-    }
-
-    override fun unify(term: Term): Substitution? {
+    override fun unifyOrNull(term: Term): Substitution? {
         TODO("Not yet implemented")
     }
 
     override fun apply(substitution: Substitution): Term {
         TODO("Not yet implemented")
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as ProperFunction
+
+        return symbol == other.symbol &&
+                arity == other.arity &&
+                arguments == other.arguments
+    }
+
+    override fun hashCode(): Int {
+        return arguments.hashCode()
     }
 
 }
 
 //@ConsistentCopyVisibility
-class Constant private constructor(
-    symbol: FunctionSymbol,
-) : Function(symbol, 0, emptyList()) {
+class Constant(
+    symbol: String,
+) : Function(symbol, 0) {
+
+    override val freeVariables: Set<Variable> = emptySet()
 
     override fun display(): String =
-        symbol.displaySymbol
+        "$symbol()"
 
-    companion object {
-        operator fun invoke(symbol: String) =
-            Constant(FunctionSymbol(symbol))
-    }
-
-    override fun unify(term: Term): Substitution? {
+    override fun unifyOrNull(term: Term): Substitution? {
         TODO("Not yet implemented")
     }
 
     override fun apply(substitution: Substitution): Term {
         TODO("Not yet implemented")
     }
+
 }
 

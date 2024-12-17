@@ -28,6 +28,7 @@ dependencies {
 
     implementation("io.github.nhubbard:konf:$konfVersion")
 
+    testImplementation(project(":common:tptp-parser"))
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")

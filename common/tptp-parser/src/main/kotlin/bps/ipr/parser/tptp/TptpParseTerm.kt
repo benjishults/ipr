@@ -4,9 +4,9 @@ import bps.ipr.parser.Parser
 import bps.ipr.parser.TermParser
 import bps.ipr.terms.Constant
 import bps.ipr.terms.FreeVariable
-import bps.ipr.terms.FunctionSymbol
 import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
+import bps.ipr.terms.TermLanguage
 import bps.ipr.terms.Variable
 import java.util.regex.Pattern
 
@@ -20,18 +20,22 @@ interface TptpParser : Parser {
 
 }
 
+private val _tptpUpperAlpha = ('A'..'Z').toSet()
+private val _tptpLowerAlpha = ('a'..'z').toSet()
+private val _tptpNumeric = ('0'..'9').toSet()
+private val _tptpAlphaNumeric = (_tptpUpperAlpha + _tptpLowerAlpha + _tptpNumeric).toSet()
+private val _delimiters = setOf(',', '(', ')')
+
 /**
  * Parse according to https://tptp.org/UserDocs/TPTPLanguage/SyntaxBNF.html#fof_term
  */
-object TptpFofTermParser : TermParser, Parser by TptpParser {
+interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
 
-    val tptpUpperAlpha = ('A'..'Z').toSet()
-    val tptpLowerAlpha = ('a'..'z').toSet()
-    val tptpNumeric = ('0'..'9').toSet()
-    val tptpAlphaNumeric = (tptpUpperAlpha + tptpLowerAlpha + tptpNumeric).toSet()
+    val tptpUpperAlpha: Set<Char> get() = _tptpUpperAlpha
+    val tptpLowerAlpha: Set<Char> get() = _tptpLowerAlpha
+    val tptpAlphaNumeric: Set<Char> get() = _tptpAlphaNumeric
 
-    val delimiters = setOf(',', '(', ')')
-    val endingDelimiters = setOf(',', ')')
+    val delimiters: Set<Char> get() = _delimiters
 
     /**
      * Attempts to parse the string as a term and returns a pair containing the parsed term
@@ -65,12 +69,9 @@ object TptpFofTermParser : TermParser, Parser by TptpParser {
                                             ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
                                                 val globalIndexAfterClosedParen =
                                                     startIndexOfArguments + closedParenInArgumentsInputIndex + 1
-                                                ProperFunction(
-                                                    FunctionSymbol(functor),
-                                                    args.size,
-                                                    args,
-                                                ) to substring(globalIndexAfterClosedParen)
-                                                    .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
+                                                termLanguage.properFunctionOrNull(functor, args)!! to
+                                                        substring(globalIndexAfterClosedParen)
+                                                            .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
                                             }
                                     }
                             }
@@ -175,17 +176,26 @@ object TptpFofTermParser : TermParser, Parser by TptpParser {
     fun String.parseTptpConstantOrNull(): Constant? =
         trim()
             .takeIf { it.isTptpLowerWord() }
-            ?.let { Constant(it) }
+            ?.let { termLanguage.constantOrNull(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpVariableOrNull(): Variable? =
         trim()
             .takeIf { it.isTptpUpperWord() }
-            ?.let { FreeVariable(it) }
+            ?.let { termLanguage.variableOrNull(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpFunctorOrNull(): String? =
         trim()
             .takeIf { it.isTptpLowerWord() }
+
+    companion object {
+
+        operator fun invoke(termLanguage: TermLanguage): TptpFofTermParser =
+            object : TptpFofTermParser, Parser by TptpParser {
+                override val termLanguage: TermLanguage = termLanguage
+            }
+
+    }
 
 }

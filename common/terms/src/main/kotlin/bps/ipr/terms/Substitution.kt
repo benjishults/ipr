@@ -7,10 +7,33 @@ sealed interface Substitution {
     // TODO should this return `null` if the var isn't mapped?
     fun map(variable: Variable): Term
 //    fun incorporate(pair: SingletonSubstitution): Substitution?
+
+    fun display(): String
+
+    class Builder {
+        private val mapping: MutableMap<Variable, Term> = mutableMapOf()
+        fun withPair(variable: Variable, term: Term): Builder =
+            this.also {
+                mapping[variable] = term
+            }
+
+//        fun build(): Substitution {
+//            when (mapping.size) {
+//                0 -> EmptySubstitution
+//                1 -> mapping
+//                    .iterator()
+//                    .next()
+//                    .let { (key, value) ->
+//                        SingletonSubstitution(key, value)
+//                    }
+//            }
+//        }
+    }
 }
 
 data object EmptySubstitution : Substitution {
     override fun map(variable: Variable): Term = variable
+    override fun display(): String = "{}"
 //    override fun incorporate(pair: SingletonSubstitution): Substitution = pair
 }
 
@@ -31,6 +54,9 @@ data class SingletonSubstitution(
         value
             .takeIf { variable == key }
             ?: variable
+
+    override fun display(): String =
+        "{$key ↦ ${value.display()}}" // \u21a6
 
 //    override fun incorporate(pair: SingletonSubstitution): Substitution? =
 //        TODO()
@@ -56,6 +82,20 @@ class MultiSubstitution(
 
     override fun map(variable: Variable): Term =
         mapping[variable] ?: variable
+
+    override fun display(): String =
+        buildString {
+            append("{")
+            append(
+                mapping
+                    .map { (key, value) ->
+                        // \u21a6
+                        append("$key ↦ ${value.display()}")
+                    }
+                    .joinToString(", "),
+            )
+            append("}")
+        }
 
 //    override fun incorporate(pair: SingletonSubstitution): Substitution =
 //        TODO()
