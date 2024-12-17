@@ -1,5 +1,8 @@
 package bps.ipr.terms
 
+import bps.kotlin.allIndexed
+import bps.kotlin.findIndexedOrNull
+
 /**
  * A [TermLanguage] controls
  * 1. what symbol is allowed to be a variable
@@ -132,7 +135,7 @@ open class FolTermLanguage : TermLanguage {
 }
 
 open class FolDagTermLanguage : FolTermLanguage() {
-    protected val properFunctionInternTable = mutableMapOf<Pair<String, List<Term>>, ProperFunction>()
+    protected val properFunctionInternTable = mutableMapOf<String, MutableList<Pair<ArgumentList, ProperFunction>>>()
 
     override fun clear() {
         super.clear()
@@ -140,15 +143,33 @@ open class FolDagTermLanguage : FolTermLanguage() {
     }
 
     override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
-        arityInternTable.getOrPut(symbol) { arguments.size }
+        arityInternTable
+            .getOrPut(symbol) { arguments.size }
             .takeIf { it == arguments.size }
             ?.run {
-                properFunctionInternTable.getOrPut(symbol to arguments) {
-                    ProperFunction(
-                        symbol,
-                        ArgumentList(arguments),
-                    )
-                }
+                properFunctionInternTable[symbol]
+                    ?.let { listOfTermsWithSymbol ->
+                        listOfTermsWithSymbol
+                            .find { (args: ArgumentList, _) ->
+                                arguments.allIndexed { index, termInArguments: Term ->
+                                    termInArguments === args[index]
+                                }
+                            }
+                            ?.second
+                            ?: ArgumentList(arguments)
+                                .let { args ->
+                                    ProperFunction(
+                                        symbol,
+                                        args,
+                                    )
+                                        .also { listOfTermsWithSymbol.add(args to it) }
+                                }
+                    }
+                    ?: ProperFunction(symbol, ArgumentList(arguments))
+                        .also { termToReturn ->
+                            properFunctionInternTable[symbol] =
+                                mutableListOf(termToReturn.arguments to termToReturn)
+                        }
             }
 
     /**

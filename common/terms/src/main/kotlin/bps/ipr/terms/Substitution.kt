@@ -10,6 +10,9 @@ sealed interface Substitution {
 
     fun display(): String
 
+    fun combine(other: Substitution): Substitution =
+        TODO()
+
     class Builder {
         private val mapping: MutableMap<Variable, Term> = mutableMapOf()
         fun withPair(variable: Variable, term: Term): Builder =
