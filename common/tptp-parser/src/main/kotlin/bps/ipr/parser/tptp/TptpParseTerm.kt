@@ -3,9 +3,11 @@ package bps.ipr.parser.tptp
 import bps.ipr.parser.Parser
 import bps.ipr.parser.TermParser
 import bps.ipr.terms.Constant
+import bps.ipr.terms.FolDagTermImplementation
 import bps.ipr.terms.FreeVariable
 import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
+import bps.ipr.terms.TermImplementation
 import bps.ipr.terms.TermLanguage
 import bps.ipr.terms.Variable
 import java.util.regex.Pattern
@@ -69,7 +71,7 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
                                             ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
                                                 val globalIndexAfterClosedParen =
                                                     startIndexOfArguments + closedParenInArgumentsInputIndex + 1
-                                                termLanguage.properFunctionOrNull(functor, args)!! to
+                                                termImplementation.properFunctionOrNull(functor, args)!! to
                                                         substring(globalIndexAfterClosedParen)
                                                             .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
                                             }
@@ -176,13 +178,13 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
     fun String.parseTptpConstantOrNull(): Constant? =
         trim()
             .takeIf { it.isTptpLowerWord() }
-            ?.let { termLanguage.constantOrNull(it) }
+            ?.let { termImplementation.constantOrNull(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpVariableOrNull(): Variable? =
         trim()
             .takeIf { it.isTptpUpperWord() }
-            ?.let { termLanguage.variableOrNull(it) }
+            ?.let { termImplementation.variableOrNull(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpFunctorOrNull(): String? =
@@ -191,9 +193,9 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
 
     companion object {
 
-        operator fun invoke(termLanguage: TermLanguage): TptpFofTermParser =
+        operator fun invoke(termImplementation: TermImplementation): TptpFofTermParser =
             object : TptpFofTermParser, Parser by TptpParser {
-                override val termLanguage: TermLanguage = termLanguage
+                override val termImplementation: TermImplementation = termImplementation
             }
 
     }

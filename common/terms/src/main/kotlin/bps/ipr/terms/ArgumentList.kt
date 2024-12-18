@@ -1,5 +1,7 @@
 package bps.ipr.terms
 
+import bps.kotlin.allIndexed
+
 /**
  * A [List] with equality defined by its members.
  *
@@ -12,11 +14,8 @@ class ArgumentList(arguments: List<Term>) : List<Term> by arguments {
                 (other is ArgumentList &&
                         other.size == this.size &&
                         // kotlin doesn't seem to have an allIndexed function.
-                        other.foldIndexed(true) { i, _, t ->
-                            if (t != get(i))
-                                return false
-                            else
-                                true
+                        other.allIndexed { i, t ->
+                            t == get(i)
                         })
 
     // NOTE explicitly calling super here to highlight that this is what we want

@@ -6,7 +6,7 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class SimpleUnificationTests : FreeSpec(), TptpFofTermParser by TptpFofTermParser(FolDagTermLanguage()) {
+class SimpleUnificationTests : FreeSpec(), TptpFofTermParser by TptpFofTermParser(FolDagTermImplementation()) {
 
     init {
 //        testUnify(

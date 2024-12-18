@@ -1,6 +1,15 @@
 package bps.ipr.terms
 
+// NOTE the fast algorithms for unification encode the substitution into the term DAG while they're being built.
+//   this is not conducive to parallel or breadth-first unification within a tableau, is it?  Unless I copy the dags
+//   for each problem.
+//   Basically, the very fast algorithms use union-find on the nodes in the term dag.  It might not be too terrible
+//   to build this structure for each unification problem we have to do.
+// NOTE I think we can get a linear space algorithm without storing the substitution as part of the DAG?
+//   or, just use the DAG with the old algorithm for some savings just maybe not asymptotic improvement.
 sealed interface Substitution {
+    // NOTE do I want to track the v-range for faster combinations/applications?
+
     /**
      * @return [variable] if it isn't mapped by the receiver or the term it is mapped to if it is mapped.
      */

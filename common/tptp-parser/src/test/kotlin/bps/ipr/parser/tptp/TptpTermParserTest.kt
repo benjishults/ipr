@@ -1,7 +1,7 @@
 package bps.ipr.parser.tptp
 
 import bps.ipr.terms.Constant
-import bps.ipr.terms.FolDagTermLanguage
+import bps.ipr.terms.FolDagTermImplementation
 import bps.ipr.terms.FreeVariable
 import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
@@ -15,8 +15,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 class TptpTermParserTest : FreeSpec() {
 
     init {
-        val termLanguage = FolDagTermLanguage()
-        with(TptpFofTermParser(termLanguage)) {
+        val termImplementation = FolDagTermImplementation()
+        with(TptpFofTermParser(termImplementation)) {
             testValidStartTerm<Constant>("f)", "f()", 1)
             testValidStartTerm<ProperFunction>("f(a)c(", "f(a())", 4)
             testValidStartTerm<ProperFunction>("f(a)c,", "f(a())", 4)
@@ -83,7 +83,7 @@ class TptpTermParserTest : FreeSpec() {
                                 .asClue { invalidTerm ->
                                     invalidTerm.shouldBeNull()
                                 }
-                            termLanguage.clear()
+                            termImplementation.clear()
                         }
                     }
             }
@@ -107,7 +107,7 @@ class TptpTermParserTest : FreeSpec() {
                     term.shouldBeInstanceOf<T>()
                     term.details()
                 }
-            termLanguage.clear()
+            termImplementation.clear()
         }
         return tptpStringInput
     }
@@ -129,7 +129,7 @@ class TptpTermParserTest : FreeSpec() {
                     term.shouldBeInstanceOf<T>()
                     term.details()
                 }
-            termLanguage.clear()
+            termImplementation.clear()
         }
         return tptpStringInput
     }

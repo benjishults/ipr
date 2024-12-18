@@ -1,11 +1,11 @@
 package bps.ipr.parser
 
 import bps.ipr.terms.Term
-import bps.ipr.terms.TermLanguage
+import bps.ipr.terms.TermImplementation
 
 interface TermParser : Parser {
 
-    val termLanguage: TermLanguage
+    val termImplementation: TermImplementation
 
     /**
      * Attempts to parse the string as a term and returns a pair containing the parsed term
