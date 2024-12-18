@@ -43,7 +43,6 @@ class TermLanguageTest : FreeSpec() {
                         (term1 === term2) shouldBe true
                     }
                 }
-
             }
             "test fol term language (expect variables and constants interned)" - {
                 FolTermImplementation().use { implementation ->

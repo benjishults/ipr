@@ -1,8 +1,5 @@
 package bps.ipr.terms
 
-import bps.kotlin.allIndexed
-import bps.kotlin.findIndexedOrNull
-
 /**
  * A [TermLanguage] controls
  * 1. what symbol is allowed to be a variable
