@@ -41,6 +41,22 @@ interface TermImplementation : AutoCloseable {
      */
     fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction?
 
+    /**
+     * Allows absolutely everything and interns nothing.
+     */
+    companion object : TermImplementation {
+        override val termLanguage: TermLanguage = TermLanguage
+
+        override fun variableOrNull(symbol: String): Variable? =
+            FreeVariable(symbol)
+
+        override fun constantOrNull(symbol: String): Constant? =
+            Constant(symbol)
+
+        override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
+            ProperFunction(symbol, ArgumentList(arguments))
+    }
+
 }
 
 open class FolTermImplementation(
