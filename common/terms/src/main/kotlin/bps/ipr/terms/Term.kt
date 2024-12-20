@@ -7,9 +7,10 @@ sealed interface Term {
      */
     val freeVariables: Set<Variable>
 
-    fun unifyOrNull(term: Term, under: Substitution = EmptySubstitution): Substitution?
+//    fun unifyOrNull(term: Term, under: Substitution = EmptySubstitution): Substitution?
 
-    fun apply(substitution: Substitution): Term
+    // TODO consider moving this to a subtype SyntacticTerm
+    fun apply(substitution: IdempotentSubstitution, termImplementation: TermImplementation): Term
 
     fun display(): String
 

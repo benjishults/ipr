@@ -25,6 +25,12 @@ interface TermImplementation : AutoCloseable {
         termLanguage.clear()
     }
 
+//    /**
+//     * @return `true` if we can determine in constant time that the two terms are identical
+//     */
+//    fun identical(term1: Term, term2: Term): Boolean =
+//        term1 === term2
+
     /**
      * @return a [Variable] for the normalization of the given [symbol] or `null` if that isn't possible.
      */
@@ -41,10 +47,26 @@ interface TermImplementation : AutoCloseable {
      */
     fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction?
 
+    /**
+     * Allows absolutely everything and interns nothing.
+     */
+    companion object : TermImplementation {
+        override val termLanguage: TermLanguage = TermLanguage
+
+        override fun variableOrNull(symbol: String): Variable? =
+            FreeVariable(symbol)
+
+        override fun constantOrNull(symbol: String): Constant? =
+            Constant(symbol)
+
+        override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
+            ProperFunction(symbol, ArgumentList(arguments))
+    }
+
 }
 
 open class FolTermImplementation(
-    override val termLanguage: TermLanguage = FolTermLanguage,
+    override val termLanguage: TermLanguage = FolTermLanguage(),
 ) : TermImplementation {
 
     protected val variableInternTable = mutableMapOf<String, FreeVariable>()
@@ -79,7 +101,9 @@ open class FolTermImplementation(
 
 }
 
-open class FolDagTermImplementation : FolTermImplementation() {
+open class FolDagTermImplementation(
+    termLanguage: TermLanguage = FolTermLanguage(),
+) : FolTermImplementation(termLanguage) {
 
     // NOTE ArgumentLists can't be put into sets or used as keys in maps so this is what I've got.  :(
     // TODO consider clearing this once parsing is done just to give back some memory
