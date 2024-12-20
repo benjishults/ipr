@@ -13,7 +13,7 @@ class LanguageArityTest : FreeSpec() {
             FolTermImplementation().use { implementation ->
                 "f can be both variable and constant but can't have a non-zero arity, now" {
                     val fAsConstant = implementation.constantOrNull("f")
-                    val fAsVariable = implementation.variableOrNull("f")
+                    val fAsVariable = implementation.freeVariableOrNull("f")
                     fAsConstant.shouldNotBeNull()
                     fAsVariable.shouldNotBeNull()
                     implementation.properFunctionOrNull("f", listOf(fAsConstant)).shouldBeNull()
@@ -24,7 +24,7 @@ class LanguageArityTest : FreeSpec() {
             TermImplementation.use { implementation ->
                 "f can be variable, constant, and function with arguments" {
                     val fAsConstant = implementation.constantOrNull("f")
-                    val fAsVariable: Variable? = implementation.variableOrNull("f")
+                    val fAsVariable: Variable? = implementation.freeVariableOrNull("f")
                     fAsConstant.shouldNotBeNull()
                     fAsVariable.shouldNotBeNull()
                     implementation.properFunctionOrNull("f", listOf(fAsConstant))

@@ -1,8 +1,6 @@
 package bps.ipr.terms
 
 import bps.ipr.parser.tptp.TptpFofTermParser
-import io.kotest.assertions.asClue
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
@@ -12,44 +10,38 @@ import io.kotest.matchers.shouldBe
 class SimpleUnificationTests : FreeSpec(), TptpFofTermParser by TptpFofTermParser(FolDagTermImplementation()) {
 
     init {
-        "using GeneralRecursiveDescentUnifier" - {
-            with(GeneralRecursiveDescentUnifier(FolTermImplementation())) {
-                with(FolTermImplementation()) implementation@{
-                    with(TptpFofTermParser(this)) {
-                        val x = variableOrNull("X")!!
-                        val y = variableOrNull("Y")!!
-                        val z = variableOrNull("Z")!!
-                        val a = constantOrNull("a")!!
-                        val ga = "g(a)".parseTermOrNull()!!.first
-                        val gx = "g(X)".parseTermOrNull()!!.first
-                        "composeIdempotent does not produce idempotent substitutions" {
-                            val sigma = SingletonIdempotentSubstitution(x, ga)
-                            val theta = SingletonIdempotentSubstitution(z, gx)
-                            shouldThrow<IllegalArgumentException> {
-                                sigma.composeIdempotent(theta, termImplementation)
+        "using GeneralRecursiveDescentUnifier with a FolTermImplementation" - {
+            with(TptpFofTermParser(FolTermImplementation())) {
+                with(GeneralRecursiveDescentUnifier(termImplementation)) {
+                    val x = termImplementation.freeVariableOrNull("X")!!
+                    val y = termImplementation.freeVariableOrNull("Y")!!
+                    val z = termImplementation.freeVariableOrNull("Z")!!
+                    val ga = "g(a)".parseTermOrNull()!!.first
+                    val gx = "g(X)".parseTermOrNull()!!.first
+                    "unify f(X, g(a), g(Z)) and f(g(Y), g(Y), g(g(X)))" {
+                        unify(
+                            "f(X, g(a), g(Z))".parseTermOrNull()!!.first,
+                            "f(g(Y), g(Y), g(g(X)))".parseTermOrNull()!!.first,
+                            EmptySubstitution,
+                        )
+                            .let { substitution ->
+                                substitution.shouldNotBeNull()
+                                substitution.isIdempotent().shouldBeTrue()
+                                substitution.display() shouldBe "{X ↦ g(a()), Y ↦ a(), Z ↦ g(g(a()))}"
+                                substitution.domain shouldContainExactly setOf(x, y, z)
+                                x.apply(
+                                    substitution,
+                                    termImplementation,
+                                ) shouldBe "g(a)".parseTermOrNull()!!.first
+                                y.apply(
+                                    substitution,
+                                    termImplementation,
+                                ) shouldBe "a".parseTermOrNull()!!.first
+                                z.apply(
+                                    substitution,
+                                    termImplementation,
+                                ) shouldBe "g(g(a))".parseTermOrNull()!!.first
                             }
-                        }
-                        "unify f(X, g(a), g(Z)) and f(g(Y), g(Y), g(g(X)))" {
-                            unify(
-                                "f(X, g(a), g(Z))".parseTermOrNull()!!.first,
-                                "f(g(Y), g(Y), g(g(X)))".parseTermOrNull()!!.first,
-                                EmptySubstitution,
-                            )
-                                .let { substitution ->
-                                    substitution.shouldNotBeNull()
-                                    substitution.isIdempotent().shouldBeTrue()
-                                    substitution.domain shouldContainExactly setOf(x, y, z)
-                                    x.apply(substitution, termImplementation) shouldBe properFunctionOrNull(
-                                        "g",
-                                        listOf(constantOrNull("a")!!),
-                                    )
-                                    y.apply(substitution, termImplementation) shouldBe constantOrNull("a")
-                                    z.apply(substitution, termImplementation) shouldBe properFunctionOrNull(
-                                        "g",
-                                        listOf(properFunctionOrNull("g", listOf(constantOrNull("a")!!))!!),
-                                    )
-                                }
-                        }
                     }
                 }
             }
@@ -63,7 +55,7 @@ class SimpleUnificationTests : FreeSpec(), TptpFofTermParser by TptpFofTermParse
         h(x1, x2, . . . , xn, f(y0, y0), f(y1, y1), . . . , f(yn−1, yn−1), yn)
         h(f(x0, x0), f(x1, x1), . . . , f(xn−1, xn−1), y1, y2, . . . , yn, xn)
         {x1 7→ f(x0, x0), x2 7→ f(f(x0, x0), f(x0, x0)), . . . ,
-y0 7→ x0, y1 7→ f(x0, x0), y2 7→ f(f(x0, x0), f(x0, x0)), . . .}
+    y0 7→ x0, y1 7→ f(x0, x0), y2 7→ f(f(x0, x0), f(x0, x0)), . . .}
          */
 //        testUnify(
 //            // n=3

@@ -25,7 +25,13 @@ interface TermLanguage {
      * The default implementation simply returns the receiver.
      * @return the normalized variable symbol derived from the input string if any.
      */
-    fun toNormalizedVariableOrNull(symbol: String): String? = symbol
+    fun toNormalizedFreeVariableOrNull(symbol: String): String? = symbol
+
+    /**
+     * The default implementation simply returns the receiver.
+     * @return the normalized variable symbol derived from the input string if any.
+     */
+    fun toNormalizedBoundVariableOrNull(symbol: String): String? = symbol
 
     /**
      * The default implementation simply returns the receiver.
@@ -45,18 +51,15 @@ interface TermLanguage {
  * both a variable and a functor in a single instance of this [TermLanguage].  However, a given functor symbol has a
  * fixed arity once it is normalized.
  */
-class FolTermLanguage : TermLanguage {
+open class FolTermLanguage : TermLanguage {
 
-    private val internalArityInternTable = mutableMapOf<String, Int>()
+    protected val internalArityInternTable = mutableMapOf<String, Int>()
     override val arityInternTable: Map<String, Int> = internalArityInternTable
 
     override fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? =
         symbol.takeIf {
-            val orPut = internalArityInternTable
-                .getOrPut(symbol) {
-                    arity
-                }
-            orPut == arity
+            internalArityInternTable
+                .getOrPut(symbol) { arity } == arity
         }
 
     override fun clear() {
