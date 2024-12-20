@@ -45,13 +45,19 @@ interface TermLanguage {
  * both a variable and a functor in a single instance of this [TermLanguage].  However, a given functor symbol has a
  * fixed arity once it is normalized.
  */
-object FolTermLanguage : TermLanguage {
+class FolTermLanguage : TermLanguage {
 
     private val internalArityInternTable = mutableMapOf<String, Int>()
     override val arityInternTable: Map<String, Int> = internalArityInternTable
 
     override fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? =
-        symbol.takeIf { internalArityInternTable.getOrPut(symbol) { arity } == arity }
+        symbol.takeIf {
+            val orPut = internalArityInternTable
+                .getOrPut(symbol) {
+                    arity
+                }
+            orPut == arity
+        }
 
     override fun clear() {
         internalArityInternTable.clear()

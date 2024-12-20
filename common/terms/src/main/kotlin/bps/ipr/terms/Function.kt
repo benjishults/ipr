@@ -8,6 +8,22 @@ sealed class Function(
     override fun toString(): String =
         display()
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Function) return false
+
+        if (arity != other.arity) return false
+        if (symbol != other.symbol) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = arity
+        result = 31 * result + symbol.hashCode()
+        return result
+    }
+
 }
 
 class Constant(
@@ -15,24 +31,10 @@ class Constant(
 ) : Function(symbol, 0) {
 
     override val freeVariables: Set<Variable> = emptySet()
+    override fun apply(substitution: IdempotentSubstitution, termImplementation: TermImplementation): Term = this
 
     override fun display(): String =
         "$symbol()"
-
-    override fun unifyOrNull(term: Term, under: Substitution): Substitution? =
-        when (term) {
-            is FreeVariable -> term.unifyOrNull(this, under)
-            is Constant ->
-                if (this == term)
-                    under
-                else
-                    null
-            is ProperFunction -> null
-        }
-
-    override fun apply(substitution: Substitution): Term {
-        TODO("Not yet implemented")
-    }
 
 }
 
@@ -55,6 +57,19 @@ class ProperFunction(
             .flatMap { it.freeVariables }
             .toSet()
 
+    override fun apply(substitution: IdempotentSubstitution, termImplementation: TermImplementation): Term =
+        // short-circuit if we know the substitution won't disturb this term
+        if (substitution.domain.firstOrNull { it in this.freeVariables } !== null)
+            termImplementation.properFunctionOrNull(
+                symbol,
+                arguments
+                    .map {
+                        it.apply(substitution, termImplementation)
+                    },
+            )!!
+        else
+            this
+
     override fun display(): String {
         return "$symbol${
             arguments
@@ -63,44 +78,12 @@ class ProperFunction(
         }"
     }
 
-    // FIXME either get under working properly or get rid of it
-    override fun unifyOrNull(term: Term, under: Substitution): Substitution? =
-        when (term) {
-            is ProperFunction ->
-                if (term.symbol == symbol) {
-                    if (term.arguments == arguments)
-                        under
-                    else
-                        arguments.foldIndexed(under) { index: Int, runningSubstitution: Substitution?, arg: Term ->
-                            runningSubstitution
-                                ?.let {
-                                    arg.unifyOrNull(term.arguments[index], runningSubstitution)
-                                        ?.let { runningSubstitution.combine(it) }
-                                }
-                        }
-                } else
-                    null
-            is Constant -> null
-            is FreeVariable -> term.unifyOrNull(this, under)
-        }
-
-    override fun apply(substitution: Substitution): Term {
-        TODO("Not yet implemented")
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as ProperFunction
-
-        return symbol == other.symbol &&
-                arity == other.arity &&
+    override fun equals(other: Any?): Boolean =
+        super.equals(other) &&
+                other is ProperFunction &&
                 arguments == other.arguments
-    }
 
-    override fun hashCode(): Int {
-        return arguments.hashCode()
-    }
+    override fun hashCode(): Int =
+        31 * super.hashCode() + arguments.hashCode()
 
 }

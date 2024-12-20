@@ -11,28 +11,13 @@ sealed interface Variable : Term {
 
 }
 
-data class FreeVariable(
+class FreeVariable(
     override val symbol: String,
 ) : Variable, Comparable<FreeVariable> {
+
     override val freeVariables: Set<FreeVariable> = setOf(this)
 
-    // FIXME either get rid of under or use it properly
-    override fun unifyOrNull(term: Term, under: Substitution): Substitution? =
-        when (term) {
-            is ProperFunction ->
-                if (this.occursFreeIn(term))
-                    null
-                else
-                    SingletonSubstitution(this, term)
-            is Constant -> SingletonSubstitution(this, term)
-            is FreeVariable ->
-                if (this == term)
-                    EmptySubstitution
-                else
-                    makeSubstitution(this, term)
-        }
-
-    override fun apply(substitution: Substitution): Term =
+    override fun apply(substitution: IdempotentSubstitution, termImplementation: TermImplementation): Term =
         substitution.map(this)
 
     override fun display(): String =
@@ -41,13 +26,29 @@ data class FreeVariable(
     override fun compareTo(other: FreeVariable): Int =
         symbol.compareTo(other.symbol)
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as FreeVariable
+
+        return symbol == other.symbol
+    }
+
+    override fun hashCode(): Int {
+        return symbol.hashCode()
+    }
+
+    override fun toString(): String = display()
+
     companion object {
 
-        private fun makeSubstitution(var1: FreeVariable, var2: FreeVariable): Substitution =
+        // FIXME this should probably be in the [TermLanguage] or the [TermImplementation]
+        fun makeSubstitution(var1: FreeVariable, var2: FreeVariable): IdempotentSubstitution =
             when (var1.compareTo(var2).sign) {
                 0 -> EmptySubstitution
-                -1 -> SingletonSubstitution(var2, var1)
-                else -> SingletonSubstitution(var1, var2)
+                -1 -> SingletonIdempotentSubstitution(var2, var1)
+                else -> SingletonIdempotentSubstitution(var1, var2)
             }
 
     }
