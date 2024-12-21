@@ -3,8 +3,6 @@ package bps.ipr.formulas
 import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.FolTermImplementation
 import bps.ipr.terms.Term
-import bps.ipr.terms.TermImplementation
-import bps.kotlin.allIndexed
 
 /**
  * A [FormulaImplementation] is a factory for [Formula]s in a given language.  Different implementations might return

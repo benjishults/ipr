@@ -6,7 +6,7 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
 
     init {
         "asdf" {
-            f
+//            f
         }
     }
 

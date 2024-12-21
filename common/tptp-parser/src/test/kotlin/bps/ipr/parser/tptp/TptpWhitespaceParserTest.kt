@@ -3,7 +3,7 @@ package bps.ipr.parser.tptp
 import bps.ipr.parser.ParserTestFixture
 import io.kotest.core.spec.style.FreeSpec
 
-class TptpParserTest : FreeSpec(), TptpParser, ParserTestFixture {
+class TptpWhitespaceParserTest : FreeSpec(), TptpWhitespaceParser, ParserTestFixture {
 
     init {
         ""

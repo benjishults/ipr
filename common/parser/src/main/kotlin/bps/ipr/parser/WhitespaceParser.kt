@@ -2,7 +2,7 @@ package bps.ipr.parser
 
 import java.util.regex.Pattern
 
-interface Parser {
+interface WhitespaceParser {
 
     val whitespace: Pattern
 
