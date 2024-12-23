@@ -2,6 +2,7 @@ package bps.ipr.formulas
 
 //import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.ArgumentList
+import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.FolTermImplementation
 import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
@@ -46,11 +47,6 @@ open class FolFormulaImplementation(
     val termImplementation: FolTermImplementation = FolTermImplementation(),
 ) : FormulaImplementation {
 
-//    protected val formulaConstructorMap: MutableMap<String, (List<FolFormula>, List<BoundVariable>) -> FolFormula?> =
-//        mutableMapOf()
-
-    protected val predicateMap: MutableMap<String, Int> = mutableMapOf()
-
     fun predicateOrNull(symbol: String, arguments: List<Term> = emptyList()): FolFormula? =
         formulaLanguage
             .toNormalizedPredicateOrNull(symbol, arguments.size)
@@ -72,5 +68,11 @@ open class FolFormulaImplementation(
 
     open fun impliesOrNull(antecedent: FolFormula, consequent: FolFormula): Implies =
         Implies(antecedent, consequent)
+
+    open fun forAllOrNull(boundVariables: List<BoundVariable>, subFormula: FolFormula): ForAll =
+        ForAll(boundVariables, subFormula)
+
+    open fun forSomeOrNull(boundVariables: List<BoundVariable>, subFormula: FolFormula): ForSome =
+        ForSome(boundVariables, subFormula)
 
 }

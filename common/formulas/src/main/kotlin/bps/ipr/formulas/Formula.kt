@@ -1,10 +1,12 @@
 package bps.ipr.formulas
 
 import bps.ipr.terms.ArgumentList
+import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.Substitution
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
 import bps.ipr.terms.Variable
+import bps.ipr.terms.FreeVariable
 
 interface Formula {
 
@@ -21,6 +23,11 @@ sealed interface FolFormula : Formula {
      */
     val variablesFreeIn: Set<Variable>
 
+//    /**
+//     * Variables that are bound by variable-binding within this formula.
+//     */
+//    val variablesBoundIn: Set<BoundVariable>
+
     // TODO consider moving this to a subtype SyntacticTerm
     fun apply(substitution: Substitution, formulaImplementation: FolFormulaImplementation): FolFormula
 
@@ -30,6 +37,7 @@ class Predicate(
     override val symbol: String,
     val arguments: ArgumentList,
 ) : FolFormula {
+    //    override val variablesBoundIn: Set<BoundVariable> = emptySet()
     override val variablesFreeIn: Set<Variable> =
         arguments
             .flatMapTo(mutableSetOf()) {
@@ -62,6 +70,7 @@ class Predicate(
 }
 
 class Not(val subFormula: FolFormula) : FolFormula {
+    //    override val variablesBoundIn: Set<BoundVariable> = subFormula.variablesBoundIn
     override val variablesFreeIn: Set<Variable> = subFormula.variablesFreeIn
 
     override fun apply(substitution: Substitution, formulaImplementation: FolFormulaImplementation): Not =
@@ -89,6 +98,12 @@ abstract class AbstractMultiFolFormula<F : AbstractMultiFolFormula<F>>(
     }
 
     abstract val formulaConstructor: (FolFormulaImplementation, List<FolFormula>) -> F
+
+//    override val variablesBoundIn: Set<BoundVariable> =
+//        subFormulas
+//            .flatMapTo(mutableSetOf()) {
+//                it.variablesBoundIn
+//            }
 
     override val variablesFreeIn: Set<Variable> =
         subFormulas
@@ -158,7 +173,90 @@ class Implies(vararg subFormulas: FolFormula) : AbstractMultiFolFormula<Implies>
 
 }
 
-//class ForAll(
-//    val boundVariables: List<BoundVariable>,
-//    val subFormula: FolFormula,
-//) : FolFormula {}
+abstract class VariablesBindingFolFormula
+/**
+ * @throws IllegalArgumentException if any of the [BoundVariable]s in [boundVariables] display the same as any of
+ * the [FreeVariable]s in [subFormula]'s [FolFormula.variablesFreeIn] OR if any of the [BoundVariable]s in
+ * [boundVariables] do NOT occur free in [subFormula].
+ */
+constructor(
+    val boundVariables: List<BoundVariable>,
+    val subFormula: FolFormula,
+) : FolFormula {
+
+    init {
+        require(boundVariables.isNotEmpty())
+        val freeVariablesInSubFormula =
+            subFormula.variablesFreeIn
+                .filterIsInstance<FreeVariable>()
+                .map { it.display() }
+        require(
+            boundVariables
+                .map { it.display() }
+                .find { it in freeVariablesInSubFormula }
+                    == null,
+        )
+        require(boundVariables.all { it in subFormula.variablesFreeIn })
+    }
+
+//    override val variablesBoundIn: Set<BoundVariable> =
+//        subFormula.variablesBoundIn + boundVariables
+
+    override val variablesFreeIn: Set<Variable> =
+        boundVariables
+            .map { it.display() }
+            .let { boundVariableDisplays ->
+                subFormula.variablesFreeIn -
+                        subFormula.variablesFreeIn
+                            .filterIsInstance<BoundVariable>()
+                            .filter { it.display() in boundVariableDisplays }
+                            .toSet()
+            }
+
+    override fun apply(substitution: Substitution, formulaImplementation: FolFormulaImplementation): FolFormula {
+        TODO("Not yet implemented")
+    }
+
+    override fun display(): String =
+        buildString {
+            append(
+                boundVariables
+                    .map { it.display() }
+                    .joinToString(", ", "($symbol (", ") "),
+            )
+            append(subFormula.display())
+            append(")")
+        }
+}
+
+class ForAll
+/**
+ * @throws IllegalArgumentException if any of the [BoundVariable]s in [boundVariables] display the same as any of
+ * the [FreeVariable]s in [subFormula]'s [FolFormula.variablesFreeIn] OR if any of the [BoundVariable]s in
+ * [boundVariables] do NOT occur free in [subFormula].
+ */
+constructor(
+    boundVariables: List<BoundVariable>,
+    subFormula: FolFormula,
+) : VariablesBindingFolFormula(boundVariables, subFormula) {
+
+    override val symbol: String =
+        "FORALL"
+
+}
+
+class ForSome
+/**
+ * @throws IllegalArgumentException if any of the [BoundVariable]s in [boundVariables] display the same as any of
+ * the [FreeVariable]s in [subFormula]'s [FolFormula.variablesFreeIn] OR if any of the [BoundVariable]s in
+ * [boundVariables] do NOT occur free in [subFormula].
+ */
+constructor(
+    boundVariables: List<BoundVariable>,
+    subFormula: FolFormula,
+) : VariablesBindingFolFormula(boundVariables, subFormula) {
+
+    override val symbol: String =
+        "FORSOME"
+
+}

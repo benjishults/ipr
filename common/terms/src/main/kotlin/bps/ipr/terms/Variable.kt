@@ -1,8 +1,9 @@
 package bps.ipr.terms
 
 import kotlin.math.sign
+import kotlin.random.Random
 
-sealed interface Variable : Term/*, Comparable<Variable>*/ {
+sealed interface Variable : Term, Comparable<Variable> {
 
     val symbol: String
 
@@ -15,25 +16,28 @@ sealed interface Variable : Term/*, Comparable<Variable>*/ {
     override fun display(): String =
         symbol
 
+    override fun compareTo(other: Variable): Int =
+        symbol.compareTo(other.symbol)
+
     companion object {
 
         // FIXME this should probably be in the [TermLanguage] or the [TermImplementation]
         fun makeSubstitution(var1: Variable, var2: Variable): IdempotentSubstitution =
-            when (var1) {
-                is FreeVariable ->
-                    when (var2) {
-                        is FreeVariable ->
-                            when (var1.compareTo(var2).sign) {
-                                0 ->
-                                    EmptySubstitution
-                                -1 ->
-                                    SingletonIdempotentSubstitution(var2, var1)
-                                else ->
-                                    SingletonIdempotentSubstitution(var1, var2)
-                            }
-                        else ->
-                            SingletonIdempotentSubstitution(var1, var2)
-                    }
+//            when (var1) {
+//                is Variable ->
+//                    when (var2) {
+//                        is FreeVariable ->
+            when (var1.compareTo(var2).sign) {
+                0 ->
+                    EmptySubstitution
+                -1 ->
+                    SingletonIdempotentSubstitution(var2, var1)
+                else ->
+                    SingletonIdempotentSubstitution(var1, var2)
+            }
+//                        else ->
+//                            SingletonIdempotentSubstitution(var1, var2)
+//                    }
 //                is BoundVariable ->
 //                    when (var2) {
 //                        is BoundVariable ->
@@ -48,7 +52,7 @@ sealed interface Variable : Term/*, Comparable<Variable>*/ {
 //                        else ->
 //                            SingletonIdempotentSubstitution(var2, var1)
 //                    }
-            }
+//            }
 
     }
 
@@ -56,12 +60,9 @@ sealed interface Variable : Term/*, Comparable<Variable>*/ {
 
 class FreeVariable(
     override val symbol: String,
-) : Variable, Comparable<FreeVariable> {
+) : Variable/*, Comparable<FreeVariable>*/ {
 
     override val variablesFreeIn: Set<Variable> = setOf(this)
-
-    override fun compareTo(other: FreeVariable): Int =
-        symbol.compareTo(other.symbol)
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -90,22 +91,22 @@ class FreeVariable(
 
 }
 
-//// TODO gotta thing about what to do about interning, here.
-//class BoundVariable(
-//    override val symbol: String,
-//    /**
-//     * Caller is responsible to ensure any desired uniqueness constraints.  If not specified, this will be a random
-//     * [Long].
-//     */
-//    val id: Long = Random.nextLong(),
-//) : Variable, Comparable<BoundVariable> {
-//
-//    override val variablesFreeIn: Set<Variable> = setOf(this)
-//
-//    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
-//        substitution.map(this)
-//
-//    override fun compareTo(other: BoundVariable): Int =
+// TODO gotta think about what to do about interning, here.
+class BoundVariable(
+    override val symbol: String,
+    /**
+     * Caller is responsible to ensure any desired uniqueness constraints.  If not specified, this will be a random
+     * [Long].
+     */
+    val id: Long = Random.nextLong(),
+) : Variable/*, Comparable<BoundVariable>*/ {
+
+    override val variablesFreeIn: Set<Variable> = setOf(this)
+
+    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
+        substitution.map(this)
+
+//    override fun compareTo(other: Variable): Int =
 //        symbol
 //            .compareTo(other.symbol)
 //            .sign
@@ -115,24 +116,24 @@ class FreeVariable(
 //                    else -> it
 //                }
 //            }
-//
-//    override fun toString(): String =
-//        display()
-//
-//    override fun equals(other: Any?): Boolean {
-//        if (this === other) return true
-//        if (other !is BoundVariable) return false
-//
-//        if (id != other.id) return false
-//        if (symbol != other.symbol) return false
-//
-//        return true
-//    }
-//
-//    override fun hashCode(): Int {
-//        var result = id.hashCode()
-//        result = 31 * result + symbol.hashCode()
-//        return result
-//    }
-//
-//}
+
+    override fun toString(): String =
+        display()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is BoundVariable) return false
+
+        if (id != other.id) return false
+        if (symbol != other.symbol) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = id.hashCode()
+        result = 31 * result + symbol.hashCode()
+        return result
+    }
+
+}
