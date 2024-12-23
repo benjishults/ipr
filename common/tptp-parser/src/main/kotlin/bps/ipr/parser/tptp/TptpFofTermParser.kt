@@ -1,26 +1,11 @@
 package bps.ipr.parser.tptp
 
-import bps.ipr.parser.Parser
+import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.TermParser
 import bps.ipr.terms.Constant
-import bps.ipr.terms.FolDagTermImplementation
-import bps.ipr.terms.FreeVariable
-import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
-import bps.ipr.terms.TermLanguage
 import bps.ipr.terms.Variable
-import java.util.regex.Pattern
-
-private val tptpWhitespacePattern = Pattern.compile("\\s*(?:%.*|/\\*(?:\\n|\\r|.)*?\\*/|\\s+)\\s*")
-
-interface TptpParser : Parser {
-
-    override val whitespace: Pattern get() = tptpWhitespacePattern
-
-    companion object : TptpParser
-
-}
 
 private val _tptpUpperAlpha = ('A'..'Z').toSet()
 private val _tptpLowerAlpha = ('a'..'z').toSet()
@@ -31,8 +16,9 @@ private val _delimiters = setOf(',', '(', ')')
 /**
  * Parse according to https://tptp.org/UserDocs/TPTPLanguage/SyntaxBNF.html#fof_term
  */
-interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
+interface TptpFofTermParser : TermParser {
 
+    val whitespaceParser: WhitespaceParser
     val tptpUpperAlpha: Set<Char> get() = _tptpUpperAlpha
     val tptpLowerAlpha: Set<Char> get() = _tptpLowerAlpha
     val tptpAlphaNumeric: Set<Char> get() = _tptpAlphaNumeric
@@ -71,9 +57,11 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
                                             ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
                                                 val globalIndexAfterClosedParen =
                                                     startIndexOfArguments + closedParenInArgumentsInputIndex + 1
-                                                termImplementation.properFunctionOrNull(functor, args)!! to
-                                                        substring(globalIndexAfterClosedParen)
-                                                            .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
+                                                with(whitespaceParser) {
+                                                    termImplementation.properFunctionOrNull(functor, args)!! to
+                                                            substring(globalIndexAfterClosedParen)
+                                                                .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
+                                                }
                                             }
                                     }
                             }
@@ -84,14 +72,16 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
                 }
             }
             ?: run {
-                val tokenStartIndex = indexOfFirstNonWhitespace()
-                val tokenEndIndex = substring(tokenStartIndex).indexOfFirstWhitespace() + tokenStartIndex
-                val endOfFollowingWhitespace = substring(tokenEndIndex).indexOfFirstNonWhitespace() + tokenEndIndex
-                substring(tokenStartIndex, tokenEndIndex)
-                    .let { token ->
-                        (token.parseTptpVariableOrNull() ?: token.parseTptpConstantOrNull())
-                            ?.let { it to endOfFollowingWhitespace }
-                    }
+                with(whitespaceParser) {
+                    val tokenStartIndex = indexOfFirstNonWhitespace()
+                    val tokenEndIndex = substring(tokenStartIndex).indexOfFirstWhitespace() + tokenStartIndex
+                    val endOfFollowingWhitespace = substring(tokenEndIndex).indexOfFirstNonWhitespace() + tokenEndIndex
+                    substring(tokenStartIndex, tokenEndIndex)
+                        .let { token ->
+                            (token.parseTptpVariableOrNull() ?: token.parseTptpConstantOrNull())
+                                ?.let { it to endOfFollowingWhitespace }
+                        }
+                }
             }
 
     /**
@@ -184,7 +174,7 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
     fun String.parseTptpVariableOrNull(): Variable? =
         trim()
             .takeIf { it.isTptpUpperWord() }
-            ?.let { termImplementation.variableOrNull(it) }
+            ?.let { termImplementation.freeVariableOrNull(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpFunctorOrNull(): String? =
@@ -194,8 +184,9 @@ interface TptpFofTermParser : TermParser, Parser /*by TptpParser*/ {
     companion object {
 
         operator fun invoke(termImplementation: TermImplementation): TptpFofTermParser =
-            object : TptpFofTermParser, Parser by TptpParser {
+            object : TptpFofTermParser {
                 override val termImplementation: TermImplementation = termImplementation
+                override val whitespaceParser: WhitespaceParser = TptpWhitespaceParser
             }
 
     }

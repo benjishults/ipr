@@ -27,7 +27,6 @@ tasks.named("compileKotlin", org.jetbrains.kotlin.gradle.tasks.KotlinCompilation
 dependencies {
 
     api(project(":common:terms"))
-    api(project(":common:formulas"))
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("io.mockk:mockk-jvm:$mockkVersion")

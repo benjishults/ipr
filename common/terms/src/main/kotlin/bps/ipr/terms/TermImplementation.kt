@@ -32,9 +32,14 @@ interface TermImplementation : AutoCloseable {
 //        term1 === term2
 
     /**
-     * @return a [Variable] for the normalization of the given [symbol] or `null` if that isn't possible.
+     * @return a [FreeVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
      */
-    fun variableOrNull(symbol: String): Variable?
+    fun freeVariableOrNull(symbol: String): FreeVariable?
+
+//    /**
+//     * @return a [BoundVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
+//     */
+//    fun boundVariableOrNull(symbol: String): BoundVariable?
 
     /**
      * @return a [Constant] for the normalization of the given [symbol] as a functor or `null` if that isn't possible.
@@ -53,13 +58,16 @@ interface TermImplementation : AutoCloseable {
     companion object : TermImplementation {
         override val termLanguage: TermLanguage = TermLanguage
 
-        override fun variableOrNull(symbol: String): Variable? =
+        override fun freeVariableOrNull(symbol: String): FreeVariable =
             FreeVariable(symbol)
 
-        override fun constantOrNull(symbol: String): Constant? =
+//        override fun boundVariableOrNull(symbol: String): BoundVariable =
+//            BoundVariable(symbol)
+
+        override fun constantOrNull(symbol: String): Constant =
             Constant(symbol)
 
-        override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
+        override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction =
             ProperFunction(symbol, ArgumentList(arguments))
     }
 
@@ -69,34 +77,53 @@ open class FolTermImplementation(
     override val termLanguage: TermLanguage = FolTermLanguage(),
 ) : TermImplementation {
 
-    protected val variableInternTable = mutableMapOf<String, FreeVariable>()
+    protected val freeVariableInternTable = mutableMapOf<String, FreeVariable>()
+
+    //    protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
     protected val constantInternTable = mutableMapOf<String, Constant>()
 
     override fun clear() {
         super.clear()
-        variableInternTable.clear()
+        freeVariableInternTable.clear()
+//        boundVariableInternTable.clear()
         constantInternTable.clear()
     }
 
-    override fun variableOrNull(symbol: String): Variable? =
+    override fun freeVariableOrNull(symbol: String): FreeVariable? =
         termLanguage
-            .toNormalizedVariableOrNull(symbol)
+            .toNormalizedFreeVariableOrNull(symbol)
             ?.let {
-                variableInternTable.getOrPut(it) { FreeVariable(it) }
+                freeVariableInternTable.getOrPut(it) { FreeVariable(it) }
             }
+
+//    override fun boundVariableOrNull(symbol: String): BoundVariable? =
+//        termLanguage
+//            .toNormalizedBoundVariableOrNull(symbol)
+//            ?.let { normalizedSymbol ->
+//                boundVariableInternTable
+//                    .getOrPut(normalizedSymbol) {
+//                        mutableListOf()
+//                    }
+//                    .let { existingList ->
+//                        BoundVariable(normalizedSymbol, existingList.size.toLong())
+//                            .apply {
+//                                existingList.add(this)
+//                            }
+//                    }
+//            }
 
     override fun constantOrNull(symbol: String): Constant? =
         termLanguage
             .toNormalizedFunctorOrNull(symbol, 0)
             ?.let {
-                constantInternTable.getOrPut(symbol) { Constant(symbol) }
+                constantInternTable.getOrPut(it) { Constant(it) }
             }
 
     override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
         termLanguage
             .toNormalizedFunctorOrNull(symbol, arguments.size)
             ?.let {
-                ProperFunction(symbol, ArgumentList(arguments))
+                ProperFunction(it, ArgumentList(arguments))
             }
 
 }

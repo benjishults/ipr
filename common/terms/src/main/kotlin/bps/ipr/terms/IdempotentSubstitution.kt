@@ -33,6 +33,12 @@ interface Substitution {
      */
     fun map(variable: Variable): Term
 
+    /**
+     * We standardize display using parens (`(`, `)`) to represent functor arguments and commas (`,`) to separate
+     * arguments. This will only be ambiguous in languages that allow commas and parens in functor or variable symbols.
+     * Constants are represented as a function with zero arguments so there is no chance of ambiguity between constants
+     * and variables.
+     */
     fun display(): String
 
     /**

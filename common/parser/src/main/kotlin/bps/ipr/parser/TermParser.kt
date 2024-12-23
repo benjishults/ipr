@@ -3,7 +3,7 @@ package bps.ipr.parser
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
 
-interface TermParser : Parser {
+interface TermParser {
 
     val termImplementation: TermImplementation
 
