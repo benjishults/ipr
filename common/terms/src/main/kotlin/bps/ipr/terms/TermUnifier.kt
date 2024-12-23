@@ -1,10 +1,10 @@
 package bps.ipr.terms
 
-interface Unifier {
+interface TermUnifier {
     /**
-     * A [Unifier] needs a [TermImplementation] in order to construct new terms.
+     * A [TermUnifier] needs a [TermImplementation] in order to construct new terms.
      *
-     * Generally, a [Unifier] assumes that the [Term]s it is unifying were constructed by the given [TermImplementation]
+     * Generally, a [TermUnifier] assumes that the [Term]s it is unifying were constructed by the given [TermImplementation]
      * or compatible.
      */
     val termImplementation: TermImplementation
@@ -15,9 +15,10 @@ interface Unifier {
  * This unifier is appropriate for an implementation like [TermImplementation] or [FolTermImplementation] where proper
  * functions are not interned.  This does assume that free variables and constants with the same symbol are equal.
  */
-data class GeneralRecursiveDescentUnifier(
+data class GeneralRecursiveDescentTermUnifier(
     override val termImplementation: TermImplementation = FolTermImplementation(),
-) : Unifier {
+) : TermUnifier {
+
     // FIXME make a version of this that can assume that under has already been applied
     override fun unify(term1: Term, term2: Term, under: IdempotentSubstitution): IdempotentSubstitution? =
         // this short-circuit will be particularly useful when terms are interned

@@ -1,10 +1,8 @@
 package bps.ipr.formulas
 
-import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.Constant
 import bps.ipr.terms.FreeVariable
 import io.kotest.assertions.asClue
-import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -16,25 +14,30 @@ class BoundVariableFormulaTest : FreeSpec() {
         with(FolFormulaImplementation()) {
             val P = predicateOrNull("P")!!
             val x: FreeVariable = termImplementation.freeVariableOrNull("x")!!
-            val y: FreeVariable = termImplementation.freeVariableOrNull("")!!
-            val bvx: BoundVariable = termImplementation.boundVariableOrNull("x")!!
+            val y: FreeVariable = termImplementation.freeVariableOrNull("y")!!
+//            val bvx: FreeVariable = termImplementation.freeVariableOrNull("x")!!
+//            val bvx: BoundVariable = termImplementation.boundVariableOrNull("x")!!
             val c: Constant = termImplementation.constantOrNull("c")!!
             val Qx = predicateOrNull("Q", listOf(x))!!
-            val Qbvx = predicateOrNull("Q", listOf(bvx))!!
-            val Rbvxy = predicateOrNull("R", listOf(bvx, y))!!
+            val Qbvx = predicateOrNull("Q", listOf(x))!!
+//            val Qbvx = predicateOrNull("Q", listOf(bvx))!!
+            val rxy = predicateOrNull("R", listOf(x, y))!!
+//            val Rbvxy = predicateOrNull("R", listOf(bvx, y))!!
             "variable binding formulas" - {
-                "binding a free variable with the same display is not allowed" {
-                    shouldThrow<IllegalArgumentException> {
-                        forAllOrNull(listOf(bvx), Qx)
-                    }
+                "binding a free variable is allowed" {
+                    forAllOrNull(listOf(x), Qx)
+                        .asClue {
+                            it.shouldNotBeNull()
+                            it.display() shouldBe "(FORALL (x) Q(x))"
+                        }
                 }
-                "for some x, R(x,y) is allowed if x is of type BoundVariable" {
-                    forSomeOrNull(listOf(bvx), Rbvxy)
+                "for some x, R(x,y) is allowed" {
+                    forSomeOrNull(listOf(x), rxy)
                         .asClue {
                             it.shouldNotBeNull()
                             it.variablesFreeIn shouldContainExactlyInAnyOrder listOf(y)
                         }
-                    Rbvxy.variablesFreeIn shouldContainExactlyInAnyOrder listOf(y, bvx)
+                    rxy.variablesFreeIn shouldContainExactlyInAnyOrder listOf(y, x)
                 }
             }
         }

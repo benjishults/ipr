@@ -1,11 +1,9 @@
 package bps.ipr.formulas
 
-//import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.ArgumentList
-import bps.ipr.terms.BoundVariable
 import bps.ipr.terms.FolTermImplementation
-import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
+import bps.ipr.terms.Variable
 
 /**
  * A [FormulaImplementation] is a factory for [Formula]s in a given language.  Different implementations might return
@@ -47,32 +45,32 @@ open class FolFormulaImplementation(
     val termImplementation: FolTermImplementation = FolTermImplementation(),
 ) : FormulaImplementation {
 
-    fun predicateOrNull(symbol: String, arguments: List<Term> = emptyList()): FolFormula? =
+    fun predicateOrNull(symbol: String, arguments: List<Term> = emptyList()): Predicate? =
         formulaLanguage
             .toNormalizedPredicateOrNull(symbol, arguments.size)
             ?.let {
                 Predicate(it, ArgumentList(arguments))
             }
 
-    open fun notOrNull(subFormula: FolFormula): Not =
+    open fun notOrNull(subFormula: FolFormula<*>): Not =
         Not(subFormula)
 
-    open fun andOrNull(vararg subFormula: FolFormula): And =
+    open fun andOrNull(vararg subFormula: FolFormula<*>): And =
         And(*subFormula)
 
-    open fun orOrNull(vararg subFormula: FolFormula): Or =
+    open fun orOrNull(vararg subFormula: FolFormula<*>): Or =
         Or(*subFormula)
 
-    open fun iffOrNull(vararg subFormula: FolFormula): Equivalence =
+    open fun iffOrNull(vararg subFormula: FolFormula<*>): Equivalence =
         Equivalence(*subFormula)
 
-    open fun impliesOrNull(antecedent: FolFormula, consequent: FolFormula): Implies =
+    open fun impliesOrNull(antecedent: FolFormula<*>, consequent: FolFormula<*>): Implies =
         Implies(antecedent, consequent)
 
-    open fun forAllOrNull(boundVariables: List<BoundVariable>, subFormula: FolFormula): ForAll =
+    open fun forAllOrNull(boundVariables: List<Variable>, subFormula: FolFormula<*>): ForAll =
         ForAll(boundVariables, subFormula)
 
-    open fun forSomeOrNull(boundVariables: List<BoundVariable>, subFormula: FolFormula): ForSome =
+    open fun forSomeOrNull(boundVariables: List<Variable>, subFormula: FolFormula<*>): ForSome =
         ForSome(boundVariables, subFormula)
 
 }

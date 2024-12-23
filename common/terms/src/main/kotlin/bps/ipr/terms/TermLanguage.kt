@@ -22,25 +22,29 @@ interface TermLanguage {
     fun clear() {}
 
     /**
-     * The default implementation simply returns the receiver.
+     * The default implementation simply returns the receiver if non-blank.
      * @return the normalized variable symbol derived from the input string if any.
      */
-    fun toNormalizedFreeVariableOrNull(symbol: String): String? = symbol
+    fun toNormalizedFreeVariableOrNull(symbol: String): String? =
+        symbol.takeIf { it.isNotBlank() }
+
+//    /**
+//     * The default implementation simply returns the receiver.
+//     * @return the normalized variable symbol derived from the input string if any.
+//     */
+//    fun toNormalizedBoundVariableOrNull(symbol: String): String? =
+//        symbol.takeIf { it.isNotBlank() }
+//        symbol
 
     /**
-     * The default implementation simply returns the receiver.
-     * @return the normalized variable symbol derived from the input string if any.
-     */
-    fun toNormalizedBoundVariableOrNull(symbol: String): String? = symbol
-
-    /**
-     * The default implementation simply returns the receiver.
+     * The default implementation simply returns the receiver if non-blank.
      * @return the normalized functor symbol of the given arity derived from the input string if any.
      */
-    fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? = symbol
+    fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? =
+        symbol.takeIf { it.isNotBlank() }
 
     /**
-     * Allows absolutely everything.
+     * Allows absolutely everything except pure whitespace.
      */
     companion object : TermLanguage
 
@@ -57,10 +61,12 @@ open class FolTermLanguage : TermLanguage {
     override val arityInternTable: Map<String, Int> = internalArityInternTable
 
     override fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? =
-        symbol.takeIf {
-            internalArityInternTable
-                .getOrPut(symbol) { arity } == arity
-        }
+        super
+            .toNormalizedFunctorOrNull(symbol, arity)
+            .takeIf {
+                internalArityInternTable
+                    .getOrPut(symbol) { arity } == arity
+            }
 
     override fun clear() {
         internalArityInternTable.clear()

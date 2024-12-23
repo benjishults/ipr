@@ -65,7 +65,7 @@ interface TptpFofFormulaParser : FolFormulaParser {
 <proposition>          :== <predicate>
 <predicate>            :== <atomic_word> // BPS: this is a lower_word
      */
-    override fun String.parseFormulaOrNull(): Pair<FolFormula, Int>? = TODO()
+    override fun String.parseFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
 //        firstOfOrNull(delimiters)
 //            ?.let { (firstDelimiter, indexOfFirstDelimiter) ->
 //                // NOTE need to say return here to prevent the ?: below from activating on a null value

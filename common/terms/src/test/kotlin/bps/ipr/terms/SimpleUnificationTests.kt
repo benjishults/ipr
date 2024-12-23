@@ -12,7 +12,7 @@ class SimpleUnificationTests : FreeSpec(), TptpFofTermParser by TptpFofTermParse
     init {
         "using GeneralRecursiveDescentUnifier with a FolTermImplementation" - {
             with(TptpFofTermParser(FolTermImplementation())) {
-                with(GeneralRecursiveDescentUnifier(termImplementation)) {
+                with(GeneralRecursiveDescentTermUnifier(termImplementation)) {
                     val x = termImplementation.freeVariableOrNull("X")!!
                     val y = termImplementation.freeVariableOrNull("Y")!!
                     val z = termImplementation.freeVariableOrNull("Z")!!
@@ -72,11 +72,11 @@ class SimpleUnificationTests : FreeSpec(), TptpFofTermParser by TptpFofTermParse
 
     }
 
-    fun Unifier.testUnify(term1: Term, term2: Term) {
+    fun TermUnifier.testUnify(term1: Term, term2: Term) {
 
     }
 
-    fun Unifier.testFailToUnify(term1: Term, term2: Term) {
+    fun TermUnifier.testFailToUnify(term1: Term, term2: Term) {
 
     }
 

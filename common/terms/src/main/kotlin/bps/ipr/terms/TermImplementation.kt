@@ -36,10 +36,10 @@ interface TermImplementation : AutoCloseable {
      */
     fun freeVariableOrNull(symbol: String): FreeVariable?
 
-    /**
-     * @return a [BoundVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
-     */
-    fun boundVariableOrNull(symbol: String): BoundVariable?
+//    /**
+//     * @return a [BoundVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
+//     */
+//    fun boundVariableOrNull(symbol: String): BoundVariable?
 
     /**
      * @return a [Constant] for the normalization of the given [symbol] as a functor or `null` if that isn't possible.
@@ -61,8 +61,8 @@ interface TermImplementation : AutoCloseable {
         override fun freeVariableOrNull(symbol: String): FreeVariable =
             FreeVariable(symbol)
 
-        override fun boundVariableOrNull(symbol: String): BoundVariable =
-            BoundVariable(symbol)
+//        override fun boundVariableOrNull(symbol: String): BoundVariable =
+//            BoundVariable(symbol)
 
         override fun constantOrNull(symbol: String): Constant =
             Constant(symbol)
@@ -79,13 +79,13 @@ open class FolTermImplementation(
 
     protected val freeVariableInternTable = mutableMapOf<String, FreeVariable>()
 
-    protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
+    //    protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
     protected val constantInternTable = mutableMapOf<String, Constant>()
 
     override fun clear() {
         super.clear()
         freeVariableInternTable.clear()
-        boundVariableInternTable.clear()
+//        boundVariableInternTable.clear()
         constantInternTable.clear()
     }
 
@@ -96,21 +96,21 @@ open class FolTermImplementation(
                 freeVariableInternTable.getOrPut(it) { FreeVariable(it) }
             }
 
-    override fun boundVariableOrNull(symbol: String): BoundVariable? =
-        termLanguage
-            .toNormalizedBoundVariableOrNull(symbol)
-            ?.let { normalizedSymbol ->
-                boundVariableInternTable
-                    .getOrPut(normalizedSymbol) {
-                        mutableListOf()
-                    }
-                    .let { existingList ->
-                        BoundVariable(normalizedSymbol, existingList.size.toLong())
-                            .apply {
-                                existingList.add(this)
-                            }
-                    }
-            }
+//    override fun boundVariableOrNull(symbol: String): BoundVariable? =
+//        termLanguage
+//            .toNormalizedBoundVariableOrNull(symbol)
+//            ?.let { normalizedSymbol ->
+//                boundVariableInternTable
+//                    .getOrPut(normalizedSymbol) {
+//                        mutableListOf()
+//                    }
+//                    .let { existingList ->
+//                        BoundVariable(normalizedSymbol, existingList.size.toLong())
+//                            .apply {
+//                                existingList.add(this)
+//                            }
+//                    }
+//            }
 
     override fun constantOrNull(symbol: String): Constant? =
         termLanguage
