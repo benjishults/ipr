@@ -19,7 +19,7 @@ interface FormulaParser {
 
 }
 
-interface FolFormulaParser : FormulaParser, TermParser {
+interface FolFormulaParser : FormulaParser {
     override val formulaImplementation: FolFormulaImplementation
-//    val termParser: TermParser
+    val termParser: TermParser
 }

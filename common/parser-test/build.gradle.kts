@@ -5,8 +5,7 @@ val mockkVersion: String by project
 val consoleVersion: String by project
 
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.allopen") version "2.1.0"
+    alias(libs.plugins.kotlin.jvm)
     `java-library`
 }
 
@@ -17,11 +16,8 @@ repositories {
     mavenCentral()
 }
 
-tasks.named("compileKotlin", org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask::class.java) {
-    compilerOptions {
-//        freeCompilerArgs.add("-Xcontext-receivers")
-        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1)
-    }
+kotlin {
+    jvmToolchain(24)
 }
 
 dependencies {

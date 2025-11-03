@@ -9,14 +9,16 @@ interface Substitution {
 
     // NOTE I think there is a mistake in the Baader-Snyder algorithm for composition.  They define domain as
     //   variables that are not mapped to themselves.  However, their algorithm for composition of substitutions
-    //   assumes that the definition of domain is more about whether or not the variable is in the syntactic representation
-    //   of the substitution.
+    //   assumes that the definition of domain is more about whether or not the variable is in the syntactic
+    //   representation of the substitution.
     val domain: Set<Variable>
 
     // FIXME remove this if it is unneeded after algorithms are tested
     val range: List<Term>
 
     // FIXME remove this if it is unneeded after algorithms are tested
+    // NOTE this is useful for ensuring we don't try to compose incompatible substitutions (where the result would not be idempotent)
+    //      However, we should be able to ensure that we are never trying to do that.
 //    val varRange: Set<Variable>
 
     fun isIdempotent(): Boolean =
@@ -25,11 +27,9 @@ interface Substitution {
                 !variable.occursFreeIn(term)
             }
         }
-//    domain.intersect(varRange).isEmpty()
-//        domain.all { variable -> variable !in varRange }
 
     /**
-     * @return [variable] if it isn't mapped by the receiver or the [Term] it is mapped to if it is in the [domain].
+     * @return [variable] if it isn't mapped or the [Term] it is mapped to if it is in the [domain].
      */
     fun map(variable: Variable): Term
 
@@ -59,9 +59,12 @@ sealed interface IdempotentSubstitution : Substitution {
 }
 
 data object EmptySubstitution : IdempotentSubstitution {
-    override val domain: Set<Variable> = emptySet()
-    override val range: List<Term> = emptyList()
-//    override val varRange: Set<Variable> = emptySet()
+    override val domain: Set<Variable> =
+        emptySet()
+    override val range: List<Term> =
+        emptyList()
+//    override val varRange: Set<Variable> =
+//        emptySet()
 
     override fun map(variable: Variable): Term =
         variable
@@ -102,42 +105,47 @@ sealed interface NonEmptyIdempotentSubstitution : IdempotentSubstitution {
     override fun composeIdempotent(
         theta: IdempotentSubstitution,
         termImplementation: TermImplementation,
-    ): IdempotentSubstitution {
-        // apply other to every term in the range of sigma: sigma_1
-        val sigma1: IdempotentSubstitution = applyToRange(
-            theta,
-            termImplementation,
-        )
-        require(sigma1.isIdempotent())
-        // remove from other any binding of a variable that occurs in the domain of sigma: theta_1
-        val theta1: IdempotentSubstitution = theta.withoutBindingsFor(this.domain)
-        // take the union of sigma_2 and theta_1
-        return when (sigma1) {
-            is EmptySubstitution ->
-                theta1
-            is SingletonIdempotentSubstitution ->
-                when (theta1) {
-                    is EmptySubstitution ->
-                        sigma1
-                    is SingletonIdempotentSubstitution ->
-                        MultiIdempotentSubstitution(
-                            mapOf(
-                                sigma1.key to sigma1.value,
-                                theta1.key to theta1.value,
-                            ),
-                        )
-                    is MultiIdempotentSubstitution ->
-                        theta1.union(sigma1)
-                }
-            is MultiIdempotentSubstitution ->
-                when (theta1) {
-                    is NonEmptyIdempotentSubstitution ->
-                        sigma1.union(theta1) // trouble is, this result is not idempotent
-                    else ->
-                        sigma1
-                }
+    ): IdempotentSubstitution =
+//        require(
+//            theta
+//                .varRange
+//                .find { it in domain } === null,
+//        )
+        if (theta is EmptySubstitution)
+            this
+        else {
+            // apply theta to every term in the range of sigma: sigma_1
+            val sigma1: IdempotentSubstitution = applyToRange(
+                theta,
+                termImplementation,
+            )
+            require(sigma1.isIdempotent())
+            // NOTE the reason we can assume this is non-empty is that we assume that theta's variable range does not
+            //      intersect sigma's domain.  Thus, applying theta to the range of sigma cannot result in trivial
+            //      mappings which would be dropped.  Without dropped mappings, we can't become empty.  :smile:
+            sigma1 as NonEmptyIdempotentSubstitution
+            // remove from theta any binding of a variable that occurs in the domain of sigma: theta_1
+            val theta1: IdempotentSubstitution = theta.withoutBindingsFor(this.domain)
+            // take the union of sigma_2 and theta_1
+            when (theta1) {
+                is EmptySubstitution ->
+                    sigma1
+                is MultiIdempotentSubstitution ->
+                    theta1.union(sigma1)
+                is SingletonIdempotentSubstitution ->
+                    when (sigma1) {
+                        is MultiIdempotentSubstitution ->
+                            sigma1.union(theta1)
+                        is SingletonIdempotentSubstitution ->
+                            MultiIdempotentSubstitution(
+                                mapOf(
+                                    sigma1.key to sigma1.value,
+                                    theta1.key to theta1.value,
+                                ),
+                            )
+                    }
+            }
         }
-    }
 
 }
 
@@ -147,14 +155,18 @@ data class SingletonIdempotentSubstitution(
     val key: Variable,
     val value: Term,
 ) : NonEmptyIdempotentSubstitution {
+
     init {
         // NOTE delete this once the factories have been validated... if there are factories... and there should be
         require(!key.occursFreeIn(value))
     }
 
-    override val domain: Set<Variable> = setOf(key)
-    override val range: List<Term> = listOf(value)
-//    override val varRange: Set<Variable> = value.freeVariables
+    override val domain: Set<Variable> =
+        setOf(key)
+    override val range: List<Term> =
+        listOf(value)
+//    override val varRange: Set<Variable> =
+//        value.variablesFreeIn
 
     override fun withoutBindingsFor(vars: Set<Variable>): IdempotentSubstitution =
         if (key in vars)
@@ -210,8 +222,7 @@ class MultiIdempotentSubstitution(
             .values
             .toList()
 //    override val varRange: Set<Variable> =
-//        range
-//            .flatMap { it.freeVariables }
+//        range.flatMap { it.variablesFreeIn }
 //            .toSet()
 
     init {
@@ -270,13 +281,15 @@ class MultiIdempotentSubstitution(
     override fun applyToRange(
         substitution: IdempotentSubstitution,
         termImplementation: TermImplementation,
-    ): IdempotentSubstitution = // FIXME skip this if we can tell nothing is going to happen
+    ): IdempotentSubstitution =
         MultiIdempotentSubstitution(
             mapping
                 .mapValues { (_, value) ->
                     value.apply(substitution, termImplementation)
                 }
-                .filter { (key, value) -> key != value },
+                .filter { (key, value) ->
+                    key != value
+                },
         )
 
     override fun toString(): String =

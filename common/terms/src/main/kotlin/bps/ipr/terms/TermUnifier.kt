@@ -19,7 +19,6 @@ data class GeneralRecursiveDescentTermUnifier(
     override val termImplementation: TermImplementation = FolTermImplementation(),
 ) : TermUnifier {
 
-    // FIXME make a version of this that can assume that under has already been applied
     override fun unify(term1: Term, term2: Term, under: IdempotentSubstitution): IdempotentSubstitution? =
         // this short-circuit will be particularly useful when terms are interned
         if (term1 === term2)
@@ -29,7 +28,6 @@ data class GeneralRecursiveDescentTermUnifier(
                 is Variable ->
                     under
                         .map(term1)
-                        // TODO can I get rid of this bit if I ensure under has been applied ahead of time?
                         .takeIf { it != term1 }
                         ?.let {
                             unify(it, term2, under)

@@ -30,8 +30,11 @@ class Constant(
     symbol: String,
 ) : Function(symbol, 0) {
 
-    override val variablesFreeIn: Set<Variable> = emptySet()
-    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term = this
+    override val variablesFreeIn: Set<Variable> =
+        emptySet()
+
+    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
+        this
 
     override fun display(): String =
         "$symbol()"
@@ -48,6 +51,7 @@ class ProperFunction(
      */
     val arguments: ArgumentList,
 ) : Function(symbol, arguments.size) {
+
     init {
         require(arguments.isNotEmpty())
     }
@@ -58,7 +62,11 @@ class ProperFunction(
 
     override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
         // short-circuit if we know the substitution won't disturb this term
-        if (substitution.domain.firstOrNull { it in this.variablesFreeIn } !== null)
+        if (substitution
+                .domain
+                .firstOrNull { it in this.variablesFreeIn }
+            !== null
+        )
             termImplementation.properFunctionOrNull(
                 symbol,
                 arguments
@@ -69,13 +77,10 @@ class ProperFunction(
         else
             this
 
-    override fun display(): String {
-        return "$symbol${
-            arguments
-                .map { it.display() }
-                .joinToString(", ", "(", ")") { it }
-        }"
-    }
+    override fun display(): String =
+        arguments
+            .map { it.display() }
+            .joinToString(", ", "$symbol(", ")") { it }
 
     override fun equals(other: Any?): Boolean =
         super.equals(other) &&

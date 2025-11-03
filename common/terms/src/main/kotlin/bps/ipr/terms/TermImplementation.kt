@@ -9,9 +9,6 @@ import bps.kotlin.allIndexed
  */
 interface TermImplementation : AutoCloseable {
 
-    /**
-     * The [TermLanguage] used to determine the normalizations of symbols.
-     */
     val termLanguage: TermLanguage
 
     /**
@@ -24,12 +21,6 @@ interface TermImplementation : AutoCloseable {
     fun clear() {
         termLanguage.clear()
     }
-
-//    /**
-//     * @return `true` if we can determine in constant time that the two terms are identical
-//     */
-//    fun identical(term1: Term, term2: Term): Boolean =
-//        term1 === term2
 
     /**
      * @return a [FreeVariable] for the normalization of the given [symbol] or `null` if that isn't possible.

@@ -1,7 +1,6 @@
 package bps.ipr.terms
 
 import kotlin.math.sign
-import kotlin.random.Random
 
 sealed interface Variable : Term, Comparable<Variable> {
 
@@ -23,10 +22,6 @@ sealed interface Variable : Term, Comparable<Variable> {
 
         // FIXME this should probably be in the [TermLanguage] or the [TermImplementation]
         fun makeSubstitution(var1: Variable, var2: Variable): IdempotentSubstitution =
-//            when (var1) {
-//                is Variable ->
-//                    when (var2) {
-//                        is FreeVariable ->
             when (var1.compareTo(var2).sign) {
                 0 ->
                     EmptySubstitution
@@ -35,24 +30,6 @@ sealed interface Variable : Term, Comparable<Variable> {
                 else ->
                     SingletonIdempotentSubstitution(var1, var2)
             }
-//                        else ->
-//                            SingletonIdempotentSubstitution(var1, var2)
-//                    }
-//                is BoundVariable ->
-//                    when (var2) {
-//                        is BoundVariable ->
-//                            when (var1.compareTo(var2).sign) {
-//                                0 ->
-//                                    EmptySubstitution
-//                                -1 ->
-//                                    SingletonIdempotentSubstitution(var2, var1)
-//                                else ->
-//                                    SingletonIdempotentSubstitution(var1, var2)
-//                            }
-//                        else ->
-//                            SingletonIdempotentSubstitution(var2, var1)
-//                    }
-//            }
 
     }
 
@@ -60,7 +37,7 @@ sealed interface Variable : Term, Comparable<Variable> {
 
 class FreeVariable(
     override val symbol: String,
-) : Variable/*, Comparable<FreeVariable>*/ {
+) : Variable {
 
     override val variablesFreeIn: Set<Variable> = setOf(this)
 
@@ -77,65 +54,4 @@ class FreeVariable(
 
     override fun toString(): String = display()
 
-//    companion object {
-//
-//        // FIXME this should probably be in the [TermLanguage] or the [TermImplementation]
-//        fun makeSubstitution(var1: FreeVariable, var2: FreeVariable): IdempotentSubstitution =
-//            when (var1.compareTo(var2).sign) {
-//                0 -> EmptySubstitution
-//                -1 -> SingletonIdempotentSubstitution(var2, var1)
-//                else -> SingletonIdempotentSubstitution(var1, var2)
-//            }
-//
-//    }
-
 }
-
-///**
-// * These are used only for temporarily renaming free variables during substitution
-// */
-//class BoundVariable(
-//    override val symbol: String,
-//    /**
-//     * Caller is responsible to ensure any desired uniqueness constraints.  If not specified, this will be a random
-//     * [Long].
-//     */
-//    val id: Long = Random.nextLong(),
-//) : Variable/*, Comparable<BoundVariable>*/ {
-//
-//    override val variablesFreeIn: Set<Variable> = setOf(this)
-//
-//    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
-//        substitution.map(this)
-//
-////    override fun compareTo(other: Variable): Int =
-////        symbol
-////            .compareTo(other.symbol)
-////            .sign
-////            .let {
-////                when (it) {
-////                    0 -> id.compareTo(other.id)
-////                    else -> it
-////                }
-////            }
-//
-//    override fun toString(): String =
-//        display()
-//
-//    override fun equals(other: Any?): Boolean {
-//        if (this === other) return true
-//        if (other !is BoundVariable) return false
-//
-//        if (id != other.id) return false
-//        if (symbol != other.symbol) return false
-//
-//        return true
-//    }
-//
-//    override fun hashCode(): Int {
-//        var result = id.hashCode()
-//        result = 31 * result + symbol.hashCode()
-//        return result
-//    }
-//
-//}

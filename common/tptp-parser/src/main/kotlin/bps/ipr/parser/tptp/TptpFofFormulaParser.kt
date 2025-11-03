@@ -1,34 +1,51 @@
 package bps.ipr.parser.tptp
 
+import bps.ipr.formulas.AbstractMultiFolFormula
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
+import bps.ipr.formulas.Not
+import bps.ipr.formulas.Predicate
+import bps.ipr.formulas.VariablesBindingFolFormula
 import bps.ipr.parser.FolFormulaParser
-import bps.ipr.parser.TermParser
-import bps.ipr.parser.WhitespaceParser
+import bps.ipr.terms.TermImplementation
+import java.util.regex.Pattern
 
 private val _tptpUpperAlpha = ('A'..'Z').toSet()
-private val _tptpLowerAlpha = ('a'..'z').toSet()
+private val _tptpLowerAlpha = ('a'..'z').toSet() // predicates, propositions, functions, constants
 private val _tptpNumeric = ('0'..'9').toSet()
 private val _tptpAlphaNumeric = (_tptpUpperAlpha + _tptpLowerAlpha + _tptpNumeric).toSet()
-private val _delimiters = setOf(',', '(', ')', '[', ']')
+
+//private val _delimiters = setOf(',', '(', ')', '[', ']')
+private val _associativeConnective = setOf("|", "&")
+private val _nonAssociativeConnectiveRegEx = setOf(
+    Regex("<=>"),
+    Regex("=>"),
+    Regex("<="),
+    Regex("<~>"),
+    Regex("~\\|"),
+    Regex("~&"),
+)
+private val _unaryConnective = setOf("~")
+private val _infixInequality = setOf("!=")
+private val _fofQuantifier = setOf("!", "?", "#")
+private val _variableListMarker = setOf("[", "]")
 
 /**
  * Parse according to https://tptp.org/UserDocs/TPTPLanguage/SyntaxBNF.html#fof_formula
  */
-interface TptpFofFormulaParser : FolFormulaParser {
+open class TptpFofFormulaParser(
+    final override val formulaImplementation: FolFormulaImplementation = FolFormulaImplementation(),
+    override val whitespaceParser: TptpWhitespaceParser = TptpWhitespaceParser,
+    termParserFactory: (TermImplementation) -> TptpFofTermParser,
+) : FolFormulaParser {
 
-//    val tptpUpperAlpha: Set<Char> get() = _tptpUpperAlpha
-//    val tptpLowerAlpha: Set<Char> get() = _tptpLowerAlpha
-//    val tptpAlphaNumeric: Set<Char> get() = _tptpAlphaNumeric
-
-//    val delimiters: Set<Char> get() = _delimiters
-//    override val termImplementation: TermImplementation = formulaImplementation.termImplementation
+    override val termParser: TptpFofTermParser = termParserFactory(formulaImplementation.termImplementation)
 
     /**
-     * Attempts to parse the string as a term and returns a pair containing the parsed term
+     * Attempts to parse the string as a [FolFormula] and returns a pair containing the parsed formula
      * and the position in the string where parsing stopped.  Trailing whitespace should be consumed.
      *
-     * @return a pair consisting of a term and the index where parsing stopped, or null if parsing fails.
+     * @return a pair consisting of a [FolFormula] and the index where parsing stopped, or null if parsing fails.
      */
     // NOTE just doing TPTP fof_logic_formula for now
     /*
@@ -65,163 +82,56 @@ interface TptpFofFormulaParser : FolFormulaParser {
 <proposition>          :== <predicate>
 <predicate>            :== <atomic_word> // BPS: this is a lower_word
      */
+    /*
+    so, what could I be looking at?
+1. a functor (parse a predicate) ... but if the predicate is followed by one of many stuffs, then this would be a mistake, so ...
+2. a
+     */
     override fun String.parseFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
-//        firstOfOrNull(delimiters)
-//            ?.let { (firstDelimiter, indexOfFirstDelimiter) ->
-//                // NOTE need to say return here to prevent the ?: below from activating on a null value
-//                return when (firstDelimiter) {
-//                    ',', ')' -> {
-//                        // constant or variable or invalid
-//                        substring(0, indexOfFirstDelimiter)
-//                            .let { functor ->
-//                                (functor.parseTptpVariableOrNull() ?: functor.parseTptpConstantOrNull())
-//                                    ?.let { it to indexOfFirstDelimiter }
-//                            }
-//                    }
-//                    '(' -> {
-//                        // proper function
-//                        substring(0, indexOfFirstDelimiter)
-//                            .parseTptpFunctorOrNull()
-//                            ?.let { functor ->
-//                                val startIndexOfArguments = indexOfFirstDelimiter + 1
-//                                substring(startIndexOfArguments)
-//                                    .let { argumentsInput ->
-//                                        argumentsInput
-//                                            .parseTptpFofArgumentsOrNull()
-//                                            ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
-//                                                val globalIndexAfterClosedParen =
-//                                                    startIndexOfArguments + closedParenInArgumentsInputIndex + 1
-//                                                formulaImplementation.termImplementation.properFunctionOrNull(
-//                                                    functor,
-//                                                    args,
-//                                                )!! to
-//                                                        substring(globalIndexAfterClosedParen)
-//                                                            .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
-//                                            }
-//                                    }
-//                            }
-//                    }
-//                    else -> {
-//                        throw IllegalStateException()
+    // parseBinaryFormula | parseUnaryFormula | parseUnitaryFormula
+
+    fun String.parseBinaryFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    // parseBinaryNonAssoc | parseBinaryAssoc
+
+    fun String.parseBinaryNonAssoc(): Pair<FolFormula<*>, Int>? = TODO()
+    // unitFormula nonAssocConnective unitFormula
+
+    fun String.parseUnitFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    // parseUnitaryFormula | parseUnaryFormula
+
+    fun String.parseUnitaryFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    // parseQuantifiedFormula | parseAtomicFormula | ( parseFormulaOrNull )
+    // if it starts with a '(' then parseFormulaOrNull then expect ')'
+
+    fun String.parseQuantifiedFormulaOrNull(): Pair<VariablesBindingFolFormula<*>, Int>? = TODO()
+    // fofQuantifier [variableList] : unitFormula
+
+    fun String.parseAtomicFormulaOrNull(): Pair<Predicate, Int>? = TODO()
+    // identical to parseTermOrNull except build a Predicate rather than a Term
+
+    fun String.parseUnaryFormulaOrNull(): Pair<Not, Int>? = TODO()
+    // not or an inequality
+    // starts with '~'
+
+    fun String.parseBinaryAssocOrNull(): Pair<AbstractMultiFolFormula<*>, Int>? = TODO()
+    // parseOr | parseAnd
+
+    /**
+     * @return the pattern of the first found [Regex] and its first index or `null` if none are present.
+     */
+    fun String.firstOfOrNull(stopAtRegExp: Collection<Regex>): Pair<String, Int>? {
+//        Pattern.compile(stopAtRegExp.joinToString("|"))
+//            .matcher(this)
+//            .let { matcher ->
+//                if (matcher.find()) {
+//                    val start = matcher.start()
+//                    stopAtRegExp.find { regexp ->
+//                        this.lookingAt(regexp)
 //                    }
 //                }
+//
 //            }
-//            ?: run {
-//                val tokenStartIndex = indexOfFirstNonWhitespace()
-//                val tokenEndIndex = substring(tokenStartIndex).indexOfFirstWhitespace() + tokenStartIndex
-//                val endOfFollowingWhitespace = substring(tokenEndIndex).indexOfFirstNonWhitespace() + tokenEndIndex
-//                substring(tokenStartIndex, tokenEndIndex)
-//                    .let { token ->
-//                        (token.parseTptpVariableOrNull() ?: token.parseTptpConstantOrNull())
-//                            ?.let { it to endOfFollowingWhitespace }
-//                    }
-//            }
-
-//    /**
-//     * expects the receiver to be a non-empty, comma-separated list of TPTP FOF terms followed by a closed paren.
-//     * @return the [Pair] of
-//     * 1. the [List] of [Term]s
-//     * 2. the index within the receiver of the closed paren terminating the list of arguments
-//     *
-//     * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
-//     */
-//    // TODO since this only returns ')' as the delimiter, we shouldn't need to use the DelimiterAndIndex class here.
-//    fun String.parseTptpFofArgumentsOrNull(): Pair<List<Term>, Int>? =
-//        parseTptpFofArgumentsOrNullHelper()
-//            ?.let { (list, indexOfTerminatingClosedParen) ->
-//                list.toList() to indexOfTerminatingClosedParen
-//            }
-//
-//    /**
-//     * expects the receiver to be a non-empty, comma-separated list of TPTP FOF terms (with no initial open paren)
-//     * followed by a closed paren then, possibly, other stuff.
-//     * @return the [Pair] of
-//     * 1. the [List] of [Term]s
-//     * 2. the index within the receiver of the `')'` that terminates the list of terms
-//     *
-//     * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
-//     */
-//    // TODO probably don't need to return the mutable list since it's just being mutated and the return value isn't used
-//    private fun String.parseTptpFofArgumentsOrNullHelper(
-//        list: MutableList<Term> = mutableListOf(),
-//    ): Pair<MutableList<Term>, Int>? =
-//        formulaImplementation.termImplementation.parseTermOrNull()
-//            ?.let { (firstTerm: Term, indexAfterFirstTerm: Int) ->
-//                list.add(firstTerm)
-//                getOrNull(indexAfterFirstTerm)
-//                    ?.let { delimiter ->
-//                        // NOTE need to say return here to prevent the ?: below from activating on a null value
-//                        return when (delimiter) {
-//                            ',' -> {
-//                                substring(indexAfterFirstTerm + 1)
-//                                    .parseTptpFofArgumentsOrNullHelper(list)
-//                                    ?.let { (_, indexOfCloseParenAfterAllArguments) ->
-//                                        list to indexOfCloseParenAfterAllArguments + (indexAfterFirstTerm + 1)
-//                                    }
-//                            }
-//                            ')' -> {
-//                                list to indexAfterFirstTerm
-//                            }
-//                            else -> {
-//                                null
-//                            }
-//                        }
-//                    }
-//                    ?: run {
-//                        // exhausted input on first term
-//                        list to length
-//                    }
-//            }
-//
-//    /**
-//     * @return the first found [Char] and its first index or `null` if none are present.
-//     */
-//    fun String.firstOfOrNull(stopAt: Collection<Char>): Pair<Char, Int>? {
-//        forEachIndexed { index: Int, char: Char ->
-//            if (char in stopAt) {
-//                return char to index
-//            }
-//        }
-//        return null
-//    }
-//
-//    fun String.isTptpLowerWord(): Boolean =
-//        isNotEmpty() &&
-//                get(0) in tptpLowerAlpha &&
-//                substring(1)
-//                    .all { it in tptpAlphaNumeric }
-//
-//    fun String.isTptpUpperWord(): Boolean =
-//        isNotEmpty() &&
-//                get(0) in tptpUpperAlpha &&
-//                substring(1)
-//                    .all { it in tptpAlphaNumeric }
-//
-//    // TODO make these work like the rest
-//    fun String.parseTptpConstantOrNull(): Constant? =
-//        trim()
-//            .takeIf { it.isTptpLowerWord() }
-//            ?.let { formulaImplementation.termImplementation.constantOrNull(it) }
-//
-//    // TODO make these work like the rest
-//    fun String.parseTptpVariableOrNull(): Variable? =
-//        trim()
-//            .takeIf { it.isTptpUpperWord() }
-//            ?.let { termImplementation.freeVariableOrNull(it) }
-//
-//    // TODO make these work like the rest
-//    fun String.parseTptpFunctorOrNull(): String? =
-//        trim()
-//            .takeIf { it.isTptpLowerWord() }
-
-    companion object {
-
-        operator fun invoke(formulaImplementation: FolFormulaImplementation): TptpFofFormulaParser =
-            object : TptpFofFormulaParser, TermParser by TptpFofTermParser(formulaImplementation.termImplementation) {
-                override val formulaImplementation: FolFormulaImplementation = formulaImplementation
-                override val whitespaceParser: WhitespaceParser = TptpWhitespaceParser
-            }
-
+        return null
     }
 
 }

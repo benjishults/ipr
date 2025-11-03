@@ -1,11 +1,11 @@
 package bps.ipr.parser.tptp
 
-import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.TermParser
 import bps.ipr.terms.Constant
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
 import bps.ipr.terms.Variable
+import java.util.regex.Pattern
 
 private val _tptpUpperAlpha = ('A'..'Z').toSet()
 private val _tptpLowerAlpha = ('a'..'z').toSet()
@@ -18,12 +18,12 @@ private val _delimiters = setOf(',', '(', ')')
  */
 interface TptpFofTermParser : TermParser {
 
-    val whitespaceParser: WhitespaceParser
+    val whitespaceParser: TptpWhitespaceParser
     val tptpUpperAlpha: Set<Char> get() = _tptpUpperAlpha
     val tptpLowerAlpha: Set<Char> get() = _tptpLowerAlpha
     val tptpAlphaNumeric: Set<Char> get() = _tptpAlphaNumeric
 
-    val delimiters: Set<Char> get() = _delimiters
+    val termDelimiters: Set<Char> get() = _delimiters
 
     /**
      * Attempts to parse the string as a term and returns a pair containing the parsed term
@@ -32,7 +32,7 @@ interface TptpFofTermParser : TermParser {
      * @return a pair consisting of a term and the index where parsing stopped, or null if parsing fails.
      */
     override fun String.parseTermOrNull(): Pair<Term, Int>? =
-        firstOfOrNull(delimiters)
+        firstOfOrNull(termDelimiters)
             ?.let { (firstDelimiter, indexOfFirstDelimiter) ->
                 // NOTE need to say return here to prevent the ?: below from activating on a null value
                 return when (firstDelimiter) {
@@ -186,7 +186,7 @@ interface TptpFofTermParser : TermParser {
         operator fun invoke(termImplementation: TermImplementation): TptpFofTermParser =
             object : TptpFofTermParser {
                 override val termImplementation: TermImplementation = termImplementation
-                override val whitespaceParser: WhitespaceParser = TptpWhitespaceParser
+                override val whitespaceParser: TptpWhitespaceParser = TptpWhitespaceParser
             }
 
     }
