@@ -1,11 +1,11 @@
 package bps.ipr.parser.tptp
 
+import bps.ipr.common.LinkedList
 import bps.ipr.parser.TermParser
 import bps.ipr.terms.Constant
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
 import bps.ipr.terms.Variable
-import java.util.regex.Pattern
 
 private val _tptpUpperAlpha = ('A'..'Z').toSet()
 private val _tptpLowerAlpha = ('a'..'z').toSet()
@@ -25,12 +25,6 @@ interface TptpFofTermParser : TermParser {
 
     val termDelimiters: Set<Char> get() = _delimiters
 
-    /**
-     * Attempts to parse the string as a term and returns a pair containing the parsed term
-     * and the position in the string where parsing stopped.  Trailing whitespace should be consumed.
-     *
-     * @return a pair consisting of a term and the index where parsing stopped, or null if parsing fails.
-     */
     override fun String.parseTermOrNull(): Pair<Term, Int>? =
         firstOfOrNull(termDelimiters)
             ?.let { (firstDelimiter, indexOfFirstDelimiter) ->
@@ -51,22 +45,20 @@ interface TptpFofTermParser : TermParser {
                             ?.let { functor ->
                                 val startIndexOfArguments = indexOfFirstDelimiter + 1
                                 substring(startIndexOfArguments)
-                                    .let { argumentsInput ->
-                                        argumentsInput
-                                            .parseTptpFofArgumentsOrNull()
-                                            ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
-                                                val globalIndexAfterClosedParen =
-                                                    startIndexOfArguments + closedParenInArgumentsInputIndex + 1
-                                                with(whitespaceParser) {
-                                                    termImplementation.properFunctionOrNull(functor, args)!! to
-                                                            substring(globalIndexAfterClosedParen)
-                                                                .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
-                                                }
-                                            }
+                                    .parseArgumentsOrNull()
+                                    ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
+                                        val globalIndexAfterClosedParen =
+                                            startIndexOfArguments + closedParenInArgumentsInputIndex + 1
+                                        with(whitespaceParser) {
+                                            termImplementation.properFunctionOrNull(functor, args)!! to
+                                                    substring(globalIndexAfterClosedParen)
+                                                        .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
+                                        }
                                     }
                             }
                     }
                     else -> {
+                        // FIXME should this be null?
                         throw IllegalStateException()
                     }
                 }
@@ -93,10 +85,10 @@ interface TptpFofTermParser : TermParser {
      * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
      */
     // TODO since this only returns ')' as the delimiter, we shouldn't need to use the DelimiterAndIndex class here.
-    fun String.parseTptpFofArgumentsOrNull(): Pair<List<Term>, Int>? =
+    override fun String.parseArgumentsOrNull(): Pair<List<Term>, Int>? =
         parseTptpFofArgumentsOrNullHelper()
-            ?.let { (list, indexOfTerminatingClosedParen) ->
-                list.toList() to indexOfTerminatingClosedParen
+            ?.let { (list: List<Term>, indexOfTerminatingClosedParen: Int) ->
+                list to indexOfTerminatingClosedParen
             }
 
     /**
@@ -108,10 +100,9 @@ interface TptpFofTermParser : TermParser {
      *
      * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
      */
-    // TODO probably don't need to return the mutable list since it's just being mutated and the return value isn't used
     private fun String.parseTptpFofArgumentsOrNullHelper(
-        list: MutableList<Term> = mutableListOf(),
-    ): Pair<MutableList<Term>, Int>? =
+        list: LinkedList<Term> = LinkedList(),
+    ): Pair<List<Term>, Int>? =
         parseTermOrNull()
             ?.let { (firstTerm: Term, indexAfterFirstTerm: Int) ->
                 list.add(firstTerm)
@@ -139,18 +130,6 @@ interface TptpFofTermParser : TermParser {
                         list to length
                     }
             }
-
-    /**
-     * @return the first found [Char] and its first index or `null` if none are present.
-     */
-    fun String.firstOfOrNull(stopAt: Collection<Char>): Pair<Char, Int>? {
-        forEachIndexed { index: Int, char: Char ->
-            if (char in stopAt) {
-                return char to index
-            }
-        }
-        return null
-    }
 
     fun String.isTptpLowerWord(): Boolean =
         isNotEmpty() &&
