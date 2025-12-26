@@ -25,14 +25,14 @@ interface TptpFofTermParser : TermParser {
 
     val termDelimiters: Set<Char> get() = _delimiters
 
-    override fun String.parseTermOrNull(): Pair<Term, Int>? =
-        firstOfOrNull(termDelimiters)
+    override fun String.parseTermOrNull(startIndex: Int): Pair<Term, Int>? =
+        firstOfOrNull(startIndex, termDelimiters)
             ?.let { (firstDelimiter, indexOfFirstDelimiter) ->
                 // NOTE need to say return here to prevent the ?: below from activating on a null value
                 return when (firstDelimiter) {
                     ',', ')' -> {
                         // constant or variable or invalid
-                        substring(0, indexOfFirstDelimiter)
+                        substring(startIndex, indexOfFirstDelimiter)
                             .let { functor ->
                                 (functor.parseTptpVariableOrNull() ?: functor.parseTptpConstantOrNull())
                                     ?.let { it to indexOfFirstDelimiter }
@@ -40,12 +40,12 @@ interface TptpFofTermParser : TermParser {
                     }
                     '(' -> {
                         // proper function
-                        substring(0, indexOfFirstDelimiter)
+                        substring(startIndex, indexOfFirstDelimiter)
                             .parseTptpFunctorOrNull()
                             ?.let { functor ->
                                 val startIndexOfArguments = indexOfFirstDelimiter + 1
                                 substring(startIndexOfArguments)
-                                    .parseArgumentsOrNull()
+                                    .parseArgumentsOrNull(startIndex)
                                     ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
                                         val globalIndexAfterClosedParen =
                                             startIndexOfArguments + closedParenInArgumentsInputIndex + 1
@@ -85,11 +85,8 @@ interface TptpFofTermParser : TermParser {
      * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
      */
     // TODO since this only returns ')' as the delimiter, we shouldn't need to use the DelimiterAndIndex class here.
-    override fun String.parseArgumentsOrNull(): Pair<List<Term>, Int>? =
-        parseTptpFofArgumentsOrNullHelper()
-            ?.let { (list: List<Term>, indexOfTerminatingClosedParen: Int) ->
-                list to indexOfTerminatingClosedParen
-            }
+    override fun String.parseArgumentsOrNull(startIndex: Int): Pair<List<Term>, Int>? =
+        parseTptpFofArgumentsOrNullHelper(startIndex)
 
     /**
      * expects the receiver to be a non-empty, comma-separated list of TPTP FOF terms (with no initial open paren)
@@ -101,9 +98,10 @@ interface TptpFofTermParser : TermParser {
      * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
      */
     private fun String.parseTptpFofArgumentsOrNullHelper(
-        list: LinkedList<Term> = LinkedList(),
+        startIndex: Int,
+        list: MutableList<Term> = mutableListOf(),
     ): Pair<List<Term>, Int>? =
-        parseTermOrNull()
+        parseTermOrNull(startIndex)
             ?.let { (firstTerm: Term, indexAfterFirstTerm: Int) ->
                 list.add(firstTerm)
                 getOrNull(indexAfterFirstTerm)
@@ -112,7 +110,7 @@ interface TptpFofTermParser : TermParser {
                         return when (delimiter) {
                             ',' -> {
                                 substring(indexAfterFirstTerm + 1)
-                                    .parseTptpFofArgumentsOrNullHelper(list)
+                                    .parseTptpFofArgumentsOrNullHelper(0, list)
                                     ?.let { (_, indexOfCloseParenAfterAllArguments) ->
                                         list to indexOfCloseParenAfterAllArguments + (indexAfterFirstTerm + 1)
                                     }

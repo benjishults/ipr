@@ -55,3 +55,24 @@ class FreeVariable(
     override fun toString(): String = display()
 
 }
+
+class BoundVariable(
+    override val symbol: String,
+) : Variable {
+
+    override val variablesFreeIn: Set<Variable> = emptySet()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is BoundVariable) return false
+
+        return symbol == other.symbol
+    }
+
+    override fun hashCode(): Int {
+        return symbol.hashCode()
+    }
+
+    override fun toString(): String = display()
+
+}

@@ -24,6 +24,8 @@ interface FormulaLanguage {
      */
     fun clear() {}
 
+    fun getPredicateArity(symbol: String): Int?
+
     /**
      * The default implementation simply returns the receiver.
      * @return the normalized predicate symbol of the given arity derived from the input string if any.
@@ -34,8 +36,9 @@ interface FormulaLanguage {
     /**
      * Allows absolutely everything.
      */
-    companion object : FormulaLanguage
-
+    companion object : FormulaLanguage {
+        override fun getPredicateArity(symbol: String): Int? = null
+    }
 }
 
 /**
@@ -57,5 +60,8 @@ open class FolFormulaLanguage(
     override fun clear() {
         arityInternTable.clear()
     }
+
+    override fun getPredicateArity(symbol: String): Int? =
+        arityInternTable[symbol]
 
 }

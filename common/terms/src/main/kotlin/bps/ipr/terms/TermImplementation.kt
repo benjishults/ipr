@@ -70,7 +70,7 @@ open class FolTermImplementation(
 
     protected val freeVariableInternTable = mutableMapOf<String, FreeVariable>()
 
-    //    protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
+//        protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
     protected val constantInternTable = mutableMapOf<String, Constant>()
 
     override fun clear() {

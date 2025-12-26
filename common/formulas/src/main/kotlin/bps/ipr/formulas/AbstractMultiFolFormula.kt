@@ -2,8 +2,8 @@ package bps.ipr.formulas
 
 import bps.ipr.terms.Variable
 
-abstract class AbstractMultiFolFormula<out F : AbstractMultiFolFormula<F>>(
-    vararg val subFormulas: FolFormula<*>,
+sealed class AbstractMultiFolFormula<out F : AbstractMultiFolFormula<F>>(
+    val subFormulas: List<FolFormula<*>>,
 ) : FolFormula<F> {
 
     init {
@@ -31,35 +31,35 @@ abstract class AbstractMultiFolFormula<out F : AbstractMultiFolFormula<F>>(
 
 }
 
-class And(vararg conjuncts: FolFormula<*>) : AbstractMultiFolFormula<And>(*conjuncts) {
+class And(conjuncts: List<FolFormula<*>>) : AbstractMultiFolFormula<And>(conjuncts) {
     override val orderMattersLogically: Boolean = false
     override val formulaConstructor: (FolFormulaImplementation, List<FolFormula<*>>) -> And =
-        { impl, args ->
-            impl.andOrNull(*args.toTypedArray())
+        { impl: FolFormulaImplementation, args: List<FolFormula<*>> ->
+            impl.andOrNull(args)
         }
 
     override val symbol: String = "AND"
 }
 
-class Or(vararg disjuncts: FolFormula<*>) : AbstractMultiFolFormula<Or>(*disjuncts) {
+class Or(disjuncts: List<FolFormula<*>>) : AbstractMultiFolFormula<Or>(disjuncts) {
     override val orderMattersLogically: Boolean = false
     override val formulaConstructor: (FolFormulaImplementation, List<FolFormula<*>>) -> Or =
-        { impl, args ->
-            impl.orOrNull(*args.toTypedArray())
+        { impl: FolFormulaImplementation, args: List<FolFormula<*>> ->
+            impl.orOrNull(args)
         }
     override val symbol: String = "OR"
 }
 
-class Equivalence(vararg subFormulas: FolFormula<*>) : AbstractMultiFolFormula<Equivalence>(*subFormulas) {
+class Equivalence(subFormulas: List<FolFormula<*>>) : AbstractMultiFolFormula<Equivalence>(subFormulas) {
     override val orderMattersLogically: Boolean = false
     override val formulaConstructor: (FolFormulaImplementation, List<FolFormula<*>>) -> Equivalence =
-        { impl, args ->
-            impl.iffOrNull(*args.toTypedArray())
+        { impl: FolFormulaImplementation, args: List<FolFormula<*>> ->
+            impl.iffOrNull(args)
         }
     override val symbol: String = "IFF"
 }
 
-class Implies(vararg subFormulas: FolFormula<*>) : AbstractMultiFolFormula<Implies>(*subFormulas) {
+class Implies(subFormulas: List<FolFormula<*>>) : AbstractMultiFolFormula<Implies>(subFormulas) {
 
     override val orderMattersLogically: Boolean = true
 
@@ -69,8 +69,8 @@ class Implies(vararg subFormulas: FolFormula<*>) : AbstractMultiFolFormula<Impli
 
     override val symbol: String = "IMPLIES"
     override val formulaConstructor: (FolFormulaImplementation, List<FolFormula<*>>) -> Implies =
-        { impl, args ->
-            impl.impliesOrNull(args[0], args[1])
+        { impl: FolFormulaImplementation, args: List<FolFormula<*>> ->
+            impl.impliesOrNull(args)
         }
 
     val antecedent: FolFormula<*> = subFormulas[0]

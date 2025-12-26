@@ -1,10 +1,7 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("shared")
     application
 }
-
-group = "bps"
-version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -22,9 +19,6 @@ repositories {
     }
 }
 
-kotlin {
-    jvmToolchain(24)
-}
 dependencies {
 
     implementation(project(":parser"))
@@ -40,8 +34,4 @@ dependencies {
     testImplementation(libs.kotest.junit5)
     testImplementation(libs.kotest.assertions.core)
     testImplementation(libs.junit.jupiter)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }

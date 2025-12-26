@@ -1,6 +1,5 @@
 package bps.ipr.formulas
 
-import bps.ipr.terms.Constant
 import bps.ipr.terms.FreeVariable
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec

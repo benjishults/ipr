@@ -12,6 +12,7 @@ include(
     ":formulas",
     ":equality",
     ":harness",
+    ":prover",
     ":common",
 )
 project(":terms").projectDir = file("common/terms")
@@ -21,5 +22,6 @@ project(":ipr-parser").projectDir = file("common/ipr-parser")
 project(":parser-test").projectDir = file("common/parser-test")
 project(":formulas").projectDir = file("common/formulas")
 project(":equality").projectDir = file("common/equality")
-project(":harness").projectDir = file("apps/harness")
 project(":common").projectDir = file("common/common")
+project(":prover").projectDir = file("common/prover")
+project(":harness").projectDir = file("apps/harness")

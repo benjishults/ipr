@@ -1,17 +1,6 @@
 plugins {
-    alias(libs.plugins.kotlin.jvm)
+    id("shared")
     `java-library`
-}
-
-group = "bps"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-kotlin {
-    jvmToolchain(24)
 }
 
 dependencies {
@@ -21,8 +10,4 @@ dependencies {
     implementation(libs.kotest.junit5)
     implementation(libs.kotest.assertions.core)
     implementation(libs.junit.jupiter)
-}
-
-tasks.test {
-    useJUnitPlatform()
 }

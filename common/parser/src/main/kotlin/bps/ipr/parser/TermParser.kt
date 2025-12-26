@@ -14,42 +14,49 @@ interface TermParser {
      *
      * @return a pair consisting of a term and the index where parsing stopped, or null if parsing fails.
      */
-    fun String.parseTermOrNull(): Pair<Term, Int>?
+    fun String.parseTermOrNull(startIndex: Int = 0): Pair<Term, Int>?
 
     /**
-     * expects the receiver to be a non-empty list of terms followed by a list terminator (usually a closed paren).
+     * expects the receiver (from [startIndex]) to be a non-empty list of terms followed by a list terminator
+     * (usually a closed paren).
      * @return the [Pair] of
      * 1. the [List] of [Term]s
      * 2. the index within the receiver of the list terminator terminating the list of arguments
-     *
      * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
      */
-    fun String.parseArgumentsOrNull(): Pair<List<Term>, Int>?
+    fun String.parseArgumentsOrNull(startIndex: Int): Pair<List<Term>, Int>?
 
     /**
-     * @return the [Pair] of the first found [Char] and its first index or `null` if none are present.
+     * @return the [Pair] of the first found [Char] (from [startIndex]) and its first index or `null` if none are present.
      */
-    fun String.firstOfOrNull(stopAt: Collection<Char>): Pair<Char, Int>? {
-        forEachIndexed { index: Int, char: Char ->
-            if (char in stopAt) {
-                return char to index
+    fun String.firstOfOrNull(startIndex: Int, stopAt: Collection<Char>): Pair<Char, Int>? {
+        asSequence()
+            .drop(startIndex)
+            .forEachIndexed { index: Int, char: Char ->
+                if (char in stopAt) {
+                    return char to index + startIndex
+                }
             }
-        }
         return null
     }
 
     /**
-     * @return the substring of the receiver prior to the first element of the receiver that is not in [skip].
+     * @return the substring of the receiver (from [startIndex]) prior to the first element of the receiver that is
+     * not in [skip].
      */
-    fun String.beforeFirstMiss(skip: Collection<Char>): String =
-        buildString {
-            forEach {  char: Char ->
+    fun String.beforeFirstMiss(startIndex: Int, skip: Collection<Char>): String {
+        val buffer = StringBuffer()
+        this@beforeFirstMiss
+            .asSequence()
+            .drop(startIndex)
+            .forEach { char ->
                 if (char in skip) {
-                    append(char)
+                    buffer.append(char)
                 } else {
-                    return@buildString
+                    return buffer.toString()
                 }
             }
-        }
+        return buffer.toString()
+    }
 
 }

@@ -14,15 +14,11 @@ class LinkedList<T> : List<T> {
         buildList { addAll(this@LinkedList) }
 
     fun add(element: T): Boolean =
-        if (head == null) {
-            head = Node(element, null)
-            _size++
-            true
-        } else {
-            head = head!!.add(element)
-            _size++
-            true
-        }
+        true
+            .also {
+                Node(element, head)
+                    .also { head = it }
+            }
 
     override fun isEmpty(): Boolean =
         _size == 0
@@ -81,11 +77,8 @@ private data class Node<T>(
 ) {
 
     fun add(element: T): Node<T> =
-        if (next == null)
-            Node(element, null)
-                .also { next = it }
-        else
-            next!!.add(element)
+        Node(element, this)
+            .also { next = it }
 
     fun contains(element: T): Boolean =
         value == element ||

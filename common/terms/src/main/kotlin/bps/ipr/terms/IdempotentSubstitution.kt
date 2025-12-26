@@ -5,7 +5,7 @@ package bps.ipr.terms
  * [Substitution] maps a [Variable] to itself unless the contrary is explicitly called out.  In other words, if a
  * [Variable] is not in the domain of a [Substitution], then that [Variable] is mapped to itself.
  */
-interface Substitution {
+sealed interface Substitution {
 
     // NOTE I think there is a mistake in the Baader-Snyder algorithm for composition.  They define domain as
     //   variables that are not mapped to themselves.  However, their algorithm for composition of substitutions
@@ -231,6 +231,7 @@ class MultiIdempotentSubstitution(
         require(isIdempotent())
     }
 
+
     override fun map(variable: Variable): Term =
         mapping[variable]
             ?: variable
@@ -294,5 +295,18 @@ class MultiIdempotentSubstitution(
 
     override fun toString(): String =
         display()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is MultiIdempotentSubstitution) return false
+
+        if (mapping != other.mapping) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return mapping.hashCode()
+    }
 
 }

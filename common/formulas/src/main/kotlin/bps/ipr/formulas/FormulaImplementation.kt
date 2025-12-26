@@ -52,20 +52,24 @@ open class FolFormulaImplementation(
                 Predicate(it, ArgumentList(arguments))
             }
 
+    open fun truthOrNull(): Truth = Truth
+
+    open fun falsityOrNull(): Falsity = Falsity
+
     open fun notOrNull(subFormula: FolFormula<*>): Not =
         Not(subFormula)
 
-    open fun andOrNull(vararg subFormula: FolFormula<*>): And =
-        And(*subFormula)
+    open fun andOrNull( subFormulas: List<FolFormula<*>>): And =
+        And(subFormulas)
 
-    open fun orOrNull(vararg subFormula: FolFormula<*>): Or =
-        Or(*subFormula)
+    open fun orOrNull( subFormulas: List<FolFormula<*>>): Or =
+        Or(subFormulas)
 
-    open fun iffOrNull(vararg subFormula: FolFormula<*>): Equivalence =
-        Equivalence(*subFormula)
+    open fun iffOrNull( subFormulas: List<FolFormula<*>>): Equivalence =
+        Equivalence(subFormulas)
 
-    open fun impliesOrNull(antecedent: FolFormula<*>, consequent: FolFormula<*>): Implies =
-        Implies(antecedent, consequent)
+    open fun impliesOrNull(subFormulas: List<FolFormula<*>>): Implies =
+        Implies(subFormulas)
 
     open fun forAllOrNull(boundVariables: List<Variable>, subFormula: FolFormula<*>): ForAll =
         ForAll(boundVariables, subFormula)

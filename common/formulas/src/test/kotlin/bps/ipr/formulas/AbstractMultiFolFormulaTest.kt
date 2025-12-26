@@ -16,16 +16,16 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
             val c: Constant = termImplementation.constantOrNull("c")!!
             val Qx = predicateOrNull("Q", listOf(x))!!
             val Rxc = predicateOrNull("R", listOf(x, c))!!
-            val impliesOrNull = impliesOrNull(P, Rxc)
+            val impliesOrNull = impliesOrNull(listOf(P, Rxc))
             "impliesOrNull" {
                 impliesOrNull.asClue {
                     it.shouldNotBeNull()
                     it.display() shouldBe "(P() IMPLIES R(x, c()))"
                 }
             }
-            val andOrNull = andOrNull(P, Qx, Rxc)
-            val orOrNull = orOrNull(P, Qx, Rxc)
-            val iffOrNull = iffOrNull(P, Qx, Rxc)
+            val andOrNull = andOrNull(listOf(P, Qx, Rxc))
+            val orOrNull = orOrNull(listOf(P, Qx, Rxc))
+            val iffOrNull = iffOrNull(listOf(P, Qx, Rxc))
             "and or iff" {
                 andOrNull.asClue {
                     it.shouldNotBeNull()
@@ -49,7 +49,7 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
                     }
             }
             "nested formulas" {
-                iffOrNull(notOrNull, andOrNull, orOrNull, iffOrNull)
+                iffOrNull(listOf(notOrNull, andOrNull, orOrNull, iffOrNull))
                     .asClue {
                         it.shouldNotBeNull()
                         it.display() shouldBe "((NOT Q(x)) IFF (P() AND Q(x) AND R(x, c())) IFF (P() OR Q(x) OR R(x, c())) IFF (P() IFF Q(x) IFF R(x, c())))"

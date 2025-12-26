@@ -5,8 +5,9 @@ plugins {
 
 dependencies {
 
-    api(project(":terms"))
+    api(project(":formulas"))
 
+    testImplementation(project(":ipr-parser"))
     testImplementation(platform(libs.junit.bom))
     testImplementation(libs.mockk.jvm)
     testImplementation(libs.kotest.junit5)

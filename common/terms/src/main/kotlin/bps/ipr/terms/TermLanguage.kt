@@ -23,18 +23,17 @@ interface TermLanguage {
 
     /**
      * The default implementation simply returns the receiver if non-blank.
-     * @return the normalized variable symbol derived from the input string if any.
+     * @return the normalized variable symbol derived from the input string, if any.
      */
     fun toNormalizedFreeVariableOrNull(symbol: String): String? =
         symbol.takeIf { it.isNotBlank() }
 
 //    /**
 //     * The default implementation simply returns the receiver.
-//     * @return the normalized variable symbol derived from the input string if any.
+//     * @return the normalized variable symbol derived from the input string, if any.
 //     */
 //    fun toNormalizedBoundVariableOrNull(symbol: String): String? =
 //        symbol.takeIf { it.isNotBlank() }
-//        symbol
 
     /**
      * The default implementation simply returns the receiver if non-blank.

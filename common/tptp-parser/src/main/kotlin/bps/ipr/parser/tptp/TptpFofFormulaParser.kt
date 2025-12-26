@@ -87,7 +87,7 @@ open class TptpFofFormulaParser(
 1. a functor (parse a predicate) ... but if the predicate is followed by one of many stuffs, then this would be a mistake, so ...
 2. a
      */
-    override fun String.parseFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    override fun String.parseFormulaOrNull(startIndex: Int): Pair<FolFormula<*>, Int>? = TODO()
     // parseBinaryFormula | parseUnaryFormula | parseUnitaryFormula
 
     fun String.parseBinaryFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
