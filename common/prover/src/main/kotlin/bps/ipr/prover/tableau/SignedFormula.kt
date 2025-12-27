@@ -1,4 +1,4 @@
-package bps.ipr.prover
+package bps.ipr.prover.tableau
 
 import bps.ipr.formulas.And
 import bps.ipr.formulas.Equivalence
@@ -11,32 +11,29 @@ import bps.ipr.formulas.Not
 import bps.ipr.formulas.Or
 import bps.ipr.formulas.Predicate
 import bps.ipr.formulas.Truth
-import bps.ipr.prover.rule.AlphaRule
-import bps.ipr.prover.rule.BetaRule
-import bps.ipr.prover.rule.ClosingRule
-import bps.ipr.prover.rule.DeltaRule
-import bps.ipr.prover.rule.GammaRule
-import bps.ipr.prover.rule.NegativeAndRule
-import bps.ipr.prover.rule.NegativeForAllRule
-import bps.ipr.prover.rule.NegativeForSomeRule
-import bps.ipr.prover.rule.NegativeIffRule
-import bps.ipr.prover.rule.NegativeImpliesRule
-import bps.ipr.prover.rule.NegativeNotRule
-import bps.ipr.prover.rule.NegativeOrRule
-import bps.ipr.prover.rule.PositiveAndRule
-import bps.ipr.prover.rule.PositiveForAllRule
-import bps.ipr.prover.rule.PositiveForSomeRule
-import bps.ipr.prover.rule.PositiveIffRule
-import bps.ipr.prover.rule.PositiveImpliesRule
-import bps.ipr.prover.rule.PositiveNotRule
-import bps.ipr.prover.rule.PositiveOrRule
-import bps.ipr.prover.rule.Rule
 
-data class SignedFormula(
-    val formula: FolFormula<*>,
+class SignedFormula<T : FolFormula<T>> private constructor(
+    val formula: T,
     val sign: Boolean,
+     val birthPlace: TableauNode,
 ) {
-    val rule: Rule? =
+
+/*
+    lateinit var formula: T
+        private set
+    var sign: Boolean? = null
+        private set
+    lateinit var birthPlace: TableauNode
+        private set
+*/
+
+//    private fun validate() {
+//        check(this::formula.isInitialized) { "formula must be initialized" }
+//        check(this.sign !== null) { "sign must be initialized" }
+//        check(this::birthPlace.isInitialized) { "birthPlace must be initialized" }
+//    }
+
+    val rule: Rule<*>? =
         if (sign) {
             when (formula) {
                 is And -> PositiveAndRule
@@ -64,4 +61,27 @@ data class SignedFormula(
                 Falsity -> null
             }
         }
+
+    companion object {
+        fun <F : FolFormula<F>> create(
+            formula: F,
+            sign: Boolean,
+            birthPlace: TableauNode,
+        ): SignedFormula<F> =
+            SignedFormula(formula, sign, birthPlace)
+    }
+//    companion object {
+//        fun <T : FolFormula<T>> create(
+//            formula: T,
+//            sign: Boolean,
+//            birthPlace: TableauNode,
+//        ): SignedFormula<T> =
+//            SignedFormula<T>()
+//                .apply {
+//                    this.formula = formula
+//                    this.sign = sign
+//                    this.birthPlace = birthPlace
+//                }
+//    }
+
 }

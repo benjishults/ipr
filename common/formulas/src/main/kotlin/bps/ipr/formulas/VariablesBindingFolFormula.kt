@@ -3,7 +3,7 @@ package bps.ipr.formulas
 import bps.ipr.terms.FreeVariable
 import bps.ipr.terms.Variable
 
-sealed class VariablesBindingFolFormula<out F : VariablesBindingFolFormula<F>>
+sealed class VariablesBindingFolFormula<F : VariablesBindingFolFormula<F>>
 /**
  * @throws IllegalArgumentException if [boundVariables] is empty or any of the [Variable]s in
  * [boundVariables] do NOT occur free in [subFormula].

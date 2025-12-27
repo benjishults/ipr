@@ -2,7 +2,7 @@ package bps.ipr.formulas
 
 import bps.ipr.terms.Variable
 
-sealed class AbstractMultiFolFormula<out F : AbstractMultiFolFormula<F>>(
+sealed class AbstractMultiFolFormula<F : AbstractMultiFolFormula<F>>(
     val subFormulas: List<FolFormula<*>>,
 ) : FolFormula<F> {
 
