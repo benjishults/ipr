@@ -1,10 +1,36 @@
 package bps.ipr.terms
 
+import bps.ipr.parser.tptp.TptpFofTermParser
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 
 class SubstitutionTests : FreeSpec() {
 
     init {
+        with(TptpFofTermParser(FolTermImplementation())) {
+            val x = termImplementation.freeVariableOrNull("X")!!
+            val y = termImplementation.freeVariableOrNull("Y")!!
+            val z = termImplementation.freeVariableOrNull("Z")!!
+            val ga = "g(a)".parseTermOrNull()!!.first
+            val gx = "g(X)".parseTermOrNull()!!.first
+            val gy = "g(Y)".parseTermOrNull()!!.first
+            "composeIdempotent does not produce idempotent substitutions" - {
+                var sigma = SingletonIdempotentSubstitution(x, ga)
+                var theta = SingletonIdempotentSubstitution(z, gx)
+                "$sigma$theta -> not idempotent" {
+                    shouldThrow<IllegalArgumentException> {
+                        sigma.composeIdempotent(theta, termImplementation)
+                    }
+                }
+                sigma = SingletonIdempotentSubstitution(x, gy)
+                theta = SingletonIdempotentSubstitution(y, gx)
+                "$sigma$theta not idempotent" {
+                    shouldThrow<IllegalArgumentException> {
+                        sigma.composeIdempotent(theta, termImplementation)
+                    }
+                }
+            }
+        }
         "illegal due to ordering of variables {a ↦ b, b ↦ a}"
         "illegal due to application/combination rules {a \u21a6 b, b \u21a6 e}"
         "compose {a \u21a6 c, b \u21a6 d}" {}

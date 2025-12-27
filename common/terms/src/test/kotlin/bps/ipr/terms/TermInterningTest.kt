@@ -8,8 +8,8 @@ class TermInterningTest : FreeSpec() {
         "test interning works as expected on different languages" - {
             "test FolDagTermImplementation (expect everything interned)" - {
                 FolDagTermImplementation().use { implementation ->
-                    val var1: Variable = implementation.variableOrNull("x")!!
-                    val var2: Variable = implementation.variableOrNull("x")!!
+                    val var1: Variable = implementation.freeVariableOrNull("x")!!
+                    val var2: Variable = implementation.freeVariableOrNull("x")!!
                     val con1: Constant = implementation.constantOrNull("a")!!
                     val con2: Constant = implementation.constantOrNull("a")!!
                     val term1: ProperFunction =
@@ -19,7 +19,7 @@ class TermInterningTest : FreeSpec() {
                             "f",
                             listOf(
                                 implementation.constantOrNull("a")!!,
-                                implementation.variableOrNull("x")!!,
+                                implementation.freeVariableOrNull("x")!!,
                             ),
                         )!!
                     "x === x as variables" {
@@ -35,8 +35,8 @@ class TermInterningTest : FreeSpec() {
             }
             "test FolTermImplementation (expect variables and constants interned)" - {
                 FolTermImplementation().use { implementation ->
-                    val var1: Variable = implementation.variableOrNull("x")!!
-                    val var2: Variable = implementation.variableOrNull("x")!!
+                    val var1: Variable = implementation.freeVariableOrNull("x")!!
+                    val var2: Variable = implementation.freeVariableOrNull("x")!!
                     val con1: Constant = implementation.constantOrNull("a")!!
                     val con2: Constant = implementation.constantOrNull("a")!!
                     val term1: ProperFunction =
@@ -46,7 +46,7 @@ class TermInterningTest : FreeSpec() {
                             "f",
                             listOf(
                                 implementation.constantOrNull("a")!!,
-                                implementation.variableOrNull("x")!!,
+                                implementation.freeVariableOrNull("x")!!,
                             ),
                         )!!
                     "x === x as variables" {
@@ -62,8 +62,8 @@ class TermInterningTest : FreeSpec() {
             }
             "test TermImplementation (expect nothing interned)" - {
                 TermImplementation.use { implementation ->
-                    val var1: Variable = implementation.variableOrNull("x")!!
-                    val var2: Variable = implementation.variableOrNull("x")!!
+                    val var1: Variable = implementation.freeVariableOrNull("x")!!
+                    val var2: Variable = implementation.freeVariableOrNull("x")!!
                     val con1: Constant = implementation.constantOrNull("a")!!
                     val con2: Constant = implementation.constantOrNull("a")!!
                     val term1: ProperFunction =
@@ -73,7 +73,7 @@ class TermInterningTest : FreeSpec() {
                             "f",
                             listOf(
                                 implementation.constantOrNull("a")!!,
-                                implementation.variableOrNull("x")!!,
+                                implementation.freeVariableOrNull("x")!!,
                             ),
                         )!!
                     "x !== x as variables" {

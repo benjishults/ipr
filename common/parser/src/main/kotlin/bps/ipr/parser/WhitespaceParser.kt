@@ -2,12 +2,12 @@ package bps.ipr.parser
 
 import java.util.regex.Pattern
 
-interface Parser {
+interface WhitespaceParser {
 
     val whitespace: Pattern
 
     /**
-     * @return [this.length] if the receiver is all whitespace after [startingAt].
+     * @return [String.length] if the receiver is all whitespace after [startingAt].
      * Otherwise, the index of the first non-whitespace character after [startingAt].
      */
     fun String.indexOfFirstNonWhitespace(startingAt: Int = 0): Int =
@@ -25,7 +25,7 @@ interface Parser {
             }
 
     /**
-     * @return [this.length] if the receiver has no whitespace after [startingAt].
+     * @return [String.length] if the receiver has no whitespace after [startingAt].
      * Otherwise, the index of the first whitespace character after [startingAt].
      */
     fun String.indexOfFirstWhitespace(startingAt: Int = 0): Int =

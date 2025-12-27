@@ -24,12 +24,14 @@ class TptpTermParserTest : FreeSpec() {
             testValidStartTerm<ProperFunction>("f(a) c(", "f(a())", 5)
             testValidStartTerm<ProperFunction>("f(a) c,", "f(a())", 5)
             testValidStartTerm<ProperFunction>("f(a) c)", "f(a())", 5)
+            // FIXME let's make this fail?
             testValidStartTerm<Constant>(" a b ", "a()", 3)
             testValidStartTerm<Constant>("a, b", "a()", 1)
             testValidStartTerm<ProperFunction>("f(a) c", "f(a())", 5)
             testValidStartTerm<ProperFunction>("f(a) )c", "f(a())", 5)
             testValidStartTerm<ProperFunction>("f(a))c", "f(a())", 4)
 
+            // FIXME let's make this fail?
             testValidTerm<Constant>(" a ", "a()")
             testValidTerm<ProperFunction>("f(A)") {
                 arguments.size shouldBe 1
@@ -54,6 +56,7 @@ class TptpTermParserTest : FreeSpec() {
                 }
                 arguments[1].shouldBeInstanceOf<Constant>()
             }
+            // FIXME let's make this fail?
             testValidTerm<ProperFunction>(" f ( g ( a , b ) , b ) ", "f(g(a(), b()), b())") {
                 arguments.size shouldBe 2
                 with(arguments[0]) {

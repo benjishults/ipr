@@ -1,40 +1,17 @@
-val kotestVersion: String by project
-val jacksonVersion: String by project
-val konfVersion: String by project
-val mockkVersion: String by project
-val consoleVersion: String by project
-
 plugins {
-    kotlin("jvm") version "2.1.0"
-    kotlin("plugin.allopen") version "2.1.0"
+    id("shared")
     `java-library`
-}
-
-group = "bps"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
-}
-
-tasks.named("compileKotlin", org.jetbrains.kotlin.gradle.tasks.KotlinCompilationTask::class.java) {
-    compilerOptions {
-//        freeCompilerArgs.add("-Xcontext-receivers")
-        apiVersion.set(org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_1)
-    }
 }
 
 dependencies {
 
-    api(project(":common:terms"))
+    api(project(":terms"))
+    api(project(":formulas"))
+    api(project(":common"))
 
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("io.mockk:mockk-jvm:$mockkVersion")
-    testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
-    testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
-    testImplementation("org.junit.jupiter:junit-jupiter")
-}
-
-tasks.test {
-    useJUnitPlatform()
+    testImplementation(platform(libs.junit.bom))
+    testImplementation(libs.mockk.jvm)
+    testImplementation(libs.kotest.junit5)
+    testImplementation(libs.kotest.assertions.core)
+    testImplementation(libs.junit.jupiter)
 }

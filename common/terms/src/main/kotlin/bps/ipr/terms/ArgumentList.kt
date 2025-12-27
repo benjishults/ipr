@@ -13,7 +13,6 @@ class ArgumentList(arguments: List<Term>) : List<Term> by arguments {
         this === other ||
                 (other is ArgumentList &&
                         other.size == this.size &&
-                        // kotlin doesn't seem to have an allIndexed function.
                         other.allIndexed { i, t ->
                             t == get(i)
                         })

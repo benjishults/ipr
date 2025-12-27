@@ -30,8 +30,11 @@ class Constant(
     symbol: String,
 ) : Function(symbol, 0) {
 
-    override val freeVariables: Set<Variable> = emptySet()
-    override fun apply(substitution: IdempotentSubstitution, termImplementation: TermImplementation): Term = this
+    override val variablesFreeIn: Set<Variable> =
+        emptySet()
+
+    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
+        this
 
     override fun display(): String =
         "$symbol()"
@@ -48,18 +51,22 @@ class ProperFunction(
      */
     val arguments: ArgumentList,
 ) : Function(symbol, arguments.size) {
+
     init {
         require(arguments.isNotEmpty())
     }
 
-    override val freeVariables: Set<Variable> =
+    override val variablesFreeIn: Set<Variable> =
         arguments
-            .flatMap { it.freeVariables }
-            .toSet()
+            .flatMapTo(mutableSetOf()) { it.variablesFreeIn }
 
-    override fun apply(substitution: IdempotentSubstitution, termImplementation: TermImplementation): Term =
+    override fun apply(substitution: Substitution, termImplementation: TermImplementation): Term =
         // short-circuit if we know the substitution won't disturb this term
-        if (substitution.domain.firstOrNull { it in this.freeVariables } !== null)
+        if (substitution
+                .domain
+                .firstOrNull { it in this.variablesFreeIn }
+            !== null
+        )
             termImplementation.properFunctionOrNull(
                 symbol,
                 arguments
@@ -70,13 +77,10 @@ class ProperFunction(
         else
             this
 
-    override fun display(): String {
-        return "$symbol${
-            arguments
-                .map { it.display() }
-                .joinToString(", ", "(", ")") { it }
-        }"
-    }
+    override fun display(): String =
+        arguments
+            .map { it.display() }
+            .joinToString(", ", "$symbol(", ")") { it }
 
     override fun equals(other: Any?): Boolean =
         super.equals(other) &&
