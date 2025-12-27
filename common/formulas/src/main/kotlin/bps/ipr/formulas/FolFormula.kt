@@ -2,7 +2,7 @@ package bps.ipr.formulas
 
 import bps.ipr.terms.Variable
 
-sealed interface FolFormula<F : FolFormula<F>> : Formula {
+sealed interface FolFormula : Formula {
 
     /**
      * Variables that occur free in this term.

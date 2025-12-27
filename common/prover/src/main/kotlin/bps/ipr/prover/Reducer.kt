@@ -7,7 +7,7 @@ package bps.ipr.prover
 //import bps.ipr.prover.tableau.SignedFormula
 //
 //interface Reducer {
-//    fun reduce(formula: FolFormula<*>): List<SignedFormula> =
+//    fun reduce(formula: FolFormula): List<SignedFormula> =
 //        when (formula) {
 //            is Or -> formula.subFormulas.flatMap { reduce(it) }
 //            is Implies -> reduce(formula.antecedent) + reduce(formula.consequent)

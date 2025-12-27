@@ -3,7 +3,7 @@ package bps.ipr.prover.tableau
 import bps.ipr.formulas.FolFormula
 
 class Tableau(
-//    formula: FolFormula<*>,
+//    formula: FolFormula,
 ) {
 
     var root: TableauNode? = null
@@ -13,7 +13,7 @@ class Tableau(
 //        root = TableauNode(this)
 //            .also { root ->
 //                SignedFormula(
-//                    formula = formula as FolFormula<*>,
+//                    formula = formula as FolFormula,
 //                    sign = false,
 //                    birthPlace = root,
 //                )
@@ -26,7 +26,7 @@ class Tableau(
 
     companion object {
         // NOTE had to do this outside a constructor because I have to have the generic function
-        operator fun <T : FolFormula<T>> invoke(formula: T): Tableau {
+        operator fun <T : FolFormula> invoke(formula: T): Tableau {
             return Tableau()
                 .apply {
                     root = TableauNode(this)
@@ -36,9 +36,14 @@ class Tableau(
                                 sign = false,
                                 birthPlace = root,
                             )
-                                .let { signedFormula: SignedFormula<*> ->
-                                    applicableRules.addRule(signedFormula.rule)
-                                    root.newGoals.add(signedFormula)
+                                .reduce(root)
+                                .also {
+                                    val (pos, neg) = it.extractBySign()
+                                    root.newHyps = pos
+                                    root.newGoals = neg
+                                }
+                                .forEach { signedFormula ->
+                                    applicableRules.addRule(signedFormula)
                                 }
                         }
 

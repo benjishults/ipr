@@ -56,25 +56,25 @@ open class FolFormulaImplementation(
 
     open fun falsityOrNull(): Falsity = Falsity
 
-    open fun notOrNull(subFormula: FolFormula<*>): Not =
+    open fun notOrNull(subFormula: FolFormula): Not =
         Not(subFormula)
 
-    open fun andOrNull( subFormulas: List<FolFormula<*>>): And =
+    open fun andOrNull( subFormulas: List<FolFormula>): And =
         And(subFormulas)
 
-    open fun orOrNull( subFormulas: List<FolFormula<*>>): Or =
+    open fun orOrNull( subFormulas: List<FolFormula>): Or =
         Or(subFormulas)
 
-    open fun iffOrNull( subFormulas: List<FolFormula<*>>): Equivalence =
-        Equivalence(subFormulas)
+    open fun iffOrNull( subFormulas: List<FolFormula>): Iff =
+        Iff(subFormulas)
 
-    open fun impliesOrNull(subFormulas: List<FolFormula<*>>): Implies =
+    open fun impliesOrNull(subFormulas: List<FolFormula>): Implies =
         Implies(subFormulas)
 
-    open fun forAllOrNull(boundVariables: List<Variable>, subFormula: FolFormula<*>): ForAll =
+    open fun forAllOrNull(boundVariables: List<Variable>, subFormula: FolFormula): ForAll =
         ForAll(boundVariables, subFormula)
 
-    open fun forSomeOrNull(boundVariables: List<Variable>, subFormula: FolFormula<*>): ForSome =
+    open fun forSomeOrNull(boundVariables: List<Variable>, subFormula: FolFormula): ForSome =
         ForSome(boundVariables, subFormula)
 
 }

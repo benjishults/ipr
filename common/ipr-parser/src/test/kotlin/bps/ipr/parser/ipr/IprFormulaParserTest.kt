@@ -1,7 +1,7 @@
 package bps.ipr.parser.ipr
 
 import bps.ipr.formulas.And
-import bps.ipr.formulas.Equivalence
+import bps.ipr.formulas.Iff
 import bps.ipr.formulas.Falsity
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.ForAll
@@ -53,7 +53,7 @@ class IprFormulaParserTest : FreeSpec() {
                     TestValidStartFormula(And::class, "(and (P) (Q x))", "(P() AND Q(x))", 15),
                     TestValidStartFormula(Or::class, "(or (P) (Q x))", "(P() OR Q(x))", 14),
                     TestValidStartFormula(Implies::class, "(implies (P) (Q x))", "(P() IMPLIES Q(x))", 19),
-                    TestValidStartFormula(Equivalence::class, "(iff (P) (Q x))", "(P() IFF Q(x))", 15),
+                    TestValidStartFormula(Iff::class, "(iff (P) (Q x))", "(P() IFF Q(x))", 15),
                     TestValidStartFormula(ForSome::class, "(exists ((x)) (Q x))", "(EXISTS (x) Q(x))", 20),
                     TestValidStartFormula(ForAll::class, "(forall ((x)) (Q x))", "(FORALL (x) Q(x))", 20),
                     TestValidStartFormula(ForSome::class, "(exists ((x) (y)) (R x y))", "(EXISTS (x, y) R(x, y))", 26),

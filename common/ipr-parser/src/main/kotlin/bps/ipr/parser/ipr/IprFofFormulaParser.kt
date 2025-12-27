@@ -19,7 +19,7 @@ open class IprFofFormulaParser(
 
     final override val termParser: IprFofTermParser = termParserFactory(formulaImplementation.termImplementation)
 
-    override fun String.parseFormulaOrNull(startIndex: Int): Pair<FolFormula<*>, Int>? =
+    override fun String.parseFormulaOrNull(startIndex: Int): Pair<FolFormula, Int>? =
         takeIf { length > startIndex }
             ?.let { get(startIndex) }
             ?.takeIf { it == '(' }
@@ -101,8 +101,8 @@ open class IprFofFormulaParser(
 
     private fun String.parseBindingFormula(
         startIndex: Int,
-        formulaFactory: (List<Variable>, FolFormula<*>) -> FolFormula<*>,
-    ): Pair<FolFormula<*>, Int>? =
+        formulaFactory: (List<Variable>, FolFormula) -> FolFormula,
+    ): Pair<FolFormula, Int>? =
         if (startIndex == length)
             null
         else {
@@ -111,7 +111,7 @@ open class IprFofFormulaParser(
                 parseBoundVarList(index)
                     ?.let { (boundVars: List<FreeVariable>, indexOfFormula: Int) ->
                         parseFormulaArgumentsOrNull(indexOfFormula)
-                            ?.let { (formulas: List<FolFormula<*>>, index: Int) ->
+                            ?.let { (formulas: List<FolFormula>, index: Int) ->
                                 if (formulas.size == 1)
                                     formulaFactory(
                                         boundVars,
@@ -162,10 +162,10 @@ open class IprFofFormulaParser(
     private fun String.parseLogicalOperator(
         startIndex: Int,
         sizeConstraint: (Int) -> Boolean = { true },
-        formulaFactory: (List<FolFormula<*>>) -> FolFormula<*>,
-    ): Pair<FolFormula<*>, Int>? =
+        formulaFactory: (List<FolFormula>) -> FolFormula,
+    ): Pair<FolFormula, Int>? =
         parseFormulaArgumentsOrNull(startIndex)
-            ?.let { (args: List<FolFormula<*>>, indexOfEndingParen: Int) ->
+            ?.let { (args: List<FolFormula>, indexOfEndingParen: Int) ->
                 if (sizeConstraint(args.size)) {
                     formulaFactory(args) to indexOfFirstNonWhitespace(indexOfEndingParen + 1)
                 } else {
@@ -183,15 +183,15 @@ open class IprFofFormulaParser(
      * @throws ArityOverloadException if a symbol is used with an arity that differs from the arity of that symbol
      * in the language
      */
-    fun String.parseFormulaArgumentsOrNull(startIndex: Int): Pair<List<FolFormula<*>>, Int>? =
+    fun String.parseFormulaArgumentsOrNull(startIndex: Int): Pair<List<FolFormula>, Int>? =
         parseIprFofFormulaArgumentsOrNullHelper(startIndex)
 
     private fun String.parseIprFofFormulaArgumentsOrNullHelper(
         startIndex: Int,
-        list: MutableList<FolFormula<*>> = mutableListOf(),
-    ): Pair<List<FolFormula<*>>, Int>? =
+        list: MutableList<FolFormula> = mutableListOf(),
+    ): Pair<List<FolFormula>, Int>? =
         parseFormulaOrNull(startIndex)
-            ?.let { (nextFormula: FolFormula<*>, indexAfterFirstFormula: Int) ->
+            ?.let { (nextFormula: FolFormula, indexAfterFirstFormula: Int) ->
                 list.add(nextFormula)
                 getOrNull(indexAfterFirstFormula)
                     ?.let { delimiter: Char ->
@@ -205,7 +205,7 @@ open class IprFofFormulaParser(
                     }
             }
             ?: takeIf { length > startIndex && get(startIndex) == ')' }
-                ?.let { emptyList<FolFormula<*>>() to startIndex }
+                ?.let { emptyList<FolFormula>() to startIndex }
 
 
     private fun String.parsePredicate(

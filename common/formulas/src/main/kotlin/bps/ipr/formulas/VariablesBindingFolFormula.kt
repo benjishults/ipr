@@ -3,15 +3,15 @@ package bps.ipr.formulas
 import bps.ipr.terms.FreeVariable
 import bps.ipr.terms.Variable
 
-sealed class VariablesBindingFolFormula<F : VariablesBindingFolFormula<F>>
+sealed class VariablesBindingFolFormula
 /**
  * @throws IllegalArgumentException if [boundVariables] is empty or any of the [Variable]s in
  * [boundVariables] do NOT occur free in [subFormula].
  */
 constructor(
     val boundVariables: List<Variable>,
-    val subFormula: FolFormula<*>,
-) : FolFormula<F> {
+    val subFormula: FolFormula,
+) : FolFormula {
 
     init {
         require(boundVariables.isNotEmpty())
@@ -31,7 +31,7 @@ constructor(
 //    override val variablesBoundIn: Set<BoundVariable> =
 //        subFormula.variablesBoundIn + boundVariables
 
-    abstract val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula<*>) -> F
+    abstract val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula) -> FolFormula
 
     override val variablesFreeIn: Set<Variable> =
 //        boundVariables
@@ -62,10 +62,10 @@ class ForAll
  */
 constructor(
     boundVariables: List<Variable>,
-    subFormula: FolFormula<*>,
-) : VariablesBindingFolFormula<ForAll>(boundVariables, subFormula) {
+    subFormula: FolFormula,
+) : VariablesBindingFolFormula(boundVariables, subFormula) {
 
-    override val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula<*>) -> ForAll =
+    override val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula) -> ForAll =
         { folFormulaImplementation, boundVariables, folFormula ->
             folFormulaImplementation.forAllOrNull(boundVariables, folFormula)
         }
@@ -83,10 +83,10 @@ class ForSome
  */
 constructor(
     boundVariables: List<Variable>,
-    subFormula: FolFormula<*>,
-) : VariablesBindingFolFormula<ForSome>(boundVariables, subFormula) {
+    subFormula: FolFormula,
+) : VariablesBindingFolFormula(boundVariables, subFormula) {
 
-    override val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula<*>) -> ForSome =
+    override val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula) -> ForSome =
         { folFormulaImplementation, boundVariables, folFormula ->
             folFormulaImplementation.forSomeOrNull(boundVariables, folFormula)
         }
