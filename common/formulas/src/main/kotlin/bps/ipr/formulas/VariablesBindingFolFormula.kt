@@ -11,7 +11,7 @@ sealed class VariablesBindingFolFormula
 constructor(
     val boundVariables: List<Variable>,
     val subFormula: FolFormula,
-) : FolFormula {
+) : FolFormula() {
 
     init {
         require(boundVariables.isNotEmpty())

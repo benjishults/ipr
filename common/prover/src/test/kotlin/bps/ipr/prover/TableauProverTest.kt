@@ -1,7 +1,6 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
-import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.formulas.GeneralRecursiveDescentFormulaUnifier
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
