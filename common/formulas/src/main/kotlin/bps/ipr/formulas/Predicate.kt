@@ -1,13 +1,14 @@
 package bps.ipr.formulas
 
 import bps.ipr.terms.ArgumentList
+import bps.ipr.terms.IdempotentSubstitution
 import bps.ipr.terms.Substitution
 import bps.ipr.terms.Variable
 
 class Predicate(
     override val symbol: String,
     val arguments: ArgumentList,
-) : FolFormula<Predicate> {
+) : FolFormula {
     //    override val variablesBoundIn: Set<BoundVariable> = emptySet()
     override val variablesFreeIn: Set<Variable> =
         arguments
@@ -34,6 +35,10 @@ class Predicate(
                 .map { it.display() }
                 .joinToString(", ", "(", ")") { it }
         }"
+    }
+
+    fun unify(formula: Predicate, under: IdempotentSubstitution): IdempotentSubstitution? {
+        TODO("Not yet implemented")
     }
 
 }

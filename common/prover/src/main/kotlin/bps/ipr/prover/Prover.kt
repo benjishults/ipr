@@ -1,42 +1,50 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
-import bps.ipr.formulas.Formula
-import bps.ipr.prover.rule.ClosingRule
-import bps.ipr.terms.EmptySubstitution
+import bps.ipr.formulas.FormulaUnifier
+import bps.ipr.prover.tableau.SignedFormula
+import bps.ipr.prover.tableau.Tableau
 import bps.ipr.terms.Substitution
+import bps.ipr.terms.TermUnifier
 
-interface Prover<in T : Formula, out R : ProofResult> {
+interface Prover/*<T : FolFormula, out R : ProofResult>*/ {
 
-    fun prove(formula: T): R
+    fun prove(formula: FolFormula): FolProofResult
+//    fun prove(formula: T): R
 
 }
 
-interface ProofResult {
-}
+interface ProofResult
 
-sealed class FolProofResult : ProofResult
+sealed interface FolProofResult : ProofResult
 
 data class FolProofSuccess(
     val substitution: Substitution,
-) : FolProofResult()
+) : FolProofResult
 
-data object FolProofFailure : FolProofResult()
+data object FolProofFailure : FolProofResult
 
-data object FolProofIncomplete : FolProofResult()
+data object FolProofIncomplete : FolProofResult
 
-class TableauProver : Prover<FolFormula<*>, FolProofResult> {
-    override fun prove(formula: FolFormula<*>): FolProofResult =
-        Tableau(
-            TableauNode(
-                newGoals = listOf(SignedFormula(formula, false)),
-            ),
-        )
+class TableauProver(
+    val unifier: FormulaUnifier
+) : Prover/*<FolFormula, FolProofResult>*/ {
+
+    override fun prove(formula: FolFormula): FolProofResult =
+        Tableau(formula)
             .let { tableau: Tableau ->
-                if (tableau.root.newGoals.any { it.rule == ClosingRule })
-                    FolProofSuccess(EmptySubstitution)
-                else
-                    FolProofIncomplete
+                var result: FolProofResult? = tableau.attemptClose(unifier)
+                while (result === null) {
+                    tableau
+                        .applicableRules
+                        .dequeueNextRuleOrNull()
+                        ?.also { rule: SignedFormula<*> ->
+                            rule.apply()
+                            result = tableau.attemptClose(unifier)
+                        }
+                        ?: run { result = FolProofIncomplete }
+                }
+                result!!
             }
-
 }
+

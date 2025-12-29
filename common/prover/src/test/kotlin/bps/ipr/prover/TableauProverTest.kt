@@ -1,6 +1,8 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FormulaUnifier
+import bps.ipr.formulas.GeneralRecursiveDescentFormulaUnifier
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
@@ -8,27 +10,30 @@ import bps.ipr.terms.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
-class TableauProverTest: FreeSpec() , FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }) {
-    data class ProverTest(val formula: FolFormula<*>, val expectedResult: ProofResult)
+class TableauProverTest : FreeSpec(),
+    FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }) {
+    data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
+
     init {
         listOf(
             ProverTest(
-                formula = "(not (falsity))".parseFormulaOrNull()!!.first,
-                expectedResult = FolProofSuccess(EmptySubstitution)
-            ),
-            ProverTest(
                 formula = "(implies (A) (A))".parseFormulaOrNull()!!.first,
-                expectedResult = FolProofSuccess(EmptySubstitution)
+                expectedResult = FolProofSuccess(EmptySubstitution),
             ),
-            // passed
+            // passing
             ProverTest(
                 formula = "(truth)".parseFormulaOrNull()!!.first,
-                expectedResult = FolProofSuccess(EmptySubstitution)
+                expectedResult = FolProofSuccess(EmptySubstitution),
+            ),
+            ProverTest(
+                formula = "(not (falsity))".parseFormulaOrNull()!!.first,
+                expectedResult = FolProofSuccess(EmptySubstitution),
             ),
         )
+//            .reversed()
             .forEach { (formula, expectedResult) ->
                 "attempt $formula expecting $expectedResult" {
-                    TableauProver().prove(formula) shouldBe expectedResult
+                    TableauProver(GeneralRecursiveDescentFormulaUnifier()).prove(formula) shouldBe expectedResult
                 }
             }
     }

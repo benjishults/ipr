@@ -6,6 +6,7 @@ plugins {
 dependencies {
 
     api(project(":formulas"))
+    implementation(project(":common"))
 
     testImplementation(project(":ipr-parser"))
     testImplementation(platform(libs.junit.bom))

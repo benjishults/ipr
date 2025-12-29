@@ -87,23 +87,23 @@ open class TptpFofFormulaParser(
 1. a functor (parse a predicate) ... but if the predicate is followed by one of many stuffs, then this would be a mistake, so ...
 2. a
      */
-    override fun String.parseFormulaOrNull(startIndex: Int): Pair<FolFormula<*>, Int>? = TODO()
+    override fun String.parseFormulaOrNull(startIndex: Int): Pair<FolFormula, Int>? = TODO()
     // parseBinaryFormula | parseUnaryFormula | parseUnitaryFormula
 
-    fun String.parseBinaryFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    fun String.parseBinaryFormulaOrNull(): Pair<FolFormula, Int>? = TODO()
     // parseBinaryNonAssoc | parseBinaryAssoc
 
-    fun String.parseBinaryNonAssoc(): Pair<FolFormula<*>, Int>? = TODO()
+    fun String.parseBinaryNonAssoc(): Pair<FolFormula, Int>? = TODO()
     // unitFormula nonAssocConnective unitFormula
 
-    fun String.parseUnitFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    fun String.parseUnitFormulaOrNull(): Pair<FolFormula, Int>? = TODO()
     // parseUnitaryFormula | parseUnaryFormula
 
-    fun String.parseUnitaryFormulaOrNull(): Pair<FolFormula<*>, Int>? = TODO()
+    fun String.parseUnitaryFormulaOrNull(): Pair<FolFormula, Int>? = TODO()
     // parseQuantifiedFormula | parseAtomicFormula | ( parseFormulaOrNull )
     // if it starts with a '(' then parseFormulaOrNull then expect ')'
 
-    fun String.parseQuantifiedFormulaOrNull(): Pair<VariablesBindingFolFormula<*>, Int>? = TODO()
+    fun String.parseQuantifiedFormulaOrNull(): Pair<VariablesBindingFolFormula, Int>? = TODO()
     // fofQuantifier [variableList] : unitFormula
 
     fun String.parseAtomicFormulaOrNull(): Pair<Predicate, Int>? = TODO()
@@ -113,7 +113,7 @@ open class TptpFofFormulaParser(
     // not or an inequality
     // starts with '~'
 
-    fun String.parseBinaryAssocOrNull(): Pair<AbstractMultiFolFormula<*>, Int>? = TODO()
+    fun String.parseBinaryAssocOrNull(): Pair<AbstractMultiFolFormula, Int>? = TODO()
     // parseOr | parseAnd
 
     /**
