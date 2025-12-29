@@ -2,12 +2,14 @@ package bps.ipr.formulas
 
 import bps.ipr.terms.Variable
 
-sealed interface FolFormula : Formula {
+sealed class FolFormula : Formula {
 
     /**
      * Variables that occur free in this term.
      */
-    val variablesFreeIn: Set<Variable>
+    abstract val variablesFreeIn: Set<Variable>
+
+    override fun toString(): String = display()
 
 //    /**
 //     * Variables that are bound by variable-binding within this formula.

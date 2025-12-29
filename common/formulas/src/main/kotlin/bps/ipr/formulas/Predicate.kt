@@ -8,7 +8,7 @@ import bps.ipr.terms.Variable
 class Predicate(
     override val symbol: String,
     val arguments: ArgumentList,
-) : FolFormula {
+) : FolFormula() {
     //    override val variablesBoundIn: Set<BoundVariable> = emptySet()
     override val variablesFreeIn: Set<Variable> =
         arguments

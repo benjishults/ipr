@@ -1,0 +1,58 @@
+(iff (implies (p) (q)) (implies (not (q)) (not (p))))
+
+(iff (implies (not (p)) (q)) (implies (not (q)) (p)))
+
+(implies (not (implies (p) (q))) (implies (q) (p)))
+
+(implies (implies (or (p) (q)) (or (p) (r)))
+                (or (p) (implies (q) (r))))
+
+(implies (and (or (p) (q)) (or (not (p)) (q)) (or (p) (not (q))))
+  (not (or (not (p)) (not (q)))))
+
+(implies (and (implies (q) (r))
+	      (implies (r) (and (p) (q)))
+	      (implies (p) (or (q) (r))))
+  (iff (p) (q)))
+
+(iff (p) (p))
+
+(iff (iff (iff (p) (q)) (r)) (iff (p) (iff (q) (r))))
+
+(iff (or (p) (and (q) (r))) (and (or (p) (q)) (or (p) (r))))
+
+(iff (iff (p) (q)) (and (or (q) (not (p))) (or (not (q)) (p))))
+
+(iff (implies (p) (q)) (or (not (p)) (q)))
+
+(or (implies (p) (q)) (implies (q) (p)))
+
+(iff (implies (and (p) (implies (q) (r)))
+       (s))
+     (and (or (not (p)) (q) (s))
+	  (or (not (p)) (not (r)) (s))))
+
+(iff (p1) (p1))
+
+(iff (p1) (iff (p2) (iff (p1) (p2))))
+
+(iff (p1) (iff (p2) (iff (p3) (iff (p1) (iff (p2) (p3))))))
+
+(iff (p1)
+                     (iff (p2) (iff (p3)
+                                    (iff (p4) (iff (p1)
+                                                   (iff (p2)
+                                                        (iff (p3) (p4))))))))
+
+(truth)
+
+(implies (p) (p))
+
+(or (p) (not (p)))
+
+(or (p) (not (not (not (p)))))
+
+(implies (implies (implies (p) (q)) (p)) (p))
+
+(iff (not (not (p))) (p))
+

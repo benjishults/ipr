@@ -7,6 +7,7 @@ import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
 import bps.ipr.terms.EmptySubstitution
 import bps.ipr.terms.IdempotentSubstitution
+import kotlin.sequences.emptySequence
 
 class Tableau {
 
@@ -40,63 +41,45 @@ class Tableau {
     fun attemptClose(unifier: FormulaUnifier): FolProofSuccess? {
         return root
             .attemptClose(
-                queue = queue(),
                 substitution = null,
                 positiveAtomsAbove = emptyList(),
                 negativeAtomsAbove = emptyList(),
                 formulaUnifier = unifier,
             )
+            .firstOrNull()
             ?.let { FolProofSuccess(it) }
     }
 
     /**
-     * @return null if there is no substitution under [substitution] that closes this node and the rest of the nodes
-     * in [queue].  Otherwise, returns a substitution under [substitution] that closes this node and the rest of the nodes
-     * in [queue].
-     * @param substitution `null` means that no node has been closed so far so any substitution is valid.
-     * @param queue the rest of the nodes in the tree to be closed.  (breadth-first traversal)
+     * @return an empty sequence if there is no substitution under [substitution] that closes the tree rooted at this node.
+     * Otherwise, returns a sequence of substitutions under [substitution] that close the tree rooted at this node.
+     * @param substitution `null` means that no node has been closed so far, so any substitution is valid.
      */
     private fun TableauNode.attemptClose(
-        queue: Queue<TableauNode>,
         substitution: IdempotentSubstitution?,
         positiveAtomsAbove: List<PositiveAtomicFormula>,
         negativeAtomsAbove: List<NegativeAtomicFormula>,
         formulaUnifier: FormulaUnifier,
-    ): IdempotentSubstitution? {
+    ): Sequence<IdempotentSubstitution> =
         if (closables.isNotEmpty()) {
-            return substitution ?: EmptySubstitution
+            return sequenceOf(substitution ?: EmptySubstitution)
         } else {
-            sequenceOfUnifiersHere(positiveAtomsAbove, negativeAtomsAbove, substitution, formulaUnifier)
-                .forEach { unifier: IdempotentSubstitution ->
-                    if (unifier === EmptySubstitution) {
-                        return EmptySubstitution
-                    } else {
-                        // NOTE unifiers cannot be empty from this point
-                        (queue.dequeueOrNull() ?: return unifier)
-                            .attemptClose(
-                                queue = queue,
-                                substitution = unifier,
-                                positiveAtomsAbove = positiveAtomsAbove + newAtomicHyps,
-                                negativeAtomsAbove = negativeAtomsAbove + newAtomicGoals,
-                                formulaUnifier = formulaUnifier,
-                            )
-                            ?.let { nonEmptyUnifier: IdempotentSubstitution ->
-                                return nonEmptyUnifier
+            sequenceOfUnifiersHere(positiveAtomsAbove, negativeAtomsAbove, substitution, formulaUnifier) +
+                    if (children.isNotEmpty()) {
+                        children
+                            .asSequence()
+                            .flatMap {
+                                it.attemptClose(
+                                    substitution = substitution,
+                                    positiveAtomsAbove = positiveAtomsAbove + newAtomicHyps,
+                                    negativeAtomsAbove = negativeAtomsAbove + newAtomicGoals,
+                                    formulaUnifier = formulaUnifier,
+                                )
                             }
-                        // NOTE If attemptClose returned null, then there's no way to close the rest of the nodes in
-                        //  the tree under unifier.  So, we just move on.
-                    }
-                }
-
+                    } else
+                        emptySequence()
 
         }
-//        node.newAtomicGoals.forEach { goals = goals.addToBeginning(it) }
-
-        // TODO check for closing formulas
-        // TODO unify
-        // TODO
-        return null
-    }
 
     private fun TableauNode.sequenceOfUnifiersHere(
         positiveAtomsAbove: List<PositiveAtomicFormula>,
@@ -135,6 +118,8 @@ class Tableau {
             root.breadthFirstTraverse { append(it.display(it.depth())) }
         }
 
+    override fun toString(): String = display()
+
     companion object {
         // NOTE had to do this outside a constructor because I have to have the generic function
         operator fun <T : FolFormula> invoke(formula: T): Tableau {
@@ -149,7 +134,7 @@ class Tableau {
                                     sign = false,
                                     birthPlace = root,
                                 )
-                                .reduce(birthPlace = root)
+                                .reduceAlpha(birthPlace = root)
                                 .also {
                                     val (pos, neg, closing, betas, deltas, gammas) = CategorizedSignedFormulas(it)
                                     root.populate(

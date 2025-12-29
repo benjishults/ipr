@@ -12,19 +12,24 @@ import bps.ipr.formulas.Not
 import bps.ipr.formulas.Or
 import bps.ipr.formulas.Predicate
 import bps.ipr.formulas.Truth
+import bps.ipr.prover.tableau.SignedFormula.Companion.create
 
 sealed interface SignedFormula<T : FolFormula> {
     val formula: T
     val sign: Boolean
     val birthPlace: TableauNode
 
+    /**
+     * Applies the rule for the given [formula] at its [birthPlace].  This is expected to add nodes to the tableau
+     * under [birthPlace].
+     */
     fun apply()
 
     /**
      * @return the list of [SignedFormula]s that are the result of applying the alpha rule.
      * @param mutableList if not null, the result will be added to it instead of a new list being created.
      */
-    fun reduce(
+    fun reduceAlpha(
         birthPlace: TableauNode,
         mutableList: MutableList<SignedFormula<*>>? = null,
     ): MutableList<SignedFormula<*>> =
@@ -38,6 +43,26 @@ sealed interface SignedFormula<T : FolFormula> {
         append(" ".repeat(i))
         append(formula.display())
     }
+
+    fun createNodeForReducedFormulas(
+        reducedFormulasFactory: (TableauNode) -> List<SignedFormula<*>>,
+    ): TableauNode =
+        TableauNode()
+            .also { node: TableauNode ->
+                birthPlace.tableau.registerNode(node)
+                reducedFormulasFactory(node)
+                    .also { reducedSignedFormulas: List<SignedFormula<*>> ->
+                        val (pos, neg, closing, betas, deltas, gammas) = CategorizedSignedFormulas(reducedSignedFormulas)
+                        node.populate(
+                            newAtomicHyps = pos,
+                            newAtomicGoals = neg,
+                            closing = closing,
+                            betas = betas,
+                            deltas = deltas,
+                            gammas = gammas,
+                        )
+                    }
+            }
 
     companion object {
         fun <F : FolFormula> create(
@@ -86,7 +111,7 @@ sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
     /**
      * Deletes itself.
      */
-    override fun reduce(
+    override fun reduceAlpha(
         birthPlace: TableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
@@ -123,10 +148,13 @@ data class PositiveAtomicFormula(
 
 sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
     // NOTE force children to implement this
-    abstract override fun reduce(
+    abstract override fun reduceAlpha(
         birthPlace: TableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>>
+
+    override fun apply() =
+        TODO("This should never be called due to the way addRule works.")
 }
 
 data class CategorizedSignedFormulas(
@@ -145,80 +173,45 @@ data class CategorizedSignedFormulas(
             val betas = mutableListOf<BetaFormula<*>>()
             val deltas = mutableListOf<DeltaFormula<*>>()
             val gammas = mutableListOf<GammaFormula<*>>()
-            signedFormulas.forEach { signedFormula ->
-                when (signedFormula) {
-                    is PositiveAtomicFormula ->
-                        pos.add(signedFormula)
-                    is NegativeAtomicFormula ->
-                        neg.add(signedFormula)
-                    is ClosingFormula<*> ->
-                        closing.add(signedFormula)
-                    is BetaFormula<*> ->
-                        betas.add(signedFormula)
-                    is DeltaFormula<*> ->
-                        deltas.add(signedFormula)
-                    is GammaFormula<*> ->
-                        gammas.add(signedFormula)
-                    else ->
-                        Unit
+            signedFormulas
+                .forEach { signedFormula ->
+                    when (signedFormula) {
+                        is PositiveAtomicFormula ->
+                            pos.add(signedFormula)
+                        is NegativeAtomicFormula ->
+                            neg.add(signedFormula)
+                        is ClosingFormula<*> ->
+                            closing.add(signedFormula)
+                        is BetaFormula<*> ->
+                            betas.add(signedFormula)
+                        is DeltaFormula<*> ->
+                            deltas.add(signedFormula)
+                        is GammaFormula<*> ->
+                            gammas.add(signedFormula)
+                        else ->
+                            Unit
+                    }
                 }
-            }
             return CategorizedSignedFormulas(pos, neg, closing, betas, deltas, gammas)
         }
     }
 }
 
 sealed interface SignedNotFormula : AlphaFormula<Not> {
-    override fun apply() =
-        birthPlace
-            // TODO figure out splicing
-            .leaves()
-            .forEach { parent: TableauNode ->
-                listOf(SignedFormula.create(formula.subFormula, !sign, parent))
-                    // TODO take advantage of the fact that formulas are immutable
-                    //      make those first and copy references between the various SignedFormulas
-                    .flatMap { it.reduce(parent) }
-                    .let { newSignedFormulas: List<SignedFormula<*>> ->
-                        newSignedFormulas
-                            .forEach {
-                                parent
-                                    .tableau
-                                    .applicableRules
-                                    .addRule(it)
-                            }
-                        parent
-                            .children
-                            .takeIf { it.isEmpty() }
-                            ?.let {
-                                val (pos, neg) = CategorizedSignedFormulas(newSignedFormulas)
-                                parent.setChildren(
-                                    listOf(
-                                        TableauNode(
-                                            parent = parent,
-                                            newAtomicHyps = pos,
-                                            newAtomicGoals = neg,
-                                        ),
-                                    ),
-                                )
-                            }
-                            ?: throw RuntimeException("Expected to be looking at a childless node")
-                    }
-            }
 
-    override fun reduce(
+    override fun reduceAlpha(
         birthPlace: TableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         formula
             .subFormula
             .let {
-                SignedFormula.create(it, !sign, birthPlace)
-                    .reduce(birthPlace, mutableList)
+                create(it, !sign, birthPlace)
+                    .reduceAlpha(birthPlace, mutableList)
             }
 }
 
 sealed class PositiveSignedFormula<F : FolFormula> : SignedFormula<F> {
-
     override val sign: Boolean = true
 }
 
@@ -229,62 +222,46 @@ sealed class NegativeSignedFormula<F : FolFormula> : SignedFormula<F> {
 data class PositiveNotFormula(
     override val formula: Not,
     override val birthPlace: TableauNode,
-) : SignedNotFormula, PositiveSignedFormula<Not>() {
-    override fun apply() {
-        TODO("Not yet implemented")
-    }
-
-}
+) : SignedNotFormula, PositiveSignedFormula<Not>()
 
 data class NegativeNotFormula(
     override val formula: Not,
     override val birthPlace: TableauNode,
-) : SignedNotFormula, NegativeSignedFormula<Not>() {
-    override fun apply() {
-        // TODO make a child with a Positive of the arg
-        TODO("Not yet implemented")
-    }
-}
+) : SignedNotFormula, NegativeSignedFormula<Not>()
 
 data class NegativeImpliesFormula(
     override val formula: Implies,
     override val birthPlace: TableauNode,
 ) : AlphaFormula<Implies>, NegativeSignedFormula<Implies>() {
-    override fun reduce(
+    override fun reduceAlpha(
         birthPlace: TableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         formula
             .let { implies ->
-                SignedFormula
-                    .create(implies.antecedent, false, birthPlace)
-                    .reduce(
+                create(implies.antecedent, true, birthPlace)
+                    .reduceAlpha(
                         birthPlace,
-                        SignedFormula
-                            .create(implies.consequent, true, birthPlace)
-                            .reduce(birthPlace, mutableList),
+                        create(implies.consequent, false, birthPlace)
+                            .reduceAlpha(birthPlace, mutableList),
                     )
             }
-
-    override fun apply() {
-        TODO("Not yet implemented")
-    }
 
 }
 
 /**
- * Does the [reduce] work for [And] and [Or] [AlphaFormula]s.
+ * Does the [reduceAlpha] work for [And] and [Or] [AlphaFormula]s.
  */
 sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : AlphaFormula<T> {
-    override fun reduce(
+    override fun reduceAlpha(
         birthPlace: TableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         formula
             .subFormulas
             .fold(mutableList ?: mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                SignedFormula.create(t, sign, birthPlace)
-                    .reduce(birthPlace, r)
+                create(t, sign, birthPlace)
+                    .reduceAlpha(birthPlace, r)
                 r
             }
 }
@@ -292,65 +269,131 @@ sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : Alpha
 data class NegativeOrFormula(
     override val formula: Or,
     override val birthPlace: TableauNode,
-) : NegativeSignedFormula<Or>(), SimpleMultiSubAlphaFormula<Or> {
-
-    override fun apply() {
-        TODO()
-    }
-
-}
+) : NegativeSignedFormula<Or>(), SimpleMultiSubAlphaFormula<Or>
 
 data class PositiveAndFormula(
     override val formula: And,
     override val birthPlace: TableauNode,
-) : PositiveSignedFormula<And>(), SimpleMultiSubAlphaFormula<And> {
-
-    override fun apply() {
-        TODO("Not yet implemented")
-    }
-
-}
+) : PositiveSignedFormula<And>(), SimpleMultiSubAlphaFormula<And>
 
 sealed interface BetaFormula<T : FolFormula> : SignedFormula<T>
+
+/**
+ * Does the [apply] work for [And] and [Or] [BetaFormula]s.
+ */
+sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFormula<T> {
+    override fun apply() {
+        birthPlace
+            .leaves()
+            .forEach { leaf: TableauNode ->
+                leaf.setChildren(
+                    formula
+                        .subFormulas
+                        .map { folFormula: FolFormula ->
+                            createNodeForReducedFormulas { node: TableauNode ->
+                                create(
+                                    formula = folFormula,
+                                    sign = sign,
+                                    birthPlace = node,
+                                )
+                                    .reduceAlpha(birthPlace = node)
+                            }
+                        },
+                )
+            }
+    }
+}
 
 data class PositiveOrFormula(
     override val formula: Or,
     override val birthPlace: TableauNode,
-) : BetaFormula<Or>, PositiveSignedFormula<Or>() {
-    override fun apply(): Unit {
-//        formula.subFormulas.map { SignedFormula.create(it, true, birthPlace) }
-        TODO()
-    }
-}
+) : SimpleMultiSubBetaFormula<Or>, PositiveSignedFormula<Or>()
+
+data class NegativeAndFormula(
+    override val formula: And,
+    override val birthPlace: TableauNode,
+) : SimpleMultiSubBetaFormula<And>, NegativeSignedFormula<And>()
 
 data class PositiveImpliesFormula(
     override val formula: Implies,
     override val birthPlace: TableauNode,
 ) : BetaFormula<Implies>, PositiveSignedFormula<Implies>() {
-    override fun apply() {
-        TODO()
-//        listOf(
-//            SignedFormula(formula.antecedent, false, birthPlace),
-//            SignedFormula(formula.consequent, true, birthPlace),
-//        )
-    }
-}
 
-data class NegativeAndFormula(
-    override val formula: And,
-    override val birthPlace: TableauNode,
-) : BetaFormula<And>, NegativeSignedFormula<And>() {
-    override fun apply() {
-//        formula.subFormulas.map { SignedFormula(it, false, birthPlace) }
-        TODO()
-    }
+    override fun apply() =
+        birthPlace
+            .leaves()
+            .forEach { leaf: TableauNode ->
+                leaf.setChildren(
+                    listOf(
+                        createNodeForReducedFormulas { node: TableauNode ->
+                            create(
+                                formula = formula.consequent,
+                                sign = true,
+                                birthPlace = node,
+                            )
+                                .reduceAlpha(birthPlace = node)
+                        },
+                        createNodeForReducedFormulas { node: TableauNode ->
+                            create(
+                                formula = formula.antecedent,
+                                sign = false,
+                                birthPlace = node,
+                            )
+                                .reduceAlpha(birthPlace = node)
+                        },
+                    ),
+                )
+            }
+
 }
 
 data class NegativeIffFormula(
     override val formula: Iff,
     override val birthPlace: TableauNode,
 ) : BetaFormula<Iff>, NegativeSignedFormula<Iff>() {
-    override fun apply() = TODO()
+    override fun apply() =
+        birthPlace
+            .leaves()
+            .forEach { leaf: TableauNode ->
+                leaf.setChildren(
+                    listOf(
+                        createNodeForReducedFormulas { node: TableauNode ->
+                            create(
+                                formula = formula.subFormulas[0],
+                                sign = false,
+                                birthPlace = node,
+                            )
+                                .reduceAlpha(
+                                    birthPlace = node,
+                                    mutableList =
+                                        create(
+                                            formula = formula.subFormulas[1],
+                                            sign = true,
+                                            birthPlace = node,
+                                        )
+                                            .reduceAlpha(birthPlace = node),
+                                )
+                        },
+                        createNodeForReducedFormulas { node: TableauNode ->
+                            create(
+                                formula = formula.subFormulas[0],
+                                sign = true,
+                                birthPlace = node,
+                            )
+                                .reduceAlpha(
+                                    birthPlace = node,
+                                    mutableList =
+                                        create(
+                                            formula = formula.subFormulas[1],
+                                            sign = false,
+                                            birthPlace = node,
+                                        )
+                                            .reduceAlpha(birthPlace = node),
+                                )
+                        },
+                    ),
+                )
+            }
 
 }
 
@@ -358,9 +401,35 @@ data class PositiveIffFormula(
     override val formula: Iff,
     override val birthPlace: TableauNode,
 ) : BetaFormula<Iff>, PositiveSignedFormula<Iff>() {
-    override fun apply() {
-        TODO("Not yet implemented")
-    }
+    override fun apply() =
+        birthPlace
+            .leaves()
+            .forEach { leaf: TableauNode ->
+                leaf.setChildren(
+                    listOf(
+                        createNodeForReducedFormulas { node: TableauNode ->
+                            formula
+                                .subFormulas
+                                // NOTE this generates less garbage than the flatMap
+                                .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
+                                    create(t, true, node)
+                                        .reduceAlpha(node, r)
+                                    r
+                                }
+                        },
+                        createNodeForReducedFormulas { node: TableauNode ->
+                            formula
+                                .subFormulas
+                                // NOTE this generates less garbage than the flatMap
+                                .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
+                                    create(t, false, node)
+                                        .reduceAlpha(node, r)
+                                    r
+                                }
+                        },
+                    ),
+                )
+            }
 }
 
 sealed interface DeltaFormula<T : FolFormula> : SignedFormula<T>

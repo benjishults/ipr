@@ -170,4 +170,6 @@ class TableauNode(
             }
         }
 
+    override fun toString(): String = display(0)
+
 }

@@ -4,7 +4,7 @@ import bps.ipr.terms.Variable
 
 sealed class AbstractMultiFolFormula(
     val subFormulas: List<FolFormula>,
-) : FolFormula {
+) : FolFormula() {
 
     init {
         require(subFormulas.size >= 2)
@@ -52,6 +52,10 @@ class Or(disjuncts: List<FolFormula>) : AbstractMultiFolFormula(disjuncts) {
 
 class Iff(subFormulas: List<FolFormula>) : AbstractMultiFolFormula(subFormulas) {
     override val orderMattersLogically: Boolean = false
+    init {
+        // NOTE might loosen this later
+        require(subFormulas.size == 2)
+    }
     override val formulaConstructor: (FolFormulaImplementation, List<FolFormula>) -> Iff =
         { impl: FolFormulaImplementation, args: List<FolFormula> ->
             impl.iffOrNull(args)
