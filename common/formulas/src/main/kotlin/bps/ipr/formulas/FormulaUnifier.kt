@@ -9,13 +9,6 @@ import bps.ipr.terms.TermUnifier
 
 interface FormulaUnifier {
 
-    /**
-     * A [FormulaUnifier] needs a [FolFormulaImplementation] in order to construct new terms.
-     *
-     * Generally, a [FormulaUnifier] assumes that the [FolFormula]s it is unifying were constructed by the given
-     * [FolFormulaImplementation] or compatible.
-     */
-    val formulaImplementation: FolFormulaImplementation
     val termUnifier: TermUnifier
 
     /**
@@ -34,11 +27,11 @@ interface FormulaUnifier {
  * This unifier is appropriate for an implementation like [TermImplementation] or [FolTermImplementation] where proper
  * functions are not interned.  This does assume that free variables and constants with the same symbol are equal.
  */
-data class GeneralRecursiveDescentFormulaUnifier(
-    override val formulaImplementation: FolFormulaImplementation = FolFormulaImplementation(),
+class GeneralRecursiveDescentFormulaUnifier(
+    termImplementation: TermImplementation = FolTermImplementation(),
 ) : FormulaUnifier {
 
-    override val termUnifier: TermUnifier = GeneralRecursiveDescentTermUnifier(formulaImplementation.termImplementation)
+    override val termUnifier: TermUnifier = GeneralRecursiveDescentTermUnifier(termImplementation)
 
     override fun unify(
         formula1: Predicate,
@@ -51,7 +44,7 @@ data class GeneralRecursiveDescentFormulaUnifier(
         else if (formula1.symbol == formula2.symbol) {
             formula1
                 .arguments
-                .foldIndexed(under) { index, runningSub: IdempotentSubstitution, term ->
+                .foldIndexed(under) { index: Int, runningSub: IdempotentSubstitution, term ->
                     with(termUnifier) {
                         unify(
                             term

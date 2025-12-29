@@ -1,6 +1,7 @@
 package bps.ipr.formulas
 
 import bps.ipr.terms.ArgumentList
+import bps.ipr.terms.IdempotentSubstitution
 import bps.ipr.terms.Substitution
 import bps.ipr.terms.Variable
 
@@ -34,6 +35,10 @@ class Predicate(
                 .map { it.display() }
                 .joinToString(", ", "(", ")") { it }
         }"
+    }
+
+    fun unify(formula: Predicate, under: IdempotentSubstitution): IdempotentSubstitution? {
+        TODO("Not yet implemented")
     }
 
 }
