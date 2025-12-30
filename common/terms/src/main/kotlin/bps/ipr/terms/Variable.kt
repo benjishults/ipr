@@ -1,5 +1,9 @@
 package bps.ipr.terms
 
+import bps.ipr.substitution.EmptySubstitution
+import bps.ipr.substitution.IdempotentSubstitution
+import bps.ipr.substitution.SingletonIdempotentSubstitution
+import bps.ipr.substitution.Substitution
 import kotlin.math.sign
 
 sealed interface Variable : Term, Comparable<Variable> {

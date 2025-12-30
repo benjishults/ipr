@@ -1,5 +1,7 @@
 package bps.ipr.terms
 
+import bps.ipr.substitution.Substitution
+
 sealed class Function(
     val symbol: String,
     val arity: Int,
@@ -67,7 +69,7 @@ class ProperFunction(
                 .firstOrNull { it in this.variablesFreeIn }
             !== null
         )
-            termImplementation.properFunctionOrNull(
+            termImplementation.properFunction(
                 symbol,
                 arguments
                     .map {

@@ -23,9 +23,16 @@ interface TermImplementation : AutoCloseable {
     }
 
     /**
-     * @return a [FreeVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
+     * @return a [FreeVariable] for something close to the normalization of the given [symbol].
+     * Throws an exception if normalization isn't possible.
      */
-    fun freeVariableOrNull(symbol: String): FreeVariable?
+    fun newFreeVariable(symbol: String): FreeVariable
+
+    /**
+     * @return a [FreeVariable] for the normalization of the given [symbol].
+     * Throws an exception if normalization isn't possible.
+     */
+    fun freeVariableForSymbol(symbol: String): FreeVariable
 
 //    /**
 //     * @return a [BoundVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
@@ -33,44 +40,61 @@ interface TermImplementation : AutoCloseable {
 //    fun boundVariableOrNull(symbol: String): BoundVariable?
 
     /**
-     * @return a [Constant] for the normalization of the given [symbol] as a functor or `null` if that isn't possible.
+     * @return a [Constant] for the normalization of the given [symbol].
+     * Throws an exception if normalization isn't possible.
      */
-    fun constantOrNull(symbol: String): Constant?
+    fun constantForSymbol(symbol: String): Constant
+
+    fun functorForSymbol(symbol: String):
 
     /**
-     * @return a [ProperFunction] for the normalization of the given [symbol] as a functor and the
-     * given arguments or `null` if that isn't possible.
+     * @return a [ProperFunction] for the normalization of the given [symbol] and the
+     * given arguments.
      */
-    fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction?
+    fun properFunction(symbol: String, arguments: List<Term>): ProperFunction
 
     /**
      * Allows absolutely everything and interns nothing.
      */
     companion object : TermImplementation {
         override val termLanguage: TermLanguage = TermLanguage
+        override fun newFreeVariable(symbol: String): FreeVariable {
+            TODO("Not yet implemented")
+        }
 
-        override fun freeVariableOrNull(symbol: String): FreeVariable =
+        override fun freeVariableForSymbol(symbol: String): FreeVariable =
             FreeVariable(symbol)
 
 //        override fun boundVariableOrNull(symbol: String): BoundVariable =
 //            BoundVariable(symbol)
 
-        override fun constantOrNull(symbol: String): Constant =
+        override fun constantForSymbol(symbol: String): Constant =
             Constant(symbol)
 
-        override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction =
+        override fun properFunction(symbol: String, arguments: List<Term>): ProperFunction =
             ProperFunction(symbol, ArgumentList(arguments))
     }
 
 }
 
+/**
+ * This class is not thread-safe.
+ */
 open class FolTermImplementation(
     override val termLanguage: TermLanguage = FolTermLanguage(),
 ) : TermImplementation {
 
+    /**
+     * maps normalized symbols to [FreeVariable]s
+     */
     protected val freeVariableInternTable = mutableMapOf<String, FreeVariable>()
 
-//        protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
+    protected val freeVariableSymbolGenerationInfo = mutableMapOf<String, Long>()
+
+    //        protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
+    /**
+     * maps normalized symbols to [Constant]s
+     */
     protected val constantInternTable = mutableMapOf<String, Constant>()
 
     override fun clear() {
@@ -80,12 +104,48 @@ open class FolTermImplementation(
         constantInternTable.clear()
     }
 
-    override fun freeVariableOrNull(symbol: String): FreeVariable? =
+    /**
+     * only called when [normalized] is known to be on the [freeVariableInternTable] already.
+     */
+    protected open fun nextNormalizedFreeVariable(normalized: String): FreeVariable =
+        (freeVariableSymbolGenerationInfo[normalized] ?: -1)
+            .let { lastSuccessfulSuffix: Long ->
+                var nextSuffix = lastSuccessfulSuffix + 1L
+                var currentAttempt = "${normalized}_${nextSuffix}"
+                while (freeVariableInternTable.containsKey(currentAttempt)) {
+                    nextSuffix++
+                    currentAttempt = "${normalized}_${nextSuffix}"
+                }
+                FreeVariable(currentAttempt)
+                    .also {
+                        freeVariableInternTable[currentAttempt] = it
+                        freeVariableSymbolGenerationInfo[normalized] = nextSuffix
+                    }
+            }
+
+    /**
+     * Operates in a referentially transparent way.
+     */
+    override fun freeVariableForSymbol(symbol: String): FreeVariable =
         termLanguage
-            .toNormalizedFreeVariableOrNull(symbol)
-            ?.let {
+            .toNormalizedFreeVariableOrNull(symbol)!!
+            .let {
                 freeVariableInternTable.getOrPut(it) { FreeVariable(it) }
             }
+
+    override fun newFreeVariable(symbol: String): FreeVariable =
+        termLanguage
+            .toNormalizedFreeVariableOrNull(symbol)!!
+            .let { initialNormalization ->
+                if (freeVariableInternTable.containsKey(initialNormalization)) {
+                    nextNormalizedFreeVariable(initialNormalization)
+                } else
+                    FreeVariable(initialNormalization)
+                        .also {
+                            freeVariableInternTable[initialNormalization] = it
+                        }
+            }
+
 
 //    override fun boundVariableOrNull(symbol: String): BoundVariable? =
 //        termLanguage
@@ -103,19 +163,23 @@ open class FolTermImplementation(
 //                    }
 //            }
 
-    override fun constantOrNull(symbol: String): Constant? =
+    /**
+     * Operates in a referentially transparent way.
+     */
+    override fun constantForSymbol(symbol: String): Constant =
         termLanguage
-            .toNormalizedFunctorOrNull(symbol, 0)
-            ?.let {
+            .toNormalizedFunctorOrNull(symbol, 0)!!
+            .let {
                 constantInternTable.getOrPut(it) { Constant(it) }
             }
-
-    override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
-        termLanguage
-            .toNormalizedFunctorOrNull(symbol, arguments.size)
-            ?.let {
-                ProperFunction(it, ArgumentList(arguments))
-            }
+getSkolemSymbol
+    override fun properFunction(symbol: String, arguments: List<Term>): ProperFunction =
+        ProperFunction(
+            symbol =
+                termLanguage
+                    .toNormalizedFunctorOrNull(symbol, arguments.size)!!,
+            arguments = ArgumentList(arguments),
+        )
 
 }
 
@@ -132,10 +196,11 @@ open class FolDagTermImplementation(
         properFunctionInternTable.clear()
     }
 
-    override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
+    // TODO if this is referentially transparent, then let's document that.  (I think it should be)
+    override fun properFunction(symbol: String, arguments: List<Term>): ProperFunction =
         termLanguage
-            .toNormalizedFunctorOrNull(symbol, arguments.size)
-            ?.let {
+            .toNormalizedFunctorOrNull(symbol, arguments.size)!!
+            .let {
                 properFunctionInternTable[symbol]
                     ?.let { listOfTermsWithSymbol ->
                         listOfTermsWithSymbol
@@ -148,8 +213,8 @@ open class FolDagTermImplementation(
                             ?: ArgumentList(arguments)
                                 .let { args ->
                                     ProperFunction(
-                                        symbol,
-                                        args,
+                                        symbol = symbol,
+                                        arguments = args,
                                     )
                                         .also { listOfTermsWithSymbol.add(args to it) }
                                 }

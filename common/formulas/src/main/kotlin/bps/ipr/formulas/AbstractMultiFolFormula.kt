@@ -1,5 +1,6 @@
 package bps.ipr.formulas
 
+import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.terms.Variable
 
 sealed class AbstractMultiFolFormula(
@@ -12,13 +13,22 @@ sealed class AbstractMultiFolFormula(
 
     abstract val orderMattersLogically: Boolean
 
-    abstract val formulaConstructor: (FolFormulaImplementation, List<FolFormula>) -> FolFormula
+    abstract val formulaConstructor: (FolFormulaImplementation, List<FolFormula>) -> AbstractMultiFolFormula
 
 //    override val variablesBoundIn: Set<BoundVariable> =
 //        subFormulas
 //            .flatMapTo(mutableSetOf()) {
 //                it.variablesBoundIn
 //            }
+
+    override fun apply(
+        substitution: IdempotentSubstitution,
+        formulaImplementation: FolFormulaImplementation,
+    ): AbstractMultiFolFormula =
+        if (substitution.domain.firstOrNull { it in this.variablesFreeIn } !== null)
+            formulaConstructor(formulaImplementation, subFormulas.map { it.apply(substitution, formulaImplementation) })
+        else
+            this
 
     override val variablesFreeIn: Set<Variable> =
         subFormulas
@@ -52,10 +62,12 @@ class Or(disjuncts: List<FolFormula>) : AbstractMultiFolFormula(disjuncts) {
 
 class Iff(subFormulas: List<FolFormula>) : AbstractMultiFolFormula(subFormulas) {
     override val orderMattersLogically: Boolean = false
+
     init {
         // NOTE might loosen this later
         require(subFormulas.size == 2)
     }
+
     override val formulaConstructor: (FolFormulaImplementation, List<FolFormula>) -> Iff =
         { impl: FolFormulaImplementation, args: List<FolFormula> ->
             impl.iffOrNull(args)

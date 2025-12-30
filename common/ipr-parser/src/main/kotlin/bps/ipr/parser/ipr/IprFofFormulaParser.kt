@@ -80,7 +80,7 @@ open class IprFofFormulaParser(
                                                     formula,
                                                 )
                                             }
-                                        "exists" ->
+                                        "exists", "for-some" ->
                                             parseBindingFormula(indexAfterAtom) { boundVars, formula ->
                                                 formulaImplementation.forSomeOrNull(
                                                     boundVars,
@@ -141,7 +141,7 @@ open class IprFofFormulaParser(
                             parseAtomOrNull(indexOfBoundVar)
                                 ?.let { (boundVar: String, localIndexOfCloseParen: Int) ->
                                     if (get(localIndexOfCloseParen) == ')') {
-                                        boundVars.add(termImplementation.freeVariableOrNull(boundVar)!!)
+                                        boundVars.add(termImplementation.freeVariableForSymbol(boundVar)!!)
                                         runningStartingIndex = indexOfFirstNonWhitespace(localIndexOfCloseParen + 1)
                                     } else
                                         return null

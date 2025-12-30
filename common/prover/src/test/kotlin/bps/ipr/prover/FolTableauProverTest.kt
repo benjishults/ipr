@@ -12,7 +12,7 @@ import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class PropositionalTableauProverTest :
+class FolTableauProverTest :
     FreeSpec(),
     FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }),
     WhitespaceParser by IprWhitespaceParser {
@@ -20,7 +20,7 @@ class PropositionalTableauProverTest :
 
     init {
         val fileAsString = buildString {
-            PropositionalTableauProverTest::class.java.classLoader.getResourceAsStream("propositional.ipr")!!
+            FolTableauProverTest::class.java.classLoader.getResourceAsStream("fol.ipr")!!
                 .bufferedReader()
                 .useLines { lines: Sequence<String> ->
                     lines.forEach { append(it) }
@@ -42,7 +42,7 @@ class PropositionalTableauProverTest :
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display()} expecting $expectedResult" {
                         TableauProver(GeneralRecursiveDescentFormulaUnifier())
-                            .prove(formula, this@PropositionalTableauProverTest.formulaImplementation) shouldBe expectedResult
+                            .prove(formula, this@FolTableauProverTest.formulaImplementation) shouldBe expectedResult
                     }
                 }
         }

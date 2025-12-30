@@ -11,8 +11,8 @@ class BoundVariableFormulaTest : FreeSpec() {
 
     init {
         with(FolFormulaImplementation()) {
-            val x: FreeVariable = termImplementation.freeVariableOrNull("x")!!
-            val y: FreeVariable = termImplementation.freeVariableOrNull("y")!!
+            val x: FreeVariable = termImplementation.freeVariableForSymbol("x")!!
+            val y: FreeVariable = termImplementation.freeVariableForSymbol("y")!!
             val Qx = predicateOrNull("Q", listOf(x))!!
             val rxy = predicateOrNull("R", listOf(x, y))!!
             "variable binding formulas" - {

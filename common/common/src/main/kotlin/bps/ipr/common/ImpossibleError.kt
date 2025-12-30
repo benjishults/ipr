@@ -1,4 +1,4 @@
-package bps.ipr.terms
+package bps.ipr.common
 
 /**
  * Throw this when something impossible happens.

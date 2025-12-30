@@ -1,6 +1,7 @@
 package bps.ipr.terms
 
 import io.kotest.assertions.asClue
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -12,27 +13,29 @@ class LanguageArityTest : FreeSpec() {
         "test arity stuff works on FolTermImplementation" - {
             FolTermImplementation().use { implementation ->
                 "f can be both variable and constant but can't have a non-zero arity, now" {
-                    val fAsConstant = implementation.constantOrNull("f")
-                    val fAsVariable = implementation.freeVariableOrNull("f")
+                    val fAsConstant = implementation.constantForSymbol("f")
+                    val fAsVariable = implementation.freeVariableForSymbol("f")
                     fAsConstant.shouldNotBeNull()
                     fAsVariable.shouldNotBeNull()
-                    implementation.properFunctionOrNull("f", listOf(fAsConstant)).shouldBeNull()
+                    shouldThrow<NullPointerException> {
+                        implementation.properFunction("f", listOf(fAsConstant))
+                    }
                 }
             }
         }
         "test arity stuff works on TermImplementation" - {
             TermImplementation.use { implementation ->
                 "f can be variable, constant, and function with arguments" {
-                    val fAsConstant = implementation.constantOrNull("f")
-                    val fAsVariable: Variable? = implementation.freeVariableOrNull("f")
+                    val fAsConstant = implementation.constantForSymbol("f")
+                    val fAsVariable: Variable? = implementation.freeVariableForSymbol("f")
                     fAsConstant.shouldNotBeNull()
                     fAsVariable.shouldNotBeNull()
-                    implementation.properFunctionOrNull("f", listOf(fAsConstant))
+                    implementation.properFunction("f", listOf(fAsConstant))
                         .asClue {
                             it.shouldNotBeNull()
                             it.display() shouldBe "f(f())"
                         }
-                    implementation.properFunctionOrNull("f", listOf(fAsConstant, fAsVariable))
+                    implementation.properFunction("f", listOf(fAsConstant, fAsVariable))
                         .asClue {
                             it.shouldNotBeNull()
                             it.display() shouldBe "f(f(), f)"

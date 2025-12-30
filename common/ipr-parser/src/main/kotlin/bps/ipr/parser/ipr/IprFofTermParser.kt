@@ -65,10 +65,10 @@ interface IprFofTermParser : TermParser {
                                         with(whitespaceParser) {
                                             takeIf { args.isEmpty() }
                                                 ?.let {
-                                                    return termImplementation.constantOrNull(functor)!! to
+                                                    return termImplementation.constantForSymbol(functor)!! to
                                                             globalIndexAfterWhitespaceAfterTerm
                                                 }
-                                                ?: (termImplementation.properFunctionOrNull(functor, args)!! to
+                                                ?: (termImplementation.properFunction(functor, args)!! to
                                                         globalIndexAfterWhitespaceAfterTerm)
                                         }
                                     }
@@ -77,7 +77,7 @@ interface IprFofTermParser : TermParser {
                         // proper function
                         parseAtomOrNull(startIndex)
                             ?.let { (atom: String, index: Int) ->
-                                termImplementation.freeVariableOrNull(atom)
+                                termImplementation.freeVariableForSymbol(atom)
                                     ?.let { variable -> variable to index }
                             }
                 }

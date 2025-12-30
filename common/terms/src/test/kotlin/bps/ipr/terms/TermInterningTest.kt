@@ -8,18 +8,18 @@ class TermInterningTest : FreeSpec() {
         "test interning works as expected on different languages" - {
             "test FolDagTermImplementation (expect everything interned)" - {
                 FolDagTermImplementation().use { implementation ->
-                    val var1: Variable = implementation.freeVariableOrNull("x")!!
-                    val var2: Variable = implementation.freeVariableOrNull("x")!!
-                    val con1: Constant = implementation.constantOrNull("a")!!
-                    val con2: Constant = implementation.constantOrNull("a")!!
+                    val var1: Variable = implementation.freeVariableForSymbol("x")!!
+                    val var2: Variable = implementation.freeVariableForSymbol("x")!!
+                    val con1: Constant = implementation.constantForSymbol("a")!!
+                    val con2: Constant = implementation.constantForSymbol("a")!!
                     val term1: ProperFunction =
-                        implementation.properFunctionOrNull("f", listOf(con1, var1))!!
+                        implementation.properFunction("f", listOf(con1, var1))!!
                     val term2: ProperFunction =
-                        implementation.properFunctionOrNull(
+                        implementation.properFunction(
                             "f",
                             listOf(
-                                implementation.constantOrNull("a")!!,
-                                implementation.freeVariableOrNull("x")!!,
+                                implementation.constantForSymbol("a")!!,
+                                implementation.freeVariableForSymbol("x")!!,
                             ),
                         )!!
                     "x === x as variables" {
@@ -35,18 +35,18 @@ class TermInterningTest : FreeSpec() {
             }
             "test FolTermImplementation (expect variables and constants interned)" - {
                 FolTermImplementation().use { implementation ->
-                    val var1: Variable = implementation.freeVariableOrNull("x")!!
-                    val var2: Variable = implementation.freeVariableOrNull("x")!!
-                    val con1: Constant = implementation.constantOrNull("a")!!
-                    val con2: Constant = implementation.constantOrNull("a")!!
+                    val var1: Variable = implementation.freeVariableForSymbol("x")!!
+                    val var2: Variable = implementation.freeVariableForSymbol("x")!!
+                    val con1: Constant = implementation.constantForSymbol("a")!!
+                    val con2: Constant = implementation.constantForSymbol("a")!!
                     val term1: ProperFunction =
-                        implementation.properFunctionOrNull("f", listOf(con1, var1))!!
+                        implementation.properFunction("f", listOf(con1, var1))!!
                     val term2: ProperFunction =
-                        implementation.properFunctionOrNull(
+                        implementation.properFunction(
                             "f",
                             listOf(
-                                implementation.constantOrNull("a")!!,
-                                implementation.freeVariableOrNull("x")!!,
+                                implementation.constantForSymbol("a")!!,
+                                implementation.freeVariableForSymbol("x")!!,
                             ),
                         )!!
                     "x === x as variables" {
@@ -62,18 +62,18 @@ class TermInterningTest : FreeSpec() {
             }
             "test TermImplementation (expect nothing interned)" - {
                 TermImplementation.use { implementation ->
-                    val var1: Variable = implementation.freeVariableOrNull("x")!!
-                    val var2: Variable = implementation.freeVariableOrNull("x")!!
-                    val con1: Constant = implementation.constantOrNull("a")!!
-                    val con2: Constant = implementation.constantOrNull("a")!!
+                    val var1: Variable = implementation.freeVariableForSymbol("x")!!
+                    val var2: Variable = implementation.freeVariableForSymbol("x")!!
+                    val con1: Constant = implementation.constantForSymbol("a")!!
+                    val con2: Constant = implementation.constantForSymbol("a")!!
                     val term1: ProperFunction =
-                        implementation.properFunctionOrNull("f", listOf(con1, var1))!!
+                        implementation.properFunction("f", listOf(con1, var1))!!
                     val term2: ProperFunction =
-                        implementation.properFunctionOrNull(
+                        implementation.properFunction(
                             "f",
                             listOf(
-                                implementation.constantOrNull("a")!!,
-                                implementation.freeVariableOrNull("x")!!,
+                                implementation.constantForSymbol("a")!!,
+                                implementation.freeVariableForSymbol("x")!!,
                             ),
                         )!!
                     "x !== x as variables" {

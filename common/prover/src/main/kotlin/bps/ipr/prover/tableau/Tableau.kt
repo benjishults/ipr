@@ -1,12 +1,11 @@
 package bps.ipr.prover.tableau
 
-import bps.ipr.common.Queue
-import bps.ipr.common.queue
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
-import bps.ipr.terms.EmptySubstitution
-import bps.ipr.terms.IdempotentSubstitution
+import bps.ipr.substitution.EmptySubstitution
+import bps.ipr.substitution.IdempotentSubstitution
 import kotlin.sequences.emptySequence
 
 class Tableau {
@@ -122,7 +121,7 @@ class Tableau {
 
     companion object {
         // NOTE had to do this outside a constructor because I have to have the generic function
-        operator fun <T : FolFormula> invoke(formula: T): Tableau {
+        operator fun <T : FolFormula> invoke(formula: T, formulaImplementation: FolFormulaImplementation): Tableau {
             return Tableau()
                 .also { tableau: Tableau ->
                     TableauNode()
@@ -133,6 +132,7 @@ class Tableau {
                                     formula = formula,
                                     sign = false,
                                     birthPlace = root,
+                                    formulaImplementation = formulaImplementation
                                 )
                                 .reduceAlpha(birthPlace = root)
                                 .also {

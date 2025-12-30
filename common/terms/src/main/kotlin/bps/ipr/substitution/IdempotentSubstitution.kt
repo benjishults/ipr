@@ -1,9 +1,13 @@
-package bps.ipr.terms
+package bps.ipr.substitution
+
+import bps.ipr.terms.Term
+import bps.ipr.terms.TermImplementation
+import bps.ipr.terms.Variable
 
 /**
- * Mapping from [Variable]s to [Term]s with absolutely no other restrictions.  It is always assumed that a
- * [Substitution] maps a [Variable] to itself unless the contrary is explicitly called out.  In other words, if a
- * [Variable] is not in the domain of a [Substitution], then that [Variable] is mapped to itself.
+ * Mapping from [bps.ipr.terms.Variable]s to [bps.ipr.terms.Term]s with absolutely no other restrictions.  It is always assumed that a
+ * [Substitution] maps a [bps.ipr.terms.Variable] to itself unless the contrary is explicitly called out.  In other words, if a
+ * [bps.ipr.terms.Variable] is not in the domain of a [Substitution], then that [bps.ipr.terms.Variable] is mapped to itself.
  */
 sealed interface Substitution {
 
@@ -54,6 +58,9 @@ sealed interface IdempotentSubstitution : Substitution {
 
     // TODO consider moving this to a subtype something like SyntacticSubstitution
     // NOTE we can't cheaply guarantee the result will be idempotent without assuming the inputs are idempotent
+    /**
+     * @return the composition of [theta] with the receiver.  I.e. t `this` [composeIdempotent] ([theta]) `==` (t `this`)[theta]
+     */
     fun composeIdempotent(theta: IdempotentSubstitution, termImplementation: TermImplementation): IdempotentSubstitution
 
 }
@@ -115,10 +122,11 @@ sealed interface NonEmptyIdempotentSubstitution : IdempotentSubstitution {
             this
         else {
             // apply theta to every term in the range of sigma: sigma_1
-            val sigma1: IdempotentSubstitution = applyToRange(
-                theta,
-                termImplementation,
-            )
+            val sigma1: IdempotentSubstitution =
+                this.applyToRange(
+                    substitution = theta,
+                    termImplementation = termImplementation,
+                )
             require(sigma1.isIdempotent())
             // NOTE the reason we can assume this is non-empty is that we assume that theta's variable range does not
             //      intersect sigma's domain.  Thus, applying theta to the range of sigma cannot result in trivial

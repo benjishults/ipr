@@ -1,6 +1,6 @@
 package bps.ipr.formulas
 
-import bps.ipr.terms.FreeVariable
+import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.terms.Variable
 
 sealed class VariablesBindingFolFormula
@@ -31,7 +31,7 @@ constructor(
 //    override val variablesBoundIn: Set<BoundVariable> =
 //        subFormula.variablesBoundIn + boundVariables
 
-    abstract val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula) -> FolFormula
+    abstract val formulaConstructor: (FolFormulaImplementation, List<Variable>, FolFormula) -> VariablesBindingFolFormula
 
     override val variablesFreeIn: Set<Variable> =
 //        boundVariables
@@ -44,23 +44,26 @@ constructor(
                     .toSet()
 //            }
 
+    // NOTE FOL language rules applied on formula creation do not permit the bound variables to occur anywhere
+    //      outside this sub-formula.  Thus, unless someone is maliciously creating a substitution to screw things
+    //      up, there's no way bound variable here can occur in the domain or range of an "outside" substitution.
+    override fun apply(substitution: IdempotentSubstitution, formulaImplementation: FolFormulaImplementation): VariablesBindingFolFormula =
+        if (substitution.domain.firstOrNull { it in this.variablesFreeIn } !== null)
+            formulaConstructor(formulaImplementation, boundVariables, subFormula.apply(substitution, formulaImplementation))
+        else
+            this
+
     override fun display(): String =
         boundVariables
             .joinToString(
-                ", ",
-                "($symbol (",
-                ") ${subFormula.display()})",
+                separator = ", ",
+                prefix = "($symbol (",
+                postfix = ") ${subFormula.display()})",
             ) { it.display() }
 
 }
 
-class ForAll
-/**
- * @throws IllegalArgumentException if any of the [BoundVariable]s in [boundVariables] display the same as any of
- * the [FreeVariable]s in [subFormula]'s [FolFormula.variablesFreeIn] OR if any of the [BoundVariable]s in
- * [boundVariables] do NOT occur free in [subFormula].
- */
-constructor(
+class ForAll(
     boundVariables: List<Variable>,
     subFormula: FolFormula,
 ) : VariablesBindingFolFormula(boundVariables, subFormula) {
@@ -75,13 +78,7 @@ constructor(
 
 }
 
-class ForSome
-/**
- * @throws IllegalArgumentException if any of the [Variable]s in [boundVariables] display the same as any of
- * the [FreeVariable]s in [subFormula]'s [FolFormula.variablesFreeIn] OR if any of the [Variable]s in
- * [boundVariables] do NOT occur free in [subFormula].
- */
-constructor(
+class ForSome(
     boundVariables: List<Variable>,
     subFormula: FolFormula,
 ) : VariablesBindingFolFormula(boundVariables, subFormula) {

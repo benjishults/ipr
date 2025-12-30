@@ -1,15 +1,15 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.tableau.SignedFormula
 import bps.ipr.prover.tableau.Tableau
-import bps.ipr.terms.Substitution
-import bps.ipr.terms.TermUnifier
+import bps.ipr.substitution.Substitution
 
 interface Prover/*<T : FolFormula, out R : ProofResult>*/ {
 
-    fun prove(formula: FolFormula): FolProofResult
+    fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult
 //    fun prove(formula: T): R
 
 }
@@ -30,8 +30,8 @@ class TableauProver(
     val unifier: FormulaUnifier
 ) : Prover/*<FolFormula, FolProofResult>*/ {
 
-    override fun prove(formula: FolFormula): FolProofResult =
-        Tableau(formula)
+    override fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult =
+        Tableau(formula, formulaImplementation)
             .let { tableau: Tableau ->
                 var result: FolProofResult? = tableau.attemptClose(unifier)
                 while (result === null) {
