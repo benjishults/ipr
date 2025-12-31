@@ -3,9 +3,10 @@ package bps.ipr.prover.tableau
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
 
-class RuleSet {
-
+class RuleSet(
     private var _qLimit: Int = 1
+) {
+
     val qLimit: Int = _qLimit
 
     val alphaRules: Queue<AlphaFormula<*>> = queue()

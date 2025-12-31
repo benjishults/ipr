@@ -83,12 +83,12 @@ data class GeneralRecursiveDescentTermUnifier(
                         is Constant ->
                             null
                         is ProperFunction ->
-                            if (term1.symbol == term2.symbol) {
+                            if (term1.functor == term2.functor) {
                                 term1.arguments.foldIndexed(under) { index, runningSub, term ->
                                     unify(
                                         term
                                             .apply(runningSub, termImplementation),
-                                        term2.arguments[index]
+                                        term2.arguments.elementAt(index)
                                             .apply(runningSub, termImplementation),
                                         runningSub,
                                     )

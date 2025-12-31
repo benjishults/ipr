@@ -3,7 +3,6 @@ package bps.ipr.terms
 import io.kotest.assertions.asClue
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
@@ -17,8 +16,8 @@ class LanguageArityTest : FreeSpec() {
                     val fAsVariable = implementation.freeVariableForSymbol("f")
                     fAsConstant.shouldNotBeNull()
                     fAsVariable.shouldNotBeNull()
-                    shouldThrow<NullPointerException> {
-                        implementation.properFunction("f", listOf(fAsConstant))
+                    shouldThrow<ArityOverloadException> {
+                        implementation.functorForSymbol("f", 1)
                     }
                 }
             }
@@ -30,12 +29,12 @@ class LanguageArityTest : FreeSpec() {
                     val fAsVariable: Variable? = implementation.freeVariableForSymbol("f")
                     fAsConstant.shouldNotBeNull()
                     fAsVariable.shouldNotBeNull()
-                    implementation.properFunction("f", listOf(fAsConstant))
+                    implementation.properFunction(implementation.functorForSymbol("f", 1), listOf(fAsConstant))
                         .asClue {
                             it.shouldNotBeNull()
                             it.display() shouldBe "f(f())"
                         }
-                    implementation.properFunction("f", listOf(fAsConstant, fAsVariable))
+                    implementation.properFunction(implementation.functorForSymbol("f", 1), listOf(fAsConstant, fAsVariable))
                         .asClue {
                             it.shouldNotBeNull()
                             it.display() shouldBe "f(f(), f)"

@@ -23,7 +23,7 @@ interface IprFofTermParser : TermParser {
      * 1. the [List] of [Term]s
      * 2. the index within the receiver of the `')'` that terminates the list of terms
      * or `null` if the receiver is not in the expected format including if an expected final closed paren is not found
-     * @throws ArityOverloadException if a symbol is used with an arity that differs from the arity of that symbol
+     * @throws bps.ipr.terms.ArityOverloadException if a symbol is used with an arity that differs from the arity of that symbol
      * in the language
      */
     private fun String.parseIprFofArgumentsOrNullHelper(
@@ -65,11 +65,14 @@ interface IprFofTermParser : TermParser {
                                         with(whitespaceParser) {
                                             takeIf { args.isEmpty() }
                                                 ?.let {
-                                                    return termImplementation.constantForSymbol(functor)!! to
+                                                    return termImplementation.constantForSymbol(functor) to
                                                             globalIndexAfterWhitespaceAfterTerm
                                                 }
-                                                ?: (termImplementation.properFunction(functor, args)!! to
-                                                        globalIndexAfterWhitespaceAfterTerm)
+                                                ?: (termImplementation
+                                                    .properFunction(
+                                                        termImplementation.functorForSymbol(functor, args.size),
+                                                        args,
+                                                    ) to globalIndexAfterWhitespaceAfterTerm)
                                         }
                                     }
                             }
@@ -77,8 +80,7 @@ interface IprFofTermParser : TermParser {
                         // proper function
                         parseAtomOrNull(startIndex)
                             ?.let { (atom: String, index: Int) ->
-                                termImplementation.freeVariableForSymbol(atom)
-                                    ?.let { variable -> variable to index }
+                                termImplementation.freeVariableForSymbol(atom) to index
                             }
                 }
             }

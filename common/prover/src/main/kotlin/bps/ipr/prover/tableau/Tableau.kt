@@ -8,7 +8,9 @@ import bps.ipr.substitution.EmptySubstitution
 import bps.ipr.substitution.IdempotentSubstitution
 import kotlin.sequences.emptySequence
 
-class Tableau {
+class Tableau(
+    private var initialQLimit: Int = 1
+) {
 
     private var _root: TableauNode? = null
     var root: TableauNode
@@ -20,7 +22,7 @@ class Tableau {
             } else
                 throw IllegalStateException("Root already set")
         }
-    val applicableRules: RuleSet = RuleSet()
+    val applicableRules: RuleSet = RuleSet(initialQLimit)
 
 //    private val nodeToStateMap: MutableMap<Long, NodeState> = mutableMapOf()
 
@@ -121,8 +123,8 @@ class Tableau {
 
     companion object {
         // NOTE had to do this outside a constructor because I have to have the generic function
-        operator fun <T : FolFormula> invoke(formula: T, formulaImplementation: FolFormulaImplementation): Tableau {
-            return Tableau()
+        operator fun <T : FolFormula> invoke(formula: T, formulaImplementation: FolFormulaImplementation, initialQLimit: Int = 1): Tableau {
+            return Tableau(initialQLimit)
                 .also { tableau: Tableau ->
                     TableauNode()
                         .also { root: TableauNode ->

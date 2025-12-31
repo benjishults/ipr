@@ -25,7 +25,15 @@ constructor(
 //                .find { it in freeVariablesInSubFormula }
 //                    == null,
 //        )
-        require(boundVariables.all { it in subFormula.variablesFreeIn })
+        require(
+            boundVariables.all { bv ->
+                (bv in subFormula.variablesFreeIn)
+                    .also {
+                        if (!it)
+                            println("bound variable $bv not in subformula $subFormula with free variables ${subFormula.variablesFreeIn}")
+                    }
+            },
+        )
     }
 
 //    override val variablesBoundIn: Set<BoundVariable> =
@@ -47,9 +55,16 @@ constructor(
     // NOTE FOL language rules applied on formula creation do not permit the bound variables to occur anywhere
     //      outside this sub-formula.  Thus, unless someone is maliciously creating a substitution to screw things
     //      up, there's no way bound variable here can occur in the domain or range of an "outside" substitution.
-    override fun apply(substitution: IdempotentSubstitution, formulaImplementation: FolFormulaImplementation): VariablesBindingFolFormula =
+    override fun apply(
+        substitution: IdempotentSubstitution,
+        formulaImplementation: FolFormulaImplementation,
+    ): VariablesBindingFolFormula =
         if (substitution.domain.firstOrNull { it in this.variablesFreeIn } !== null)
-            formulaConstructor(formulaImplementation, boundVariables, subFormula.apply(substitution, formulaImplementation))
+            formulaConstructor(
+                formulaImplementation,
+                boundVariables,
+                subFormula.apply(substitution, formulaImplementation),
+            )
         else
             this
 

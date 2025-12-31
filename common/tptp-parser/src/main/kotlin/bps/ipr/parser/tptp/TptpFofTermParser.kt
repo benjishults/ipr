@@ -41,7 +41,7 @@ interface TptpFofTermParser : TermParser {
                         // proper function
                         substring(startIndex, indexOfFirstDelimiter)
                             .parseTptpFunctorOrNull()
-                            ?.let { functor ->
+                            ?.let { functor: String ->
                                 val startIndexOfArguments = indexOfFirstDelimiter + 1
                                 substring(startIndexOfArguments)
                                     .parseArgumentsOrNull(startIndex)
@@ -49,7 +49,11 @@ interface TptpFofTermParser : TermParser {
                                         val globalIndexAfterClosedParen =
                                             startIndexOfArguments + closedParenInArgumentsInputIndex + 1
                                         with(whitespaceParser) {
-                                            termImplementation.properFunction(functor, args)!! to
+                                            termImplementation
+                                                .properFunction(
+                                                    termImplementation.functorForSymbol(functor, args.size),
+                                                    args,
+                                                ) to
                                                     substring(globalIndexAfterClosedParen)
                                                         .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
                                         }

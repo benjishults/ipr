@@ -1,8 +1,5 @@
 package bps.ipr.formulas
 
-import bps.ipr.terms.FolTermLanguage
-import bps.ipr.terms.TermLanguage
-
 /**
  * A [FormulaLanguage] controls
  * 1. what symbol is allowed to be a predicate
@@ -27,11 +24,15 @@ interface FormulaLanguage {
     fun getPredicateArity(symbol: String): Int?
 
     /**
+     * Ensures that the [symbol] meets any requirements of the language.  E.g., some languages may
+     * 1. restrict the names of predicates or
+     * 2. require functors to have a single arity.
      * The default implementation simply returns the receiver.
-     * @return the normalized predicate symbol of the given arity derived from the input string if any.
+     * @return [symbol] or `null`.
+     * @param symbol the [String] to be checked
      * @param arity defaults to `0`
      */
-    fun toNormalizedPredicateOrNull(symbol: String, arity: Int = 0): String? = symbol
+    fun ensurePredicateOrNull(symbol: String, arity: Int = 0): String? = symbol
 
     /**
      * Allows absolutely everything.
@@ -51,7 +52,7 @@ open class FolFormulaLanguage(
 
     protected val arityInternTable: MutableMap<String, Int> = mutableMapOf()
 
-    override fun toNormalizedPredicateOrNull(symbol: String, arity: Int): String? =
+    override fun ensurePredicateOrNull(symbol: String, arity: Int): String? =
         symbol.takeIf {
             arityInternTable
                 .getOrPut(symbol) { arity } == arity

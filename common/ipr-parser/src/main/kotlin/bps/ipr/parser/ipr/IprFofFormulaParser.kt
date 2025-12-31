@@ -4,6 +4,7 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.Formula
 import bps.ipr.formulas.Predicate
+import bps.ipr.terms.ArityOverloadException
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.WhitespaceParser
 import bps.ipr.terms.FreeVariable
@@ -74,14 +75,14 @@ open class IprFofFormulaParser(
                                                 formulaImplementation.impliesOrNull(it)
                                             }
                                         "forall" ->
-                                            parseBindingFormula(indexAfterAtom) { boundVars, formula ->
+                                            parseBindingFormula(indexAfterAtom) { boundVars: List<Variable>, formula: FolFormula ->
                                                 formulaImplementation.forAllOrNull(
                                                     boundVars,
                                                     formula,
                                                 )
                                             }
                                         "exists", "for-some" ->
-                                            parseBindingFormula(indexAfterAtom) { boundVars, formula ->
+                                            parseBindingFormula(indexAfterAtom) { boundVars: List<Variable>, formula: FolFormula ->
                                                 formulaImplementation.forSomeOrNull(
                                                     boundVars,
                                                     formula,
@@ -141,7 +142,7 @@ open class IprFofFormulaParser(
                             parseAtomOrNull(indexOfBoundVar)
                                 ?.let { (boundVar: String, localIndexOfCloseParen: Int) ->
                                     if (get(localIndexOfCloseParen) == ')') {
-                                        boundVars.add(termImplementation.freeVariableForSymbol(boundVar)!!)
+                                        boundVars.add(termImplementation.freeVariableForSymbol(boundVar))
                                         runningStartingIndex = indexOfFirstNonWhitespace(localIndexOfCloseParen + 1)
                                     } else
                                         return null
@@ -225,10 +226,11 @@ open class IprFofFormulaParser(
                                     }",
                                 )) to globalIndexAfterWhitespaceAfterTerm
                         }
-                        ?: (formulaImplementation.predicateOrNull(
-                            formulaBuilder,
-                            args,
-                        )!! to globalIndexAfterWhitespaceAfterTerm)
+                        ?: (formulaImplementation
+                            .predicateOrNull(
+                                formulaBuilder,
+                                args,
+                            )!! to globalIndexAfterWhitespaceAfterTerm)
                 }
         }
 

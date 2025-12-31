@@ -27,11 +27,12 @@ data object FolProofFailure : FolProofResult
 data object FolProofIncomplete : FolProofResult
 
 class TableauProver(
-    val unifier: FormulaUnifier
+    val unifier: FormulaUnifier,
+    val initialQLimit: Int = 1,
 ) : Prover/*<FolFormula, FolProofResult>*/ {
 
     override fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult =
-        Tableau(formula, formulaImplementation)
+        Tableau(formula, formulaImplementation, initialQLimit)
             .let { tableau: Tableau ->
                 var result: FolProofResult? = tableau.attemptClose(unifier)
                 while (result === null) {

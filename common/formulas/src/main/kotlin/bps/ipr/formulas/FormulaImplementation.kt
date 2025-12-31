@@ -40,14 +40,21 @@ interface FormulaImplementation : AutoCloseable {
 
 }
 
+// FIXME we need a DAG implementation of this as well.
+
 open class FolFormulaImplementation(
     override val formulaLanguage: FolFormulaLanguage = FolFormulaLanguage(),
     val termImplementation: FolTermImplementation = FolTermImplementation(),
 ) : FormulaImplementation {
 
+    override fun clear() {
+        super.clear()
+        termImplementation.clear()
+    }
+
     fun predicateOrNull(symbol: String, arguments: List<Term> = emptyList()): Predicate? =
         formulaLanguage
-            .toNormalizedPredicateOrNull(symbol, arguments.size)
+            .ensurePredicateOrNull(symbol, arguments.size)
             ?.let {
                 Predicate(it, ArgumentList(arguments))
             }

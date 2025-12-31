@@ -166,7 +166,11 @@ data class SingletonIdempotentSubstitution(
 
     init {
         // NOTE delete this once the factories have been validated... if there are factories... and there should be
-        require(!key.occursFreeIn(value))
+        require(
+            !key.occursFreeIn(value) || false.also {
+                println("key $key does not occur free in value $value")
+            },
+        )
     }
 
     override val domain: Set<Variable> =

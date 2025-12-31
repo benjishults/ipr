@@ -23,7 +23,10 @@ class PropositionalTableauProverTest :
             PropositionalTableauProverTest::class.java.classLoader.getResourceAsStream("propositional.ipr")!!
                 .bufferedReader()
                 .useLines { lines: Sequence<String> ->
-                    lines.forEach { append(it) }
+                    lines.forEach {
+                        append(it)
+                        append('\n')
+                    }
                 }
         }
         "using parsable file" - {
@@ -42,7 +45,10 @@ class PropositionalTableauProverTest :
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display()} expecting $expectedResult" {
                         TableauProver(GeneralRecursiveDescentFormulaUnifier())
-                            .prove(formula, this@PropositionalTableauProverTest.formulaImplementation) shouldBe expectedResult
+                            .prove(
+                                formula,
+                                this@PropositionalTableauProverTest.formulaImplementation,
+                            ) shouldBe expectedResult
                     }
                 }
         }

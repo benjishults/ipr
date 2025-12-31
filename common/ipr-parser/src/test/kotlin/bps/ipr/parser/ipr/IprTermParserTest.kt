@@ -2,6 +2,7 @@ package bps.ipr.parser.ipr
 
 import bps.ipr.terms.Constant
 import bps.ipr.terms.FolDagTermImplementation
+import bps.ipr.terms.FolTermImplementation
 import bps.ipr.terms.FreeVariable
 import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
@@ -22,7 +23,8 @@ class IprTermParserTest : FreeSpec() {
     )
 
     init {
-        val termImplementation = FolDagTermImplementation()
+        val termImplementation = FolTermImplementation()
+//        val termImplementation = FolDagTermImplementation()
         with(IprFofTermParser(termImplementation)) {
             "testValidStartTerm" - {
                 listOf(

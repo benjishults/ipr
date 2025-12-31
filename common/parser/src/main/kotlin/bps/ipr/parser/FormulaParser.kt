@@ -18,9 +18,18 @@ interface FormulaParser<T: Formula> {
      */
     fun String.parseFormulaOrNull(startIndex: Int = 0): Pair<T, Int>?
 
+    fun clear() {
+        formulaImplementation.clear()
+    }
+
 }
 
 interface FolFormulaParser : FormulaParser<FolFormula> {
     override val formulaImplementation: FolFormulaImplementation
     val termParser: TermParser
+
+    override fun clear() {
+        super.clear()
+        termParser.clear()
+    }
 }

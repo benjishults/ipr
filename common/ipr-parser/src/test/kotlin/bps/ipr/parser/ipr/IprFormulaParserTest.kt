@@ -13,6 +13,7 @@ import bps.ipr.formulas.Or
 import bps.ipr.formulas.Predicate
 import bps.ipr.formulas.Truth
 import bps.ipr.terms.FolDagTermImplementation
+import bps.ipr.terms.FolTermImplementation
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -29,7 +30,8 @@ class IprFormulaParserTest : FreeSpec() {
     )
 
     init {
-        val termImplementation = FolDagTermImplementation()
+        val termImplementation = FolTermImplementation()
+//        val termImplementation = FolDagTermImplementation()
         val formulaImplementation = FolFormulaImplementation()
         with(
             IprFofFormulaParser(

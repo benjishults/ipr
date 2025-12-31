@@ -11,6 +11,9 @@ package bps.ipr.terms
  */
 interface TermLanguage {
 
+    /**
+     * maps normalized functor symbols to their arities.
+     */
     val arityInternTable: Map<String, Int> get() = emptyMap()
 
     /**
@@ -19,13 +22,18 @@ interface TermLanguage {
      *
      * The default implementation does nothing since the default implementation allows everything.
      */
-    fun clear() {}
+    fun clear() {
+    }
 
     /**
+     * Ensures that the [symbol] meets any requirements of the language.  E.g., some languages may
+     * restrict the names of variables.
+     *
      * The default implementation simply returns the receiver if non-blank.
-     * @return the normalized variable symbol derived from the input string, if any.
+     * @return [symbol] or `null`.
+     * @param symbol the [String] to be checked
      */
-    fun toNormalizedFreeVariableOrNull(symbol: String): String? =
+    fun registerFreeVariableOrNull(symbol: String): String? =
         symbol.takeIf { it.isNotBlank() }
 
 //    /**
@@ -36,10 +44,15 @@ interface TermLanguage {
 //        symbol.takeIf { it.isNotBlank() }
 
     /**
+     * Ensures that the [symbol] meets any requirements of the language.  E.g., some languages may
+     * 1. restrict the names of functors or
+     * 2. require functors to have a single arity.
      * The default implementation simply returns the receiver if non-blank.
-     * @return the normalized functor symbol of the given arity derived from the input string if any.
+     * @return [symbol] or `null`.
+     * @param arity the intended arity of the functor symbol
+     * @param symbol the [String] to be checked
      */
-    fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? =
+    fun registerFunctorOrNull(symbol: String, arity: Int): String? =
         symbol.takeIf { it.isNotBlank() }
 
     /**
@@ -50,18 +63,19 @@ interface TermLanguage {
 }
 
 /**
- * Allows any [String] symbol to be a variable and any symbol to be a functor symbol.  A given symbol can be used as
+ * Allows any non-empty [String] symbol to be a variable or a functor.  A given symbol can be used as
  * both a variable and a functor in a single instance of this [TermLanguage].  However, a given functor symbol has a
- * fixed arity once it is normalized.
+ * fixed arity once it is registered.
  */
 open class FolTermLanguage : TermLanguage {
 
     protected val internalArityInternTable = mutableMapOf<String, Int>()
-    override val arityInternTable: Map<String, Int> = internalArityInternTable
+    override val arityInternTable: Map<String, Int>
+        get() = internalArityInternTable
 
-    override fun toNormalizedFunctorOrNull(symbol: String, arity: Int): String? =
+    override fun registerFunctorOrNull(symbol: String, arity: Int): String? =
         super
-            .toNormalizedFunctorOrNull(symbol, arity)
+            .registerFunctorOrNull(symbol, arity)
             .takeIf {
                 internalArityInternTable
                     .getOrPut(symbol) { arity } == arity

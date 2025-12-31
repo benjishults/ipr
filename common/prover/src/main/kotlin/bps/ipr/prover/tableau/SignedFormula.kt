@@ -7,7 +7,6 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.ForAll
 import bps.ipr.formulas.ForSome
-import bps.ipr.formulas.FormulaImplementation
 import bps.ipr.formulas.Iff
 import bps.ipr.formulas.Implies
 import bps.ipr.formulas.Not
@@ -17,9 +16,7 @@ import bps.ipr.formulas.Truth
 import bps.ipr.formulas.VariablesBindingFolFormula
 import bps.ipr.prover.tableau.SignedFormula.Companion.create
 import bps.ipr.substitution.IdempotentSubstitution
-import bps.ipr.substitution.NonEmptyIdempotentSubstitution
 import bps.ipr.substitution.SingletonIdempotentSubstitution
-import bps.ipr.terms.TermImplementation
 import bps.ipr.terms.Variable
 
 sealed interface SignedFormula<T : FolFormula> {
@@ -464,7 +461,7 @@ data class PositiveIffFormula(
 sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T> {
     override fun apply() =
         // NOTE we want a single new skolem function???
-        createDeltaChild()
+        createDeltaChildFormula()
             .let { childFormula: FolFormula ->
                 birthPlace
                     .leaves()
@@ -480,48 +477,50 @@ sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
                     }
             }
 
-    private fun getSkolemArgs(formula: VariablesBindingFolFormula): List<Variable> =
-        TODO()
-
-    private fun getSkolemSymbol(variable: Variable):
-
-    fun createDeltaChild(): FolFormula =
-        formula
-            .boundVariables
-            .firstOrNull()!!
-            .let { firstBv: Variable ->
-val skolemArgs =                getSkolemArgs(formula.subFormula)
-                formula
-                    .boundVariables
-                    .asSequence()
-                    .drop(1)
-                    .fold(
-                        SingletonIdempotentSubstitution(
-                            firstBv,
-        formulaImplementation.termImplementation.properFunction(getSkolemSymbol(firstBv), getSkolemArgs(formua.subFormula))
-//                            formulaImplementation.termImplementation.newFreeVariable(firstBv.symbol),
-                        ),
-                    ) { subst: IdempotentSubstitution, bv: Variable ->
-                        subst.composeIdempotent(
-                            theta = SingletonIdempotentSubstitution(
-                                key = bv,
-                                value = formulaImplementation.termImplementation.newFreeVariable(
-                                    bv.symbol,
-                                ),
-                            ),
-                            termImplementation = formulaImplementation.termImplementation,
-                        )
-                    }
-                    .let { substitution: IdempotentSubstitution ->
-                        // substitution substitutes the bound variables with new, similarly-named free variables
-                        formula
-                            .subFormula
-                            .apply(substitution, formulaImplementation)
-
-                    }
-            }
-        TODO()
-
+    fun createDeltaChildFormula(): FolFormula =
+        with(formulaImplementation.termImplementation) {
+            formula
+                .variablesFreeIn
+                .let { freeVariables: Set<Variable> ->
+                    formula
+                        .boundVariables
+                        .firstOrNull()!!
+                        .let { firstBv: Variable ->
+                            formula
+                                .boundVariables
+                                .asSequence()
+                                .drop(1)
+                                .fold(
+                                    SingletonIdempotentSubstitution(
+                                        key = firstBv,
+                                        value = properFunction(
+                                            // NOTE does this need to be new?
+                                            newFunctorForSymbol(firstBv.symbol, freeVariables.size),
+                                            freeVariables,
+                                        ),
+                                    ),
+                                ) { subst: IdempotentSubstitution, bv: Variable ->
+                                    subst.composeIdempotent(
+                                        theta = SingletonIdempotentSubstitution(
+                                            key = bv,
+                                            value = properFunction(
+                                                // NOTE does this need to be new?
+                                                newFunctorForSymbol(bv.symbol, freeVariables.size),
+                                                freeVariables,
+                                            ),
+                                        ),
+                                        termImplementation = this@with,
+                                    )
+                                }
+                                .let { substitution: IdempotentSubstitution ->
+                                    // substitution substitutes the bound variables with skolem functions
+                                    formula
+                                        .subFormula
+                                        .apply(substitution, formulaImplementation)
+                                }
+                        }
+                }
+        }
 }
 
 data class NegativeForAllFormula(
@@ -623,9 +622,6 @@ data class PositiveForAllFormula(
 
     override var applications: Int = 0
 
-    override fun applyGammaRule() {
-        TODO("Not yet implemented")
-    }
 }
 
 sealed interface ClosingFormula<F : FolFormula> : SignedFormula<F> {

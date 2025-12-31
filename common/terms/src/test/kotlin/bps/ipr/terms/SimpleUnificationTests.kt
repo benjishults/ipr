@@ -11,7 +11,8 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(FolDagTermImplementation()) {
+class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(FolTermImplementation()) {
+//class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(FolDagTermImplementation()) {
 
     data class TermUnificationTest(
         val term1: Term,

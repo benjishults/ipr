@@ -49,7 +49,7 @@ class GeneralRecursiveDescentFormulaUnifier(
                         unify(
                             term
                                 .apply(runningSub, termImplementation),
-                            formula2.arguments[index]
+                            formula2.arguments.elementAt(index)
                                 .apply(runningSub, termImplementation),
                             runningSub,
                         )
