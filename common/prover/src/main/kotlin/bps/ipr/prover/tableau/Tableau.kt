@@ -4,12 +4,19 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
+import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas
+import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
+import bps.ipr.prover.tableau.rule.FolRuleSelector
+import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
+import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
+import bps.ipr.prover.tableau.rule.RuleSelector
+import bps.ipr.prover.tableau.rule.SignedFormula
 import bps.ipr.substitution.EmptySubstitution
 import bps.ipr.substitution.IdempotentSubstitution
 import kotlin.sequences.emptySequence
 
 class Tableau(
-    private var initialQLimit: Int = 1
+    initialQLimit: Int = 1
 ) {
 
     private var _root: TableauNode? = null
@@ -22,9 +29,7 @@ class Tableau(
             } else
                 throw IllegalStateException("Root already set")
         }
-    val applicableRules: RuleSet = RuleSet(initialQLimit)
-
-//    private val nodeToStateMap: MutableMap<Long, NodeState> = mutableMapOf()
+    val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
 
     private var _size: Long = 0
     val size: Long
@@ -32,12 +37,7 @@ class Tableau(
 
     fun registerNode(node: TableauNode) {
         node.tableau = this
-//        nodeToStateMap[node.id] = NodeState(node)
     }
-
-    data class TreeCloserBuilder(
-        var runningSubstitution: IdempotentSubstitution? = null,
-    )
 
     fun attemptClose(unifier: FormulaUnifier): FolProofSuccess? {
         return root
@@ -138,7 +138,7 @@ class Tableau(
                                 )
                                 .reduceAlpha(birthPlace = root)
                                 .also {
-                                    val (pos, neg, closing, betas, deltas, gammas) = CategorizedSignedFormulas(it)
+                                    val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
                                     root.populate(
                                         newAtomicHyps = pos,
                                         newAtomicGoals = neg,

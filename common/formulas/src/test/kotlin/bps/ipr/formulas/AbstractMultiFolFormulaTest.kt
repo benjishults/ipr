@@ -20,7 +20,7 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
             "impliesOrNull" {
                 impliesOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() IMPLIES R(x, c()))"
+                    it.display(0) shouldBe "(P() IMPLIES R(x, c()))"
                 }
             }
             val andOrNull = andOrNull(listOf(P, Qx, Rxc))
@@ -29,15 +29,15 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
             "and or iff" {
                 andOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() AND Q(x) AND R(x, c()))"
+                    it.display(0) shouldBe "(P() AND Q(x) AND R(x, c()))"
                 }
                 orOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() OR Q(x) OR R(x, c()))"
+                    it.display(0) shouldBe "(P() OR Q(x) OR R(x, c()))"
                 }
                 iffOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() IFF R(x, c()))"
+                    it.display(0) shouldBe "(P() IFF R(x, c()))"
                 }
             }
             val notOrNull = notOrNull(Qx)
@@ -45,14 +45,14 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
                 notOrNull
                     .asClue {
                         it.shouldNotBeNull()
-                        it.display() shouldBe "(NOT Q(x))"
+                        it.display(0) shouldBe "(NOT Q(x))"
                     }
             }
             "nested formulas" {
                 andOrNull(listOf(notOrNull, andOrNull, orOrNull, iffOrNull))
                     .asClue {
                         it.shouldNotBeNull()
-                        it.display() shouldBe "((NOT Q(x)) AND (P() AND Q(x) AND R(x, c())) AND (P() OR Q(x) OR R(x, c())) AND (P() IFF R(x, c())))"
+                        it.display(0) shouldBe "((NOT Q(x)) AND (P() AND Q(x) AND R(x, c())) AND (P() OR Q(x) OR R(x, c())) AND (P() IFF R(x, c())))"
                     }
             }
         }

@@ -15,9 +15,9 @@ class PredicateTest : FreeSpec() {
             val c: Constant = termImplementation.constantForSymbol("c")!!
             val Qx = predicateOrNull("Q", listOf(x))!!
             "plain predicate" {
-                P.display() shouldBe "P()"
+                P.display(0) shouldBe "P()"
                 predicateOrNull("P", listOf(x)).shouldBeNull()
-                Qx.display() shouldBe "Q(x)"
+                Qx.display(0) shouldBe "Q(x)"
             }
         }
     }

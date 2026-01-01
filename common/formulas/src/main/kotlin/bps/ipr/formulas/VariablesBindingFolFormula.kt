@@ -68,13 +68,18 @@ constructor(
         else
             this
 
-    override fun display(): String =
-        boundVariables
-            .joinToString(
-                separator = ", ",
-                prefix = "($symbol (",
-                postfix = ") ${subFormula.display()})",
-            ) { it.display() }
+    override fun display(indent: Int): String =
+        buildString {
+            append(" ".repeat(indent))
+            append(
+                boundVariables
+                    .joinToString(
+                        separator = ", ",
+                        prefix = "($symbol (",
+                        postfix = ") ${subFormula.display(0)})",
+                    ) { it.display() },
+            )
+        }
 
 }
 

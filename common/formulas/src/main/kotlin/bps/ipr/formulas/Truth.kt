@@ -14,7 +14,10 @@ object Truth : FolFormula() {
     ) =
         this
 
-    override fun display(): String =
-        "(TRUTH)"
+    override fun display(indent: Int): String =
+        buildString {
+            append(" ".repeat(indent))
+            append("(TRUTH)")
+        }
 
 }

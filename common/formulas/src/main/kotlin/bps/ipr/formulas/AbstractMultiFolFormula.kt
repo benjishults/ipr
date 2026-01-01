@@ -36,8 +36,8 @@ sealed class AbstractMultiFolFormula(
                 it.variablesFreeIn
             }
 
-    override fun display(): String =
-        "(${subFormulas.joinToString(" $symbol ") { it.display() }})"
+    override fun display(indent: Int): String =
+        "(${subFormulas.joinToString(" $symbol ") { it.display(indent) }})"
 
 }
 

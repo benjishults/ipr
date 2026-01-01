@@ -12,7 +12,6 @@ import bps.ipr.formulas.Not
 import bps.ipr.formulas.Or
 import bps.ipr.formulas.Predicate
 import bps.ipr.formulas.Truth
-import bps.ipr.terms.FolDagTermImplementation
 import bps.ipr.terms.FolTermImplementation
 import io.kotest.assertions.asClue
 import io.kotest.core.spec.style.FreeSpec
@@ -69,7 +68,7 @@ class IprFormulaParserTest : FreeSpec() {
                                     pair.shouldNotBeNull()
                                     val (formula, indexAfterTerm) = pair
                                     indexAfterTerm shouldBe expectedEndIndex
-                                    formula.display() shouldBe expectedDisplay
+                                    formula.display(0) shouldBe expectedDisplay
                                     formula::class shouldBe formulaClass
                                 }
                             termImplementation.clear()

@@ -10,7 +10,7 @@ sealed class FolFormula : Formula {
      */
     abstract val variablesFreeIn: Set<Variable>
 
-    override fun toString(): String = display()
+    override fun toString(): String = display(0)
 
 //    /**
 //     * Variables that are bound by variable-binding within this formula.

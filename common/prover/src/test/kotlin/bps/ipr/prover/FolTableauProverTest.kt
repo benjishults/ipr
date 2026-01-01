@@ -7,6 +7,7 @@ import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
+import bps.ipr.prover.tableau.TableauProver
 import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -47,7 +48,7 @@ class FolTableauProverTest :
                     .toList()
                 formulas
                     .forEach { (formula, expectedResult) ->
-                        "attempt ${formula.display()} expecting success" {
+                        "attempt ${formula.display(0)} expecting success" {
                             TableauProver(GeneralRecursiveDescentFormulaUnifier(), index + 1)
                                 .prove(formula, this@FolTableauProverTest.formulaImplementation)
                                 .shouldBeInstanceOf<FolProofSuccess>()
@@ -81,7 +82,7 @@ class FolTableauProverTest :
                     .toList()
                 formulas
                     .forEach { (formula, expectedResult) ->
-                        "attempt ${formula.display()} expecting failure" {
+                        "attempt ${formula.display(0)} expecting failure" {
                             TableauProver(GeneralRecursiveDescentFormulaUnifier(), 6)
                                 .prove(formula, this@FolTableauProverTest.formulaImplementation)
                                 .shouldBeInstanceOf<FolProofIncomplete>()

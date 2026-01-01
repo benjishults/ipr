@@ -20,7 +20,7 @@ class BoundVariableFormulaTest : FreeSpec() {
                     forAllOrNull(listOf(x), Qx)
                         .asClue {
                             it.shouldNotBeNull()
-                            it.display() shouldBe "(FORALL (x) Q(x))"
+                            it.display(0) shouldBe "(FORALL (x) Q(x))"
                         }
                 }
                 "for some x, R(x,y) is allowed" {

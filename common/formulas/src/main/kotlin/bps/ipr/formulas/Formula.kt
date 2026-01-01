@@ -4,6 +4,6 @@ interface Formula {
 
     val symbol: String
 
-    fun display(): String
+    fun display(indent: Int = 0): String
 
 }

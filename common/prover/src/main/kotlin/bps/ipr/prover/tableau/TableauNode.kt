@@ -2,6 +2,13 @@ package bps.ipr.prover.tableau
 
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
+import bps.ipr.prover.tableau.rule.BetaFormula
+import bps.ipr.prover.tableau.rule.ClosingFormula
+import bps.ipr.prover.tableau.rule.DeltaFormula
+import bps.ipr.prover.tableau.rule.GammaFormula
+import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
+import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
+import bps.ipr.prover.tableau.rule.SignedFormula
 
 /**
  * This class is not thread-safe.
