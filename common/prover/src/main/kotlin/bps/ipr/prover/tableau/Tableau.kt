@@ -4,15 +4,28 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
+import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
+import bps.ipr.prover.tableau.rule.FolRuleSelector
+import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
+import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
+import bps.ipr.prover.tableau.rule.RuleSelector
+import bps.ipr.prover.tableau.rule.SignedFormula
 import bps.ipr.substitution.EmptySubstitution
 import bps.ipr.substitution.IdempotentSubstitution
 import kotlin.sequences.emptySequence
 
-class Tableau(
-    private var initialQLimit: Int = 1
+/**
+ * This class is not thread-safe.
+ */
+open class Tableau(
+    initialQLimit: Int = 1,
 ) {
 
     private var _root: TableauNode? = null
+
+    /**
+     * Can only be set once.
+     */
     var root: TableauNode
         get() = _root!!
         set(value) {
@@ -22,9 +35,8 @@ class Tableau(
             } else
                 throw IllegalStateException("Root already set")
         }
-    val applicableRules: RuleSet = RuleSet(initialQLimit)
 
-//    private val nodeToStateMap: MutableMap<Long, NodeState> = mutableMapOf()
+    val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
 
     private var _size: Long = 0
     val size: Long
@@ -32,12 +44,8 @@ class Tableau(
 
     fun registerNode(node: TableauNode) {
         node.tableau = this
-//        nodeToStateMap[node.id] = NodeState(node)
+        node.id = _size++
     }
-
-    data class TreeCloserBuilder(
-        var runningSubstitution: IdempotentSubstitution? = null,
-    )
 
     fun attemptClose(unifier: FormulaUnifier): FolProofSuccess? {
         return root
@@ -67,15 +75,35 @@ class Tableau(
         } else {
             sequenceOfUnifiersHere(positiveAtomsAbove, negativeAtomsAbove, substitution, formulaUnifier) +
                     if (children.isNotEmpty()) {
+                        val childrensPositiveAtomsAbove = positiveAtomsAbove + newAtomicHyps
+                        val childrensNegativeAtomsAbove = negativeAtomsAbove + newAtomicGoals
                         children
                             .asSequence()
-                            .flatMap {
-                                it.attemptClose(
-                                    substitution = substitution,
-                                    positiveAtomsAbove = positiveAtomsAbove + newAtomicHyps,
-                                    negativeAtomsAbove = negativeAtomsAbove + newAtomicGoals,
-                                    formulaUnifier = formulaUnifier,
-                                )
+                            .drop(1)
+                            .fold(
+                                // take the sequence of unifiers from the first child
+                                children
+                                    .first()
+                                    .let { firstChild: TableauNode ->
+                                        firstChild
+                                            .attemptClose(
+                                                substitution = substitution,
+                                                positiveAtomsAbove = childrensPositiveAtomsAbove,
+                                                negativeAtomsAbove = childrensNegativeAtomsAbove,
+                                                formulaUnifier = formulaUnifier,
+                                            )
+                                    },
+                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<IdempotentSubstitution>, nextChildNode: TableauNode ->
+                                // create a sequence of unifiers compatible with closers of the previous children
+                                sequenceOfUnifiersOfPreviousChildren
+                                    .flatMap { sub: IdempotentSubstitution ->
+                                        nextChildNode.attemptClose(
+                                            substitution = sub,
+                                            positiveAtomsAbove = childrensPositiveAtomsAbove,
+                                            negativeAtomsAbove = childrensNegativeAtomsAbove,
+                                            formulaUnifier = formulaUnifier,
+                                        )
+                                    }
                             }
                     } else
                         emptySequence()
@@ -116,14 +144,21 @@ class Tableau(
 
     fun display(): String =
         buildString {
-            root.breadthFirstTraverse { append(it.display(it.depth())) }
+            root.preOrderTraverse { node: TableauNode ->
+                appendLine("---")
+                append(node.display(2 * node.depth()))
+            }
         }
 
     override fun toString(): String = display()
 
     companion object {
         // NOTE had to do this outside a constructor because I have to have the generic function
-        operator fun <T : FolFormula> invoke(formula: T, formulaImplementation: FolFormulaImplementation, initialQLimit: Int = 1): Tableau {
+        operator fun <T : FolFormula> invoke(
+            formula: T,
+            formulaImplementation: FolFormulaImplementation,
+            initialQLimit: Int = 1,
+        ): Tableau {
             return Tableau(initialQLimit)
                 .also { tableau: Tableau ->
                     TableauNode()
@@ -134,11 +169,11 @@ class Tableau(
                                     formula = formula,
                                     sign = false,
                                     birthPlace = root,
-                                    formulaImplementation = formulaImplementation
+                                    formulaImplementation = formulaImplementation,
                                 )
                                 .reduceAlpha(birthPlace = root)
                                 .also {
-                                    val (pos, neg, closing, betas, deltas, gammas) = CategorizedSignedFormulas(it)
+                                    val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
                                     root.populate(
                                         newAtomicHyps = pos,
                                         newAtomicGoals = neg,

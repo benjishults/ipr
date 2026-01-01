@@ -9,8 +9,11 @@ class Not(val subFormula: FolFormula) : FolFormula() {
 
     override val symbol: String = "NOT"
 
-    override fun display(): String =
-        "(NOT ${subFormula.display()})"
+    override fun display(indent: Int): String =
+        buildString {
+            append(" ".repeat(indent))
+            append("(NOT ${subFormula.display(0)})")
+        }
 
     override fun apply(
         substitution: IdempotentSubstitution,

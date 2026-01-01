@@ -52,7 +52,7 @@ data class GeneralRecursiveDescentTermUnifier(
                                         under
                                     } else
                                         under.composeIdempotent(
-                                            Variable.Companion.makeSubstitution(term1, term2),
+                                            Variable.makeSubstitution(term1, term2),
                                             termImplementation,
                                         )
                             else ->

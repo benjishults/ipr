@@ -36,8 +36,17 @@ sealed class AbstractMultiFolFormula(
                 it.variablesFreeIn
             }
 
-    override fun display(): String =
-        "(${subFormulas.joinToString(" $symbol ") { it.display() }})"
+    override fun display(indent: Int): String =
+        buildString {
+            append(" ".repeat(indent))
+            append(
+                subFormulas.joinToString(
+                    separator = " ",
+                    prefix = "($symbol ",
+                    postfix = ")",
+                ) { it.display() },
+            )
+        }
 
 }
 

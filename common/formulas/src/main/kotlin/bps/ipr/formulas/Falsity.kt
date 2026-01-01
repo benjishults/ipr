@@ -14,7 +14,10 @@ object Falsity : FolFormula() {
 
     override val symbol: String = "FALSITY"
 
-    override fun display(): String =
-        "(FALSITY)"
+    override fun display(indent: Int): String =
+        buildString {
+            append(" ".repeat(indent))
+            append("(FALSITY)")
+        }
 
 }

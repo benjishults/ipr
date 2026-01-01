@@ -2,6 +2,13 @@ package bps.ipr.prover.tableau
 
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
+import bps.ipr.prover.tableau.rule.BetaFormula
+import bps.ipr.prover.tableau.rule.ClosingFormula
+import bps.ipr.prover.tableau.rule.DeltaFormula
+import bps.ipr.prover.tableau.rule.GammaFormula
+import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
+import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
+import bps.ipr.prover.tableau.rule.SignedFormula
 
 /**
  * This class is not thread-safe.
@@ -29,6 +36,10 @@ class TableauNode(
         }
 
     private var _id: Long? = null
+
+    /**
+     * Can only be set once.
+     */
     var id: Long
         get() = _id!!
         set(value) {
@@ -127,7 +138,12 @@ class TableauNode(
         return operation(this)
     }
 
-    fun breadthFirstTraverse(operation: (TableauNode) -> Unit) =
+    fun preOrderTraverse(operation: (TableauNode) -> Unit) {
+        operation(this)
+        children.forEach { it.preOrderTraverse(operation) }
+    }
+
+    inline fun breadthFirstTraverse(operation: (TableauNode) -> Unit) =
         queue<TableauNode>()
             .apply { enqueue(this@TableauNode) }
             .let { queue: Queue<TableauNode> ->
@@ -159,14 +175,12 @@ class TableauNode(
             append(" ".repeat(indent))
             append("Suppose\n")
             newAtomicHyps.forEach { hyp ->
-                append(hyp.display(indent + 1))
-                append("\n")
+                appendLine(hyp.display(indent + 1))
             }
             append(" ".repeat(indent))
-            append("Then\n")
+            appendLine("Then")
             newAtomicGoals.forEach { goal ->
-                append(goal.display(indent + 1))
-                append("\n")
+                appendLine(goal.display(indent + 1))
             }
         }
 

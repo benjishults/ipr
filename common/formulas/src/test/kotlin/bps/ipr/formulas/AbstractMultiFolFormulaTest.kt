@@ -11,16 +11,16 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
 
     init {
         with(FolFormulaImplementation()) {
-            val P = predicateOrNull("P")!!
-            val x: FreeVariable = termImplementation.freeVariableForSymbol("x")!!
-            val c: Constant = termImplementation.constantForSymbol("c")!!
-            val Qx = predicateOrNull("Q", listOf(x))!!
-            val Rxc = predicateOrNull("R", listOf(x, c))!!
+            val P = predicate("P")
+            val x: FreeVariable = termImplementation.freeVariableForSymbol("x")
+            val c: Constant = termImplementation.constantForSymbol("c")
+            val Qx = predicate("Q", listOf(x))
+            val Rxc = predicate("R", listOf(x, c))
             val impliesOrNull = impliesOrNull(listOf(P, Rxc))
             "impliesOrNull" {
                 impliesOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() IMPLIES R(x, c()))"
+                    it.display(0) shouldBe "(IMPLIES (P) (R x (c)))"
                 }
             }
             val andOrNull = andOrNull(listOf(P, Qx, Rxc))
@@ -29,15 +29,15 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
             "and or iff" {
                 andOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() AND Q(x) AND R(x, c()))"
+                    it.display(0) shouldBe "(AND (P) (Q x) (R x (c)))"
                 }
                 orOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() OR Q(x) OR R(x, c()))"
+                    it.display(0) shouldBe "(OR (P) (Q x) (R x (c)))"
                 }
                 iffOrNull.asClue {
                     it.shouldNotBeNull()
-                    it.display() shouldBe "(P() IFF R(x, c()))"
+                    it.display(0) shouldBe "(IFF (P) (R x (c)))"
                 }
             }
             val notOrNull = notOrNull(Qx)
@@ -45,14 +45,14 @@ class AbstractMultiFolFormulaTest : FreeSpec() {
                 notOrNull
                     .asClue {
                         it.shouldNotBeNull()
-                        it.display() shouldBe "(NOT Q(x))"
+                        it.display(0) shouldBe "(NOT (Q x))"
                     }
             }
             "nested formulas" {
                 andOrNull(listOf(notOrNull, andOrNull, orOrNull, iffOrNull))
                     .asClue {
                         it.shouldNotBeNull()
-                        it.display() shouldBe "((NOT Q(x)) AND (P() AND Q(x) AND R(x, c())) AND (P() OR Q(x) OR R(x, c())) AND (P() IFF R(x, c())))"
+                        it.display(0) shouldBe "(AND (NOT (Q x)) (AND (P) (Q x) (R x (c))) (OR (P) (Q x) (R x (c))) (IFF (P) (R x (c))))"
                     }
             }
         }

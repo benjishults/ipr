@@ -219,18 +219,13 @@ open class IprFofFormulaParser(
                     val globalIndexAfterWhitespaceAfterTerm = indexOfFirstNonWhitespace(indexOfClosedParen + 1)
                     takeIf { args.isEmpty() }
                         ?.let {
-                            (formulaImplementation.predicateOrNull(formulaBuilder)
-                                ?: throw ArityOverloadException(
-                                    "$formulaBuilder already has arity ${
-                                        formulaImplementation.formulaLanguage.getPredicateArity(formulaBuilder)
-                                    }",
-                                )) to globalIndexAfterWhitespaceAfterTerm
+                            formulaImplementation.predicate(formulaBuilder) to globalIndexAfterWhitespaceAfterTerm
                         }
                         ?: (formulaImplementation
-                            .predicateOrNull(
-                                formulaBuilder,
-                                args,
-                            )!! to globalIndexAfterWhitespaceAfterTerm)
+                            .predicate(
+                                symbol = formulaBuilder,
+                                arguments = args,
+                            ) to globalIndexAfterWhitespaceAfterTerm)
                 }
         }
 

@@ -11,26 +11,30 @@ import bps.ipr.prover.tableau.TableauProver
 import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
-class PropositionalTableauProverTest :
+class CondenseTest :
     FreeSpec(),
     FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }),
     WhitespaceParser by IprWhitespaceParser {
+
     data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
 
     init {
-        val fileAsString = buildString {
-            PropositionalTableauProverTest::class.java.classLoader.getResourceAsStream("propositional.ipr")!!
-                .bufferedReader()
-                .useLines { lines: Sequence<String> ->
-                    lines.forEach {
-                        append(it)
-                        append('\n')
+        "!condense test" - {
+            // TODO implement condense and check that it has happened
+            clear()
+            val fileAsString = buildString {
+                CondenseTest::class.java.classLoader
+                    .getResourceAsStream("condense.ipr")!!
+                    .bufferedReader()
+                    .useLines { lines: Sequence<String> ->
+                        lines.forEach {
+                            append(it)
+                            append('\n')
+                        }
                     }
-                }
-        }
-        "using parsable file" - {
+            }
             var startIndex = fileAsString.indexOfFirstNonWhitespace()
             val formulas = generateSequence {
                 fileAsString.parseFormulaOrNull(startIndex)
@@ -44,12 +48,10 @@ class PropositionalTableauProverTest :
                 .toList()
             formulas
                 .forEach { (formula, expectedResult) ->
-                    "attempt ${formula.display(0)} expecting $expectedResult" {
-                        TableauProver(GeneralRecursiveDescentFormulaUnifier())
-                            .prove(
-                                formula,
-                                this@PropositionalTableauProverTest.formulaImplementation,
-                            ) shouldBe expectedResult
+                    "attempt ${formula.display(0)} expecting success" {
+                        TableauProver(GeneralRecursiveDescentFormulaUnifier(), 2)
+                            .prove(formula, this@CondenseTest.formulaImplementation)
+                            .shouldBeInstanceOf<FolProofSuccess>()
                     }
                 }
         }

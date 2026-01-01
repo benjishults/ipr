@@ -48,7 +48,7 @@ class Constant(
         this
 
     override fun display(): String =
-        "$functor()"
+        "($functor)"
 
 }
 
@@ -96,7 +96,7 @@ class ProperFunction(
     override fun display(): String =
         arguments
             .map { it.display() }
-            .joinToString(", ", "$functor(", ")") { it }
+            .joinToString(" ", "($functor ", ")") { it }
 
     override fun equals(other: Any?): Boolean =
         super.equals(other) &&

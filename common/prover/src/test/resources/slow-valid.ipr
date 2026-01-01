@@ -1,0 +1,6 @@
+;; requires q >= 2
+(for-some ((z))				; thm1
+  (forall ((x))
+    (for-some ((y))
+      (and (implies (p2 y x) (for-some ((w)) (p2 w y)))
+           (implies (and (p2 z y) (p2 y z)) (p2 y x))))))

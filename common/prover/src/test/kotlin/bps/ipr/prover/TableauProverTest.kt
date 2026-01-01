@@ -5,6 +5,7 @@ import bps.ipr.formulas.GeneralRecursiveDescentFormulaUnifier
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
+import bps.ipr.prover.tableau.TableauProver
 import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
