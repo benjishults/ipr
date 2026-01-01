@@ -1,6 +1,7 @@
 package bps.ipr.formulas
 
 import bps.ipr.terms.ArgumentList
+import bps.ipr.terms.ArityOverloadException
 import bps.ipr.terms.FolTermImplementation
 import bps.ipr.terms.Term
 import bps.ipr.terms.Variable
@@ -52,12 +53,17 @@ open class FolFormulaImplementation(
         termImplementation.clear()
     }
 
-    fun predicateOrNull(symbol: String, arguments: List<Term> = emptyList()): Predicate? =
+    fun predicate(symbol: String, arguments: List<Term> = emptyList()): Predicate =
         formulaLanguage
             .ensurePredicateOrNull(symbol, arguments.size)
             ?.let {
                 Predicate(it, ArgumentList(arguments))
             }
+            ?: throw ArityOverloadException(
+                "$symbol is being used with arity ${arguments.size} but is already defined with arity ${
+                    formulaLanguage.getPredicateArity(symbol)
+                }",
+            )
 
     open fun truthOrNull(): Truth = Truth
 
@@ -66,13 +72,13 @@ open class FolFormulaImplementation(
     open fun notOrNull(subFormula: FolFormula): Not =
         Not(subFormula)
 
-    open fun andOrNull( subFormulas: List<FolFormula>): And =
+    open fun andOrNull(subFormulas: List<FolFormula>): And =
         And(subFormulas)
 
-    open fun orOrNull( subFormulas: List<FolFormula>): Or =
+    open fun orOrNull(subFormulas: List<FolFormula>): Or =
         Or(subFormulas)
 
-    open fun iffOrNull( subFormulas: List<FolFormula>): Iff =
+    open fun iffOrNull(subFormulas: List<FolFormula>): Iff =
         Iff(subFormulas)
 
     open fun impliesOrNull(subFormulas: List<FolFormula>): Implies =

@@ -21,13 +21,13 @@ class Predicate(
     ): Predicate =
         // short-circuit if we know the substitution won't disturb this term
         if (substitution.domain.firstOrNull { it in this.variablesFreeIn } !== null)
-            formulaImplementation.predicateOrNull(
+            formulaImplementation.predicate(
                 symbol,
                 arguments
                     .map {
                         it.apply(substitution, formulaImplementation.termImplementation)
                     },
-            )!!
+            )
         else
             this
 
@@ -35,11 +35,11 @@ class Predicate(
         buildString {
             append(" ".repeat(indent))
             append(
-                "$symbol${
-                    arguments
-                        .map { it.display() }
-                        .joinToString(", ", "(", ")") { it }
-                }",
+                arguments.joinToString(
+                    separator = "",
+                    prefix = "($symbol",
+                    postfix = ")",
+                ) { " ${it.display()}" },
             )
         }
 

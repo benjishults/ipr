@@ -42,7 +42,7 @@ class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(
                 ) { substitution ->
                     substitution.shouldNotBeNull()
                     substitution.isIdempotent().shouldBeTrue()
-                    substitution.display() shouldBe "{X ↦ g(a()), Y ↦ a(), Z ↦ g(g(a()))}"
+                    substitution.display() shouldBe "{X ↦ (g (a)), Y ↦ (a), Z ↦ (g (g (a)))}"
                     substitution.domain shouldContainExactly setOf(x, y, z)
                     x.apply(
                         substitution,
@@ -74,8 +74,8 @@ class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(
                 ) { substitution ->
                     substitution.shouldNotBeNull()
                     substitution.toString() shouldBe "{" +
-                            "x1 ↦ f2(x0, x0), " +
-                            "y1 ↦ f2(x0, x0), " +
+                            "x1 ↦ (f2 x0 x0), " +
+                            "y1 ↦ (f2 x0 x0), " +
                             "y0 ↦ x0}"
                 },
                 TermUnificationTest(
@@ -86,10 +86,10 @@ class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(
                 ) { substitution ->
                     substitution.shouldNotBeNull()
                     substitution.toString() shouldBe "{" +
-                            "x1 ↦ f2(x0, x0), " +
-                            "x2 ↦ f2(f2(x0, x0), f2(x0, x0)), " +
-                            "y1 ↦ f2(x0, x0), " +
-                            "y2 ↦ f2(f2(x0, x0), f2(x0, x0)), " +
+                            "x1 ↦ (f2 x0 x0), " +
+                            "x2 ↦ (f2 (f2 x0 x0) (f2 x0 x0)), " +
+                            "y1 ↦ (f2 x0 x0), " +
+                            "y2 ↦ (f2 (f2 x0 x0) (f2 x0 x0)), " +
                             "y0 ↦ x0}"
                 },
                 TermUnificationTest(
@@ -100,12 +100,12 @@ class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(
                 ) { substitution ->
                     substitution.shouldNotBeNull()
                     substitution.toString() shouldBe "{" +
-                            "x1 ↦ f2(x0, x0), " +
-                            "x2 ↦ f2(f2(x0, x0), f2(x0, x0)), " +
-                            "x3 ↦ f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0))), " +
-                            "y1 ↦ f2(x0, x0), " +
-                            "y2 ↦ f2(f2(x0, x0), f2(x0, x0)), " +
-                            "y3 ↦ f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0))), " +
+                            "x1 ↦ (f2 x0 x0), " +
+                            "x2 ↦ (f2 (f2 x0 x0) (f2 x0 x0)), x" +
+                            "3 ↦ (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0))), " +
+                            "y1 ↦ (f2 x0 x0), " +
+                            "y2 ↦ (f2 (f2 x0 x0) (f2 x0 x0)), " +
+                            "y3 ↦ (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0))), " +
                             "y0 ↦ x0}"
                 },
                 TermUnificationTest(
@@ -116,14 +116,14 @@ class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(
                 ) { substitution ->
                     substitution.shouldNotBeNull()
                     substitution.toString() shouldBe "{" +
-                            "x1 ↦ f2(x0, x0), " +
-                            "x2 ↦ f2(f2(x0, x0), f2(x0, x0)), " +
-                            "x3 ↦ f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0))), " +
-                            "x4 ↦ f2(f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0))), f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0)))), " +
-                            "y1 ↦ f2(x0, x0), " +
-                            "y2 ↦ f2(f2(x0, x0), f2(x0, x0)), " +
-                            "y3 ↦ f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0))), " +
-                            "y4 ↦ f2(f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0))), f2(f2(f2(x0, x0), f2(x0, x0)), f2(f2(x0, x0), f2(x0, x0)))), " +
+                            "x1 ↦ (f2 x0 x0), " +
+                            "x2 ↦ (f2 (f2 x0 x0) (f2 x0 x0)), " +
+                            "x3 ↦ (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0))), " +
+                            "x4 ↦ (f2 (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0))) (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0)))), " +
+                            "y1 ↦ (f2 x0 x0), " +
+                            "y2 ↦ (f2 (f2 x0 x0) (f2 x0 x0)), " +
+                            "y3 ↦ (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0))), " +
+                            "y4 ↦ (f2 (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0))) (f2 (f2 (f2 x0 x0) (f2 x0 x0)) (f2 (f2 x0 x0) (f2 x0 x0)))), " +
                             "y0 ↦ x0}"
                 },
             )

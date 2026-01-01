@@ -1,0 +1,61 @@
+(implies (implies (implies (a) (b)) (b)) (b))
+                                        ;not a taut
+;;0.03 no
+;;0.04 no
+
+;;; testing fol-lemmas
+
+(implies (or (a) (b) (c))
+  (d))
+
+(implies (a)
+  (and (b) (c) (d)))
+
+(implies
+    (implies (a) (b))
+  (c))
+
+(implies (truth) (falsity))
+;; 0.12 error
+
+(implies (and (implies (a) (b)) (implies (b) (a)))
+    (and (implies (a) (and (implies (a) (b)) (implies (b) (a))))
+         (implies (and (implies (a) (b)) (implies (b) (a))) (a))))
+
+(implies (or (a) (not (and (b) (c))))
+                 (or (and (implies (a) (c)) (implies (c) (a))) (b)))
+                                        ; not a taut
+;;0.03 no
+;;0.04 no
+
+(implies (implies (implies (b) (c)) (implies (a) (c)))
+                 (implies (a) (b)))
+                                        ; not a taut
+;;0.03 no
+;;0.04 no
+
+(implies (or (not (a)) (b)) (or (not (b)) (a)))
+                                        ; not a taut
+;;0.03 no
+;;0.04 no
+
+(implies (and (b) (implies (a) (b))) (a))
+                                        ; not a taut
+;;0.03 no
+;;0.04 no
+
+(implies (not (a)) (and (a) (b)))
+                                        ; not a taut
+;;0.03 no
+;;0.04 no
+
+(and (a) (not (or (a) (b))));not
+;;0.03 no
+;;0.04 no
+
+(implies (or (q) (and (q) (r)))
+                 (and (or (p) (q)) (or (p) (r))))        ; not a theorem
+;;0.02 no (fix suppose)
+;;0.03 no
+;;0.04 no
+

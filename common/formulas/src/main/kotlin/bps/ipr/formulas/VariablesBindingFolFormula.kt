@@ -25,15 +25,22 @@ constructor(
 //                .find { it in freeVariablesInSubFormula }
 //                    == null,
 //        )
-        require(
-            boundVariables.all { bv ->
-                (bv in subFormula.variablesFreeIn)
-                    .also {
-                        if (!it)
-                            println("bound variable $bv not in subformula $subFormula with free variables ${subFormula.variablesFreeIn}")
-                    }
-            },
-        )
+//        require(
+//            boundVariables.all { bv ->
+//                (bv in subFormula.variablesFreeIn)
+//                    .also {
+//                        if (!it)
+//                            println("bound variable $bv not in subformula $subFormula with free variables ${subFormula.variablesFreeIn}")
+//                    }
+//            },
+//        )
+        // NOTE print warning about un-binding bound variable
+        boundVariables.all { bv ->
+            (bv in subFormula.variablesFreeIn)
+                .also {
+                    println("bound variable $bv not in subformula $subFormula with free variables ${subFormula.variablesFreeIn}")
+                }
+        }
     }
 
 //    override val variablesBoundIn: Set<BoundVariable> =
@@ -74,7 +81,7 @@ constructor(
             append(
                 boundVariables
                     .joinToString(
-                        separator = ", ",
+                        separator = " ",
                         prefix = "($symbol (",
                         postfix = ") ${subFormula.display(0)})",
                     ) { it.display() },

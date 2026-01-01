@@ -32,12 +32,12 @@ class LanguageArityTest : FreeSpec() {
                     implementation.properFunction(implementation.functorForSymbol("f", 1), listOf(fAsConstant))
                         .asClue {
                             it.shouldNotBeNull()
-                            it.display() shouldBe "f(f())"
+                            it.display() shouldBe "(f (f))"
                         }
                     implementation.properFunction(implementation.functorForSymbol("f", 1), listOf(fAsConstant, fAsVariable))
                         .asClue {
                             it.shouldNotBeNull()
-                            it.display() shouldBe "f(f(), f)"
+                            it.display() shouldBe "(f (f) f)"
                         }
                 }
             }
