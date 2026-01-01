@@ -1,6 +1,7 @@
 package bps.ipr.terms
 
 import bps.ipr.parser.tptp.TptpFofTermParser
+import bps.ipr.substitution.SingletonIdempotentSubstitution
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FreeSpec
 
@@ -8,9 +9,9 @@ class SubstitutionTests : FreeSpec() {
 
     init {
         with(TptpFofTermParser(FolTermImplementation())) {
-            val x = termImplementation.freeVariableOrNull("X")!!
-            val y = termImplementation.freeVariableOrNull("Y")!!
-            val z = termImplementation.freeVariableOrNull("Z")!!
+            val x = termImplementation.freeVariableForSymbol("X")!!
+            val y = termImplementation.freeVariableForSymbol("Y")!!
+            val z = termImplementation.freeVariableForSymbol("Z")!!
             val ga = "g(a)".parseTermOrNull()!!.first
             val gx = "g(X)".parseTermOrNull()!!.first
             val gy = "g(Y)".parseTermOrNull()!!.first

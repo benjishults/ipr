@@ -1,0 +1,6 @@
+(forall ((x)) (implies (t x) (t (b2 x))))
+(forall ((x) (y)) (t (i (b2 (i x y)) (i (b2 x) (b2 y)))))
+(forall ((x) (y)) (t (i x (i y x))))
+(forall ((x) (y) (z)) (t (i (i x (i y z)) (i (i x y) (i x z)))))
+(forall ((x) (y)) (t (i (i (n x) (n y)) (i y x))))
+(forall ((x) (y)) (implies (and (t (i x y)) (t x)) (t y)))

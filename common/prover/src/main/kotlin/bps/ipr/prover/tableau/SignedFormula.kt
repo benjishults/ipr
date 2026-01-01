@@ -4,6 +4,7 @@ import bps.ipr.formulas.AbstractMultiFolFormula
 import bps.ipr.formulas.And
 import bps.ipr.formulas.Falsity
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.ForAll
 import bps.ipr.formulas.ForSome
 import bps.ipr.formulas.Iff
@@ -12,12 +13,17 @@ import bps.ipr.formulas.Not
 import bps.ipr.formulas.Or
 import bps.ipr.formulas.Predicate
 import bps.ipr.formulas.Truth
+import bps.ipr.formulas.VariablesBindingFolFormula
 import bps.ipr.prover.tableau.SignedFormula.Companion.create
+import bps.ipr.substitution.IdempotentSubstitution
+import bps.ipr.substitution.SingletonIdempotentSubstitution
+import bps.ipr.terms.Variable
 
 sealed interface SignedFormula<T : FolFormula> {
     val formula: T
     val sign: Boolean
     val birthPlace: TableauNode
+    val formulaImplementation: FolFormulaImplementation
 
     /**
      * Applies the rule for the given [formula] at its [birthPlace].  This is expected to add nodes to the tableau
@@ -69,32 +75,33 @@ sealed interface SignedFormula<T : FolFormula> {
             formula: F,
             sign: Boolean,
             birthPlace: TableauNode,
+            formulaImplementation: FolFormulaImplementation,
         ): SignedFormula<F> =
             (if (sign) {
                 when (formula) {
-                    is And -> PositiveAndFormula(formula, birthPlace)
-                    is Or -> PositiveOrFormula(formula, birthPlace)
-                    is Implies -> PositiveImpliesFormula(formula, birthPlace)
-                    is Iff -> PositiveIffFormula(formula, birthPlace)
-                    is ForAll -> PositiveForAllFormula(formula, birthPlace)
-                    is ForSome -> PositiveForSomeFormula(formula, birthPlace)
-                    is Not -> PositiveNotFormula(formula, birthPlace)
-                    Falsity -> PositiveClosingFormula(formula, birthPlace)
-                    is Predicate -> PositiveAtomicFormula(formula, birthPlace)
-                    Truth -> PositiveWastedFormula(formula, birthPlace)
+                    is And -> PositiveAndFormula(formula, birthPlace, formulaImplementation)
+                    is Or -> PositiveOrFormula(formula, birthPlace, formulaImplementation)
+                    is Implies -> PositiveImpliesFormula(formula, birthPlace, formulaImplementation)
+                    is Iff -> PositiveIffFormula(formula, birthPlace, formulaImplementation)
+                    is ForAll -> PositiveForAllFormula(formula, birthPlace, formulaImplementation)
+                    is ForSome -> PositiveForSomeFormula(formula, birthPlace, formulaImplementation)
+                    is Not -> PositiveNotFormula(formula, birthPlace, formulaImplementation)
+                    Falsity -> PositiveClosingFormula(formula, birthPlace, formulaImplementation)
+                    is Predicate -> PositiveAtomicFormula(formula, birthPlace, formulaImplementation)
+                    Truth -> PositiveWastedFormula(formula, birthPlace, formulaImplementation)
                 }
             } else {
                 when (formula) {
-                    is And -> NegativeAndFormula(formula, birthPlace)
-                    is Or -> NegativeOrFormula(formula, birthPlace)
-                    is Implies -> NegativeImpliesFormula(formula, birthPlace)
-                    is Iff -> NegativeIffFormula(formula, birthPlace)
-                    is ForAll -> NegativeForAllFormula(formula, birthPlace)
-                    is ForSome -> NegativeForSomeFormula(formula, birthPlace)
-                    is Not -> NegativeNotFormula(formula, birthPlace)
-                    Truth -> NegativeClosingFormula(formula, birthPlace)
-                    is Predicate -> NegativeAtomicFormula(formula, birthPlace)
-                    Falsity -> NegativeWastedFormula(formula, birthPlace)
+                    is And -> NegativeAndFormula(formula, birthPlace, formulaImplementation)
+                    is Or -> NegativeOrFormula(formula, birthPlace, formulaImplementation)
+                    is Implies -> NegativeImpliesFormula(formula, birthPlace, formulaImplementation)
+                    is Iff -> NegativeIffFormula(formula, birthPlace, formulaImplementation)
+                    is ForAll -> NegativeForAllFormula(formula, birthPlace, formulaImplementation)
+                    is ForSome -> NegativeForSomeFormula(formula, birthPlace, formulaImplementation)
+                    is Not -> NegativeNotFormula(formula, birthPlace, formulaImplementation)
+                    Truth -> NegativeClosingFormula(formula, birthPlace, formulaImplementation)
+                    is Predicate -> NegativeAtomicFormula(formula, birthPlace, formulaImplementation)
+                    Falsity -> NegativeWastedFormula(formula, birthPlace, formulaImplementation)
                 }
             }) as SignedFormula<F>
     }
@@ -122,11 +129,13 @@ sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
 data class NegativeWastedFormula(
     override val formula: FolFormula,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : WastedSignedFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {}
 
 data class PositiveWastedFormula(
     override val formula: FolFormula,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : WastedSignedFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {}
 
 sealed interface AtomicSignedFormula : SignedFormula<Predicate> {
@@ -137,14 +146,14 @@ sealed interface AtomicSignedFormula : SignedFormula<Predicate> {
 data class NegativeAtomicFormula(
     override val formula: Predicate,
     override val birthPlace: TableauNode,
-) : AtomicSignedFormula, NegativeSignedFormula<Predicate>() {
-}
+    override val formulaImplementation: FolFormulaImplementation,
+) : AtomicSignedFormula, NegativeSignedFormula<Predicate>()
 
 data class PositiveAtomicFormula(
     override val formula: Predicate,
     override val birthPlace: TableauNode,
-) : AtomicSignedFormula, PositiveSignedFormula<Predicate>() {
-}
+    override val formulaImplementation: FolFormulaImplementation,
+) : AtomicSignedFormula, PositiveSignedFormula<Predicate>()
 
 sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
     // NOTE force children to implement this
@@ -206,7 +215,7 @@ sealed interface SignedNotFormula : AlphaFormula<Not> {
         formula
             .subFormula
             .let {
-                create(it, !sign, birthPlace)
+                create(it, !sign, birthPlace, formulaImplementation)
                     .reduceAlpha(birthPlace, mutableList)
             }
 }
@@ -222,16 +231,19 @@ sealed class NegativeSignedFormula<F : FolFormula> : SignedFormula<F> {
 data class PositiveNotFormula(
     override val formula: Not,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : SignedNotFormula, PositiveSignedFormula<Not>()
 
 data class NegativeNotFormula(
     override val formula: Not,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : SignedNotFormula, NegativeSignedFormula<Not>()
 
 data class NegativeImpliesFormula(
     override val formula: Implies,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : AlphaFormula<Implies>, NegativeSignedFormula<Implies>() {
     override fun reduceAlpha(
         birthPlace: TableauNode,
@@ -239,10 +251,10 @@ data class NegativeImpliesFormula(
     ): MutableList<SignedFormula<*>> =
         formula
             .let { implies ->
-                create(implies.antecedent, true, birthPlace)
+                create(implies.antecedent, true, birthPlace, formulaImplementation)
                     .reduceAlpha(
                         birthPlace,
-                        create(implies.consequent, false, birthPlace)
+                        create(implies.consequent, false, birthPlace, formulaImplementation)
                             .reduceAlpha(birthPlace, mutableList),
                     )
             }
@@ -260,7 +272,7 @@ sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : Alpha
         formula
             .subFormulas
             .fold(mutableList ?: mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                create(t, sign, birthPlace)
+                create(t, sign, birthPlace, formulaImplementation)
                     .reduceAlpha(birthPlace, r)
                 r
             }
@@ -269,11 +281,13 @@ sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : Alpha
 data class NegativeOrFormula(
     override val formula: Or,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : NegativeSignedFormula<Or>(), SimpleMultiSubAlphaFormula<Or>
 
 data class PositiveAndFormula(
     override val formula: And,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : PositiveSignedFormula<And>(), SimpleMultiSubAlphaFormula<And>
 
 sealed interface BetaFormula<T : FolFormula> : SignedFormula<T>
@@ -295,6 +309,7 @@ sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFo
                                     formula = folFormula,
                                     sign = sign,
                                     birthPlace = node,
+                                    formulaImplementation = formulaImplementation,
                                 )
                                     .reduceAlpha(birthPlace = node)
                             }
@@ -307,16 +322,19 @@ sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFo
 data class PositiveOrFormula(
     override val formula: Or,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : SimpleMultiSubBetaFormula<Or>, PositiveSignedFormula<Or>()
 
 data class NegativeAndFormula(
     override val formula: And,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : SimpleMultiSubBetaFormula<And>, NegativeSignedFormula<And>()
 
 data class PositiveImpliesFormula(
     override val formula: Implies,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : BetaFormula<Implies>, PositiveSignedFormula<Implies>() {
 
     override fun apply() =
@@ -330,6 +348,7 @@ data class PositiveImpliesFormula(
                                 formula = formula.consequent,
                                 sign = true,
                                 birthPlace = node,
+                                formulaImplementation = formulaImplementation,
                             )
                                 .reduceAlpha(birthPlace = node)
                         },
@@ -338,6 +357,7 @@ data class PositiveImpliesFormula(
                                 formula = formula.antecedent,
                                 sign = false,
                                 birthPlace = node,
+                                formulaImplementation = formulaImplementation,
                             )
                                 .reduceAlpha(birthPlace = node)
                         },
@@ -350,6 +370,7 @@ data class PositiveImpliesFormula(
 data class NegativeIffFormula(
     override val formula: Iff,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : BetaFormula<Iff>, NegativeSignedFormula<Iff>() {
     override fun apply() =
         birthPlace
@@ -362,6 +383,7 @@ data class NegativeIffFormula(
                                 formula = formula.subFormulas[0],
                                 sign = false,
                                 birthPlace = node,
+                                formulaImplementation = formulaImplementation,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
@@ -370,6 +392,7 @@ data class NegativeIffFormula(
                                             formula = formula.subFormulas[1],
                                             sign = true,
                                             birthPlace = node,
+                                            formulaImplementation = formulaImplementation,
                                         )
                                             .reduceAlpha(birthPlace = node),
                                 )
@@ -379,6 +402,7 @@ data class NegativeIffFormula(
                                 formula = formula.subFormulas[0],
                                 sign = true,
                                 birthPlace = node,
+                                formulaImplementation = formulaImplementation,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
@@ -387,6 +411,7 @@ data class NegativeIffFormula(
                                             formula = formula.subFormulas[1],
                                             sign = false,
                                             birthPlace = node,
+                                            formulaImplementation = formulaImplementation,
                                         )
                                             .reduceAlpha(birthPlace = node),
                                 )
@@ -400,6 +425,7 @@ data class NegativeIffFormula(
 data class PositiveIffFormula(
     override val formula: Iff,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : BetaFormula<Iff>, PositiveSignedFormula<Iff>() {
     override fun apply() =
         birthPlace
@@ -412,7 +438,7 @@ data class PositiveIffFormula(
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
                                 .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                                    create(t, true, node)
+                                    create(t, true, node, formulaImplementation)
                                         .reduceAlpha(node, r)
                                     r
                                 }
@@ -422,7 +448,7 @@ data class PositiveIffFormula(
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
                                 .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                                    create(t, false, node)
+                                    create(t, false, node, formulaImplementation)
                                         .reduceAlpha(node, r)
                                     r
                                 }
@@ -432,30 +458,149 @@ data class PositiveIffFormula(
             }
 }
 
-sealed interface DeltaFormula<T : FolFormula> : SignedFormula<T>
+sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T> {
+    override fun apply() =
+        // NOTE we want a single new skolem function???
+        createDeltaChildFormula()
+            .let { childFormula: FolFormula ->
+                birthPlace
+                    .leaves()
+                    .forEach { leaf: TableauNode ->
+                        leaf.setChildren(
+                            listOf(
+                                createNodeForReducedFormulas { node: TableauNode ->
+                                    create(childFormula, sign, node, formulaImplementation)
+                                        .reduceAlpha(node)
+                                },
+                            ),
+                        )
+                    }
+            }
+
+    fun createDeltaChildFormula(): FolFormula =
+        with(formulaImplementation.termImplementation) {
+            formula
+                .variablesFreeIn
+                .let { freeVariables: Set<Variable> ->
+                    formula
+                        .boundVariables
+                        .firstOrNull()!!
+                        .let { firstBv: Variable ->
+                            formula
+                                .boundVariables
+                                .asSequence()
+                                .drop(1)
+                                .fold(
+                                    SingletonIdempotentSubstitution(
+                                        key = firstBv,
+                                        value =
+                                            newFunctorForSymbol(firstBv.symbol, freeVariables.size)
+                                                .let { functor ->
+                                                    if (freeVariables.isEmpty()) {
+                                                        constantForSymbol(functor.symbol)
+                                                    } else
+                                                        properFunction(
+                                                            functor,
+                                                            freeVariables,
+                                                        )
+                                                },
+                                    ),
+                                ) { subst: IdempotentSubstitution, bv: Variable ->
+                                    subst.composeIdempotent(
+                                        theta = SingletonIdempotentSubstitution(
+                                            key = bv,
+                                            value =
+                                                newFunctorForSymbol(bv.symbol, freeVariables.size)
+                                                    .let { functor ->
+                                                        if (freeVariables.isEmpty()) {
+                                                            constantForSymbol(functor.symbol)
+                                                        } else
+                                                            properFunction(
+                                                                functor,
+                                                                freeVariables,
+                                                            )
+                                                    },
+                                        ),
+                                        termImplementation = this@with,
+                                    )
+                                }
+                                .let { substitution: IdempotentSubstitution ->
+                                    // substitution substitutes the bound variables with skolem functions
+                                    formula
+                                        .subFormula
+                                        .apply(substitution, formulaImplementation)
+                                }
+                        }
+                }
+        }
+}
 
 data class NegativeForAllFormula(
     override val formula: ForAll,
     override val birthPlace: TableauNode,
-) : DeltaFormula<ForAll>, NegativeSignedFormula<ForAll>() {
-    override fun apply() {
-        TODO("Not yet implemented")
-    }
-}
+    override val formulaImplementation: FolFormulaImplementation,
+) : DeltaFormula<ForAll>, NegativeSignedFormula<ForAll>()
 
 data class PositiveForSomeFormula(
     override val formula: ForSome,
     override val birthPlace: TableauNode,
-) : DeltaFormula<ForSome>, PositiveSignedFormula<ForSome>() {
-    override fun apply() {
-        TODO("Not yet implemented")
-    }
-}
+    override val formulaImplementation: FolFormulaImplementation,
+) : DeltaFormula<ForSome>, PositiveSignedFormula<ForSome>()
 
-sealed interface GammaFormula<T : FolFormula> : SignedFormula<T> {
+sealed interface GammaFormula<T : VariablesBindingFolFormula> : SignedFormula<T> {
     var applications: Int
 
-    fun applyGammaRule()
+    fun applyGammaRule() =
+        birthPlace
+            .leaves()
+            .forEach { leaf: TableauNode ->
+                // NOTE we want fresh free variables on each branch
+                createGammaChild()
+                    .let { childFormula: FolFormula ->
+                        leaf.setChildren(
+                            listOf(
+                                createNodeForReducedFormulas { node: TableauNode ->
+                                    create(childFormula, sign, node, formulaImplementation)
+                                        .reduceAlpha(node)
+                                },
+                            ),
+                        )
+                    }
+            }
+
+    fun createGammaChild(): FolFormula =
+        formula
+            .boundVariables
+            .firstOrNull()!!
+            .let { firstBv: Variable ->
+                formula
+                    .boundVariables
+                    .asSequence()
+                    .drop(1)
+                    .fold(
+                        SingletonIdempotentSubstitution(
+                            firstBv,
+                            formulaImplementation.termImplementation.newFreeVariable(firstBv.symbol),
+                        ),
+                    ) { subst: IdempotentSubstitution, bv: Variable ->
+                        subst.composeIdempotent(
+                            theta = SingletonIdempotentSubstitution(
+                                key = bv,
+                                value = formulaImplementation.termImplementation.newFreeVariable(
+                                    bv.symbol,
+                                ),
+                            ),
+                            termImplementation = formulaImplementation.termImplementation,
+                        )
+                    }
+                    .let { substitution: IdempotentSubstitution ->
+                        // substitution substitutes the bound variables with new, similarly-named free variables
+                        formula
+                            .subFormula
+                            .apply(substitution, formulaImplementation)
+
+                    }
+            }
 
     override fun apply() =
         applyGammaRule()
@@ -471,25 +616,24 @@ sealed interface GammaFormula<T : FolFormula> : SignedFormula<T> {
 data class NegativeForSomeFormula(
     override val formula: ForSome,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : GammaFormula<ForSome>, NegativeSignedFormula<ForSome>() {
 
     override var applications: Int = 0
 
-    override fun applyGammaRule() {
-        TODO("Not yet implemented")
-    }
+    // TODO create new free variables for the formula.boundVariables
+    //      create a new formula from formula.subFormula with the variables substituted
+    //      add reduced signed formula(s) to leaves
 }
 
 data class PositiveForAllFormula(
     override val formula: ForAll,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : GammaFormula<ForAll>, PositiveSignedFormula<ForAll>() {
 
     override var applications: Int = 0
 
-    override fun applyGammaRule() {
-        TODO("Not yet implemented")
-    }
 }
 
 sealed interface ClosingFormula<F : FolFormula> : SignedFormula<F> {
@@ -499,6 +643,7 @@ sealed interface ClosingFormula<F : FolFormula> : SignedFormula<F> {
 data class NegativeClosingFormula(
     override val formula: FolFormula,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : ClosingFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {
     override fun apply() = Unit
 }
@@ -506,6 +651,7 @@ data class NegativeClosingFormula(
 data class PositiveClosingFormula(
     override val formula: FolFormula,
     override val birthPlace: TableauNode,
+    override val formulaImplementation: FolFormulaImplementation,
 ) : ClosingFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {
     override fun apply() = Unit
 }

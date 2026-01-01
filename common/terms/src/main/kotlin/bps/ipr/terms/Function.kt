@@ -1,7 +1,18 @@
 package bps.ipr.terms
 
+import bps.ipr.substitution.Substitution
+
+@JvmInline
+value class Functor(val symbol: String) {
+    init {
+        require(symbol.isNotEmpty())
+    }
+
+    override fun toString(): String = symbol
+}
+
 sealed class Function(
-    val symbol: String,
+    val functor: Functor,
     val arity: Int,
 ) : Term {
 
@@ -13,22 +24,22 @@ sealed class Function(
         if (other !is Function) return false
 
         if (arity != other.arity) return false
-        if (symbol != other.symbol) return false
+        if (functor != other.functor) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = arity
-        result = 31 * result + symbol.hashCode()
+        result = 31 * result + functor.hashCode()
         return result
     }
 
 }
 
 class Constant(
-    symbol: String,
-) : Function(symbol, 0) {
+    functor: Functor,
+) : Function(functor, 0) {
 
     override val variablesFreeIn: Set<Variable> =
         emptySet()
@@ -37,23 +48,28 @@ class Constant(
         this
 
     override fun display(): String =
-        "$symbol()"
+        "$functor()"
 
 }
 
 // TODO consider making specialty classes up to a certain arity to avoid using a list
 //     in many cases.  Might be interesting to measure performance differences.  UnaryFunction, BinaryFunction, Arity5Function.
 class ProperFunction(
-    symbol: String,
+    functor: Functor,
     /**
      * For performance, this argument is not protected from mutilation by the caller.  We're assuming the caller is not
      * trying to break us.
      */
     val arguments: ArgumentList,
-) : Function(symbol, arguments.size) {
+) : Function(functor, arguments.count()) {
 
     init {
-        require(arguments.isNotEmpty())
+        require(
+            arguments.firstOrNull() !== null ||
+                    false.also {
+                        println("arguments $arguments")
+                    },
+        )
     }
 
     override val variablesFreeIn: Set<Variable> =
@@ -67,8 +83,8 @@ class ProperFunction(
                 .firstOrNull { it in this.variablesFreeIn }
             !== null
         )
-            termImplementation.properFunctionOrNull(
-                symbol,
+            termImplementation.properFunction(
+                functor,
                 arguments
                     .map {
                         it.apply(substitution, termImplementation)
@@ -80,7 +96,7 @@ class ProperFunction(
     override fun display(): String =
         arguments
             .map { it.display() }
-            .joinToString(", ", "$symbol(", ")") { it }
+            .joinToString(", ", "$functor(", ")") { it }
 
     override fun equals(other: Any?): Boolean =
         super.equals(other) &&

@@ -1,5 +1,6 @@
 package bps.ipr.formulas
 
+import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.terms.Variable
 
 sealed class FolFormula : Formula {
@@ -15,6 +16,8 @@ sealed class FolFormula : Formula {
 //     * Variables that are bound by variable-binding within this formula.
 //     */
 //    val variablesBoundIn: Set<BoundVariable>
+
+    abstract fun apply(substitution: IdempotentSubstitution, formulaImplementation: FolFormulaImplementation): FolFormula
 
 }
 

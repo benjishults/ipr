@@ -1,11 +1,11 @@
 package bps.ipr.formulas
 
-import bps.ipr.terms.EmptySubstitution
+import bps.ipr.substitution.EmptySubstitution
 import bps.ipr.terms.FolTermImplementation
-import bps.ipr.terms.GeneralRecursiveDescentTermUnifier
-import bps.ipr.terms.IdempotentSubstitution
+import bps.ipr.substitution.GeneralRecursiveDescentTermUnifier
+import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.terms.TermImplementation
-import bps.ipr.terms.TermUnifier
+import bps.ipr.substitution.TermUnifier
 
 interface FormulaUnifier {
 
@@ -49,7 +49,7 @@ class GeneralRecursiveDescentFormulaUnifier(
                         unify(
                             term
                                 .apply(runningSub, termImplementation),
-                            formula2.arguments[index]
+                            formula2.arguments.elementAt(index)
                                 .apply(runningSub, termImplementation),
                             runningSub,
                         )

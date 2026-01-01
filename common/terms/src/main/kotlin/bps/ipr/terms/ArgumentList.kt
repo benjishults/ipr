@@ -7,14 +7,15 @@ import bps.kotlin.allIndexed
  *
  * These are not suitable hash-map keys or members of sets.
  */
-class ArgumentList(arguments: List<Term>) : List<Term> by arguments {
+class ArgumentList(arguments: Iterable<Term>) : Iterable<Term> by arguments {
 
+    // NOTE this will perform badly if arguments is not a List or Set
     override fun equals(other: Any?): Boolean =
         this === other ||
                 (other is ArgumentList &&
-                        other.size == this.size &&
+                        other.count() == this.count() &&
                         other.allIndexed { i, t ->
-                            t == get(i)
+                            t == elementAt(i)
                         })
 
     // NOTE explicitly calling super here to highlight that this is what we want

@@ -1,5 +1,7 @@
 package bps.ipr.terms
 
+import bps.ipr.substitution.Substitution
+
 sealed interface Term {
 
     /**

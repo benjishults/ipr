@@ -1,10 +1,18 @@
-package bps.ipr.terms
+package bps.ipr.substitution
+
+import bps.ipr.terms.Constant
+import bps.ipr.terms.FolTermImplementation
+import bps.ipr.terms.FreeVariable
+import bps.ipr.terms.ProperFunction
+import bps.ipr.terms.Term
+import bps.ipr.terms.TermImplementation
+import bps.ipr.terms.Variable
 
 interface TermUnifier {
     /**
-     * A [TermUnifier] needs a [TermImplementation] in order to construct new terms.
+     * A [TermUnifier] needs a [bps.ipr.terms.TermImplementation] in order to construct new terms.
      *
-     * Generally, a [TermUnifier] assumes that the [Term]s it is unifying were constructed by the given [TermImplementation]
+     * Generally, a [TermUnifier] assumes that the [bps.ipr.terms.Term]s it is unifying were constructed by the given [bps.ipr.terms.TermImplementation]
      * or compatible.
      */
     val termImplementation: TermImplementation
@@ -12,7 +20,7 @@ interface TermUnifier {
 }
 
 /**
- * This unifier is appropriate for an implementation like [TermImplementation] or [FolTermImplementation] where proper
+ * This unifier is appropriate for an implementation like [TermImplementation] or [bps.ipr.terms.FolTermImplementation] where proper
  * functions are not interned.  This does assume that free variables and constants with the same symbol are equal.
  */
 data class GeneralRecursiveDescentTermUnifier(
@@ -44,7 +52,7 @@ data class GeneralRecursiveDescentTermUnifier(
                                         under
                                     } else
                                         under.composeIdempotent(
-                                            Variable.makeSubstitution(term1, term2),
+                                            Variable.Companion.makeSubstitution(term1, term2),
                                             termImplementation,
                                         )
                             else ->
@@ -75,12 +83,12 @@ data class GeneralRecursiveDescentTermUnifier(
                         is Constant ->
                             null
                         is ProperFunction ->
-                            if (term1.symbol == term2.symbol) {
+                            if (term1.functor == term2.functor) {
                                 term1.arguments.foldIndexed(under) { index, runningSub, term ->
                                     unify(
                                         term
                                             .apply(runningSub, termImplementation),
-                                        term2.arguments[index]
+                                        term2.arguments.elementAt(index)
                                             .apply(runningSub, termImplementation),
                                         runningSub,
                                     )

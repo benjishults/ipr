@@ -1,6 +1,7 @@
 package bps.ipr.terms
 
 import bps.kotlin.allIndexed
+import kotlin.collections.find
 
 /**
  * A [TermImplementation] is a factory for [Term]s in a given language.  Different implementations might return
@@ -23,9 +24,16 @@ interface TermImplementation : AutoCloseable {
     }
 
     /**
-     * @return a [FreeVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
+     * @return a [FreeVariable] for a symbol similar to [symbol] but new to the language.
+     * Throws an exception if the language just can't allow it.
      */
-    fun freeVariableOrNull(symbol: String): FreeVariable?
+    fun newFreeVariable(symbol: String): FreeVariable
+
+    /**
+     * @return a [FreeVariable] if the given [symbol] is allowed by the language as a variable.
+     * Throws an exception otherwise.
+     */
+    fun freeVariableForSymbol(symbol: String): FreeVariable
 
 //    /**
 //     * @return a [BoundVariable] for the normalization of the given [symbol] or `null` if that isn't possible.
@@ -33,59 +41,168 @@ interface TermImplementation : AutoCloseable {
 //    fun boundVariableOrNull(symbol: String): BoundVariable?
 
     /**
-     * @return a [Constant] for the normalization of the given [symbol] as a functor or `null` if that isn't possible.
+     * @return a [Constant] for the given [symbol] or throw an exception if the [symbol] isn't allowed as a constant.
      */
-    fun constantOrNull(symbol: String): Constant?
+    fun constantForSymbol(symbol: String): Constant
 
     /**
-     * @return a [ProperFunction] for the normalization of the given [symbol] as a functor and the
-     * given arguments or `null` if that isn't possible.
+     * Throws an exception if the given [symbol] isn't allowed at that arity in the given language.
      */
-    fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction?
+    fun functorForSymbol(symbol: String, arity: Int): Functor =
+        Functor(
+            termLanguage
+                .registerFunctorOrNull(symbol, arity)!!,
+        )
+
+    /**
+     * @return a [Functor] for a symbol similar to [symbol] but new to the language.
+     * Throws an exception if the language just can't allow it.
+     */
+    fun newFunctorForSymbol(symbol: String, arity: Int): Functor
+
+    /**
+     * @return a [ProperFunction] for the given [functor] and the
+     * given arguments.
+     */
+    fun properFunction(functor: Functor, arguments: Iterable<Term>): ProperFunction
 
     /**
      * Allows absolutely everything and interns nothing.
      */
     companion object : TermImplementation {
         override val termLanguage: TermLanguage = TermLanguage
+        override fun newFreeVariable(symbol: String): FreeVariable {
+            TODO("Not yet implemented")
+        }
 
-        override fun freeVariableOrNull(symbol: String): FreeVariable =
+        override fun freeVariableForSymbol(symbol: String): FreeVariable =
             FreeVariable(symbol)
 
 //        override fun boundVariableOrNull(symbol: String): BoundVariable =
 //            BoundVariable(symbol)
 
-        override fun constantOrNull(symbol: String): Constant =
-            Constant(symbol)
+        override fun constantForSymbol(symbol: String): Constant =
+            Constant(functorForSymbol(symbol, 0))
 
-        override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction =
-            ProperFunction(symbol, ArgumentList(arguments))
+        override fun newFunctorForSymbol(symbol: String, arity: Int): Functor =
+            TODO("Not yet implemented")
+
+        override fun properFunction(functor: Functor, arguments: Iterable<Term>): ProperFunction =
+            ProperFunction(functor, ArgumentList(arguments))
     }
 
 }
 
+/**
+ * This class is not thread-safe.
+ */
 open class FolTermImplementation(
-    override val termLanguage: TermLanguage = FolTermLanguage(),
+    override val termLanguage: FolTermLanguage = FolTermLanguage(),
 ) : TermImplementation {
 
+    /**
+     * maps symbols to [FreeVariable]s
+     */
     protected val freeVariableInternTable = mutableMapOf<String, FreeVariable>()
 
-//        protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
+    /**
+     * Maps a string to the last successful number that was used to create a new variable from that symbol.
+     */
+    protected val freeVariableSymbolGenerationInfo = mutableMapOf<String, Long>()
+
+    /**
+     * maps symbols to [Constant]s
+     */
     protected val constantInternTable = mutableMapOf<String, Constant>()
+
+    //        protected val boundVariableInternTable = mutableMapOf<String, MutableList<BoundVariable>>()
+//    /**
+//     * maps normalized symbols to [Constant]s
+//     */
+//    protected val constantInternTable = mutableMapOf<String, Constant>()
+
+    /**
+     * maps a symbol to its existing [Functor].
+     */
+    // TODO is this really an improvement?  The trade of is lots of "duplicate" functors vs this table.
+    protected val functorInternTable = mutableMapOf<String, Functor>()
+
+    /**
+     * Maps a string to the last successful number that was used to create a new variable from that symbol.
+     */
+    protected val functorSymbolGenerationInfo = mutableMapOf<String, Long>()
 
     override fun clear() {
         super.clear()
         freeVariableInternTable.clear()
-//        boundVariableInternTable.clear()
+        freeVariableSymbolGenerationInfo.clear()
         constantInternTable.clear()
+//        boundVariableInternTable.clear()
+        functorInternTable.clear()
+        functorSymbolGenerationInfo.clear()
     }
 
-    override fun freeVariableOrNull(symbol: String): FreeVariable? =
+    /**
+     * only called when [symbol] is known to be on the [freeVariableInternTable] already.
+     */
+    protected open fun nextFreeVariable(symbol: String): FreeVariable =
+        (freeVariableSymbolGenerationInfo[symbol] ?: -1)
+            .let { lastSuccessfulSuffix: Long ->
+                var nextSuffix = lastSuccessfulSuffix + 1L
+                var currentAttempt = "${symbol}_${nextSuffix}"
+                while (freeVariableInternTable.containsKey(currentAttempt)) {
+                    nextSuffix++
+                    currentAttempt = "${symbol}_${nextSuffix}"
+                }
+                FreeVariable(termLanguage.registerFreeVariableOrNull(currentAttempt)!!)
+                    .also {
+                        freeVariableInternTable[currentAttempt] = it
+                        freeVariableSymbolGenerationInfo[symbol] = nextSuffix
+                    }
+            }
+
+    /**
+     * only called when [symbol] is known to be on the [functorInternTable] already.
+     */
+    protected open fun nextFunctor(symbol: String, arity: Int): Functor =
+        (functorSymbolGenerationInfo[symbol] ?: -1)
+            .let { lastSuccessfulSuffix: Long ->
+                var nextSuffix = lastSuccessfulSuffix + 1L
+                var currentAttempt = "${symbol}_${nextSuffix}"
+                while (functorInternTable.containsKey(currentAttempt)) {
+                    nextSuffix++
+                    currentAttempt = "${symbol}_${nextSuffix}"
+                }
+                Functor(termLanguage.registerFunctorOrNull(currentAttempt, arity)!!)
+                    .also {
+                        functorInternTable[currentAttempt] = it
+                        functorSymbolGenerationInfo[symbol] = nextSuffix
+                    }
+            }
+
+    /**
+     * Operates in a referentially transparent way.
+     */
+    override fun freeVariableForSymbol(symbol: String): FreeVariable =
         termLanguage
-            .toNormalizedFreeVariableOrNull(symbol)
-            ?.let {
+            .registerFreeVariableOrNull(symbol)!!
+            .let {
                 freeVariableInternTable.getOrPut(it) { FreeVariable(it) }
             }
+
+    override fun newFreeVariable(symbol: String): FreeVariable =
+        termLanguage
+            .registerFreeVariableOrNull(symbol)!!
+            .let { initialNormalization ->
+                if (freeVariableInternTable.containsKey(initialNormalization)) {
+                    nextFreeVariable(initialNormalization)
+                } else
+                    FreeVariable(initialNormalization)
+                        .also {
+                            freeVariableInternTable[initialNormalization] = it
+                        }
+            }
+
 
 //    override fun boundVariableOrNull(symbol: String): BoundVariable? =
 //        termLanguage
@@ -103,28 +220,49 @@ open class FolTermImplementation(
 //                    }
 //            }
 
-    override fun constantOrNull(symbol: String): Constant? =
-        termLanguage
-            .toNormalizedFunctorOrNull(symbol, 0)
-            ?.let {
-                constantInternTable.getOrPut(it) { Constant(it) }
+    override fun functorForSymbol(symbol: String, arity: Int): Functor =
+        termLanguage.registerFunctorOrNull(symbol, arity)
+            ?.let { registered: String ->
+                functorInternTable.getOrPut(registered) {
+                    Functor(termLanguage.registerFunctorOrNull(registered, arity)!!)
+                }
             }
+            ?: throw ArityOverloadException(
+                "$symbol already has arity ${
+                    termLanguage.arityInternTable[symbol]
+                }",
+                )
 
-    override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
-        termLanguage
-            .toNormalizedFunctorOrNull(symbol, arguments.size)
-            ?.let {
-                ProperFunction(it, ArgumentList(arguments))
-            }
+    override fun newFunctorForSymbol(symbol: String, arity: Int): Functor =
+//        termLanguage
+//            .registerFunctorOrNull(symbol, arity)
+//            ?.let { initial: String ->
+        if (functorInternTable.containsKey(symbol)) {
+            nextFunctor(symbol, arity)
+        } else
+            Functor(termLanguage.registerFunctorOrNull(symbol, arity)!!)
+                .also {
+                    functorInternTable[symbol] = it
+                }
+
+    /**
+     * Operates in a referentially transparent way.
+     */
+    override fun constantForSymbol(symbol: String): Constant =
+        constantInternTable.getOrPut(symbol) {
+            Constant(functorForSymbol(symbol, 0))
+        }
+
+    override fun properFunction(functor: Functor, arguments: Iterable<Term>): ProperFunction =
+        ProperFunction(functor, ArgumentList(arguments))
 
 }
 
 open class FolDagTermImplementation(
-    termLanguage: TermLanguage = FolTermLanguage(),
+    termLanguage: FolTermLanguage = FolTermLanguage(),
 ) : FolTermImplementation(termLanguage) {
 
     // NOTE ArgumentLists can't be put into sets or used as keys in maps so this is what I've got.  :(
-    // TODO consider clearing this once parsing is done just to give back some memory
     protected val properFunctionInternTable = mutableMapOf<String, MutableList<Pair<ArgumentList, ProperFunction>>>()
 
     override fun clear() {
@@ -132,33 +270,30 @@ open class FolDagTermImplementation(
         properFunctionInternTable.clear()
     }
 
-    override fun properFunctionOrNull(symbol: String, arguments: List<Term>): ProperFunction? =
-        termLanguage
-            .toNormalizedFunctorOrNull(symbol, arguments.size)
-            ?.let {
-                properFunctionInternTable[symbol]
-                    ?.let { listOfTermsWithSymbol ->
-                        listOfTermsWithSymbol
-                            .find { (args: ArgumentList, _) ->
-                                arguments.allIndexed { index, termInArguments: Term ->
-                                    termInArguments === args[index]
-                                }
-                            }
-                            ?.second
-                            ?: ArgumentList(arguments)
-                                .let { args ->
-                                    ProperFunction(
-                                        symbol,
-                                        args,
-                                    )
-                                        .also { listOfTermsWithSymbol.add(args to it) }
-                                }
+    // TODO if this is referentially transparent, then let's document that.  (I think it is/should be)
+    override fun properFunction(functor: Functor, arguments: Iterable<Term>): ProperFunction =
+        properFunctionInternTable[functor.symbol]
+            ?.let { listOfTermsWithSymbol: MutableList<Pair<ArgumentList, ProperFunction>> ->
+                listOfTermsWithSymbol
+                    .find { (args: ArgumentList, _) ->
+                        arguments.allIndexed { index: Int, termInArguments: Term ->
+                            termInArguments === args.elementAt(index)
+                        }
                     }
-                    ?: ProperFunction(symbol, ArgumentList(arguments))
-                        .also { termToReturn ->
-                            properFunctionInternTable[symbol] =
-                                mutableListOf(termToReturn.arguments to termToReturn)
+                    ?.second
+                    ?: ArgumentList(arguments)
+                        .let { args ->
+                            ProperFunction(
+                                functor = functor,
+                                arguments = args,
+                            )
+                                .also { listOfTermsWithSymbol.add(args to it) }
                         }
             }
+            ?: ProperFunction(functor, ArgumentList(arguments))
+                .also { termToReturn ->
+                    properFunctionInternTable[functor.symbol] =
+                        mutableListOf(termToReturn.arguments to termToReturn)
+                }
 
 }

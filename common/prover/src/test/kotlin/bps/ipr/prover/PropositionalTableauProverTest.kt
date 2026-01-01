@@ -7,7 +7,7 @@ import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
-import bps.ipr.terms.EmptySubstitution
+import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -23,7 +23,10 @@ class PropositionalTableauProverTest :
             PropositionalTableauProverTest::class.java.classLoader.getResourceAsStream("propositional.ipr")!!
                 .bufferedReader()
                 .useLines { lines: Sequence<String> ->
-                    lines.forEach { append(it) }
+                    lines.forEach {
+                        append(it)
+                        append('\n')
+                    }
                 }
         }
         "using parsable file" - {
@@ -41,7 +44,11 @@ class PropositionalTableauProverTest :
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display()} expecting $expectedResult" {
-                        TableauProver(GeneralRecursiveDescentFormulaUnifier()).prove(formula) shouldBe expectedResult
+                        TableauProver(GeneralRecursiveDescentFormulaUnifier())
+                            .prove(
+                                formula,
+                                this@PropositionalTableauProverTest.formulaImplementation,
+                            ) shouldBe expectedResult
                     }
                 }
         }

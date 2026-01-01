@@ -1,6 +1,5 @@
 package bps.ipr.parser.tptp
 
-import bps.ipr.common.LinkedList
 import bps.ipr.parser.TermParser
 import bps.ipr.terms.Constant
 import bps.ipr.terms.Term
@@ -42,7 +41,7 @@ interface TptpFofTermParser : TermParser {
                         // proper function
                         substring(startIndex, indexOfFirstDelimiter)
                             .parseTptpFunctorOrNull()
-                            ?.let { functor ->
+                            ?.let { functor: String ->
                                 val startIndexOfArguments = indexOfFirstDelimiter + 1
                                 substring(startIndexOfArguments)
                                     .parseArgumentsOrNull(startIndex)
@@ -50,7 +49,11 @@ interface TptpFofTermParser : TermParser {
                                         val globalIndexAfterClosedParen =
                                             startIndexOfArguments + closedParenInArgumentsInputIndex + 1
                                         with(whitespaceParser) {
-                                            termImplementation.properFunctionOrNull(functor, args)!! to
+                                            termImplementation
+                                                .properFunction(
+                                                    termImplementation.functorForSymbol(functor, args.size),
+                                                    args,
+                                                ) to
                                                     substring(globalIndexAfterClosedParen)
                                                         .indexOfFirstNonWhitespace() + globalIndexAfterClosedParen
                                         }
@@ -145,13 +148,13 @@ interface TptpFofTermParser : TermParser {
     fun String.parseTptpConstantOrNull(): Constant? =
         trim()
             .takeIf { it.isTptpLowerWord() }
-            ?.let { termImplementation.constantOrNull(it) }
+            ?.let { termImplementation.constantForSymbol(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpVariableOrNull(): Variable? =
         trim()
             .takeIf { it.isTptpUpperWord() }
-            ?.let { termImplementation.freeVariableOrNull(it) }
+            ?.let { termImplementation.freeVariableForSymbol(it) }
 
     // TODO make these work like the rest
     fun String.parseTptpFunctorOrNull(): String? =

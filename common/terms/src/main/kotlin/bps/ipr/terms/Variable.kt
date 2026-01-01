@@ -1,5 +1,9 @@
 package bps.ipr.terms
 
+import bps.ipr.substitution.EmptySubstitution
+import bps.ipr.substitution.IdempotentSubstitution
+import bps.ipr.substitution.SingletonIdempotentSubstitution
+import bps.ipr.substitution.Substitution
 import kotlin.math.sign
 
 sealed interface Variable : Term, Comparable<Variable> {
@@ -56,23 +60,23 @@ class FreeVariable(
 
 }
 
-class BoundVariable(
-    override val symbol: String,
-) : Variable {
-
-    override val variablesFreeIn: Set<Variable> = emptySet()
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other !is BoundVariable) return false
-
-        return symbol == other.symbol
-    }
-
-    override fun hashCode(): Int {
-        return symbol.hashCode()
-    }
-
-    override fun toString(): String = display()
-
-}
+//class BoundVariable(
+//    override val symbol: String,
+//) : Variable {
+//
+//    override val variablesFreeIn: Set<Variable> = emptySet()
+//
+//    override fun equals(other: Any?): Boolean {
+//        if (this === other) return true
+//        if (other !is BoundVariable) return false
+//
+//        return symbol == other.symbol
+//    }
+//
+//    override fun hashCode(): Int {
+//        return symbol.hashCode()
+//    }
+//
+//    override fun toString(): String = display()
+//
+//}

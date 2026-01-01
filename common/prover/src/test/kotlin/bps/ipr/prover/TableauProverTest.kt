@@ -5,7 +5,7 @@ import bps.ipr.formulas.GeneralRecursiveDescentFormulaUnifier
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
-import bps.ipr.terms.EmptySubstitution
+import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.shouldBe
 
@@ -32,7 +32,8 @@ class TableauProverTest : FreeSpec(),
 //            .reversed()
             .forEach { (formula, expectedResult) ->
                 "attempt $formula expecting $expectedResult" {
-                    TableauProver(GeneralRecursiveDescentFormulaUnifier()).prove(formula) shouldBe expectedResult
+                    TableauProver(GeneralRecursiveDescentFormulaUnifier())
+                        .prove(formula, this@TableauProverTest.formulaImplementation) shouldBe expectedResult
                 }
             }
     }

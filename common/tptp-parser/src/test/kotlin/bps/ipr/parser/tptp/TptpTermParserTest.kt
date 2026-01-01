@@ -1,7 +1,7 @@
 package bps.ipr.parser.tptp
 
 import bps.ipr.terms.Constant
-import bps.ipr.terms.FolDagTermImplementation
+import bps.ipr.terms.FolTermImplementation
 import bps.ipr.terms.FreeVariable
 import bps.ipr.terms.ProperFunction
 import bps.ipr.terms.Term
@@ -15,7 +15,8 @@ import io.kotest.matchers.types.shouldBeInstanceOf
 class TptpTermParserTest : FreeSpec() {
 
     init {
-        val termImplementation = FolDagTermImplementation()
+//        val termImplementation = FolDagTermImplementation()
+        val termImplementation = FolTermImplementation()
         with(TptpFofTermParser(termImplementation)) {
             testValidStartTerm<Constant>("f)", "f()", 1)
             testValidStartTerm<ProperFunction>("f(a)c(", "f(a())", 4)
@@ -34,38 +35,38 @@ class TptpTermParserTest : FreeSpec() {
             // FIXME let's make this fail?
             testValidTerm<Constant>(" a ", "a()")
             testValidTerm<ProperFunction>("f(A)") {
-                arguments.size shouldBe 1
-                arguments[0].shouldBeInstanceOf<FreeVariable>()
+                arguments.count() shouldBe 1
+                arguments.elementAt(0).shouldBeInstanceOf<FreeVariable>()
             }
             testValidTerm<ProperFunction>("f(a)", "f(a())") {
-                arguments.size shouldBe 1
-                arguments[0].shouldBeInstanceOf<Constant>()
+                arguments.count() shouldBe 1
+                arguments.elementAt(0).shouldBeInstanceOf<Constant>()
             }
             testValidTerm<ProperFunction>("f(A, b)", "f(A, b())") {
-                arguments.size shouldBe 2
-                arguments[0].shouldBeInstanceOf<FreeVariable>()
-                arguments[1].shouldBeInstanceOf<Constant>()
+                arguments.count() shouldBe 2
+                arguments.elementAt(0).shouldBeInstanceOf<FreeVariable>()
+                arguments.elementAt(1).shouldBeInstanceOf<Constant>()
             }
             testValidTerm<ProperFunction>("f(g(a, b), b)", "f(g(a(), b()), b())") {
-                arguments.size shouldBe 2
-                with(arguments[0]) {
+                arguments.count() shouldBe 2
+                with(arguments.elementAt(0)) {
                     shouldBeInstanceOf<ProperFunction>()
-                    arguments.size shouldBe 2
-                    arguments[0].shouldBeInstanceOf<Constant>()
-                    arguments[1].shouldBeInstanceOf<Constant>()
+                    arguments.count() shouldBe 2
+                    arguments.elementAt(0).shouldBeInstanceOf<Constant>()
+                    arguments.elementAt(1).shouldBeInstanceOf<Constant>()
                 }
-                arguments[1].shouldBeInstanceOf<Constant>()
+                arguments.elementAt(1).shouldBeInstanceOf<Constant>()
             }
             // FIXME let's make this fail?
             testValidTerm<ProperFunction>(" f ( g ( a , b ) , b ) ", "f(g(a(), b()), b())") {
-                arguments.size shouldBe 2
-                with(arguments[0]) {
+                arguments.count() shouldBe 2
+                with(arguments.elementAt(0)) {
                     shouldBeInstanceOf<ProperFunction>()
-                    arguments.size shouldBe 2
-                    arguments[0].shouldBeInstanceOf<Constant>()
-                    arguments[1].shouldBeInstanceOf<Constant>()
+                    arguments.count() shouldBe 2
+                    arguments.elementAt(0).shouldBeInstanceOf<Constant>()
+                    arguments.elementAt(1).shouldBeInstanceOf<Constant>()
                 }
-                arguments[1].shouldBeInstanceOf<Constant>()
+                arguments.elementAt(1).shouldBeInstanceOf<Constant>()
             }
             "invalid terms" - {
                 listOf(

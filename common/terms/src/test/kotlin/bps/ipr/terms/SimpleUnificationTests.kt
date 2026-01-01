@@ -1,13 +1,18 @@
 package bps.ipr.terms
 
 import bps.ipr.parser.ipr.IprFofTermParser
+import bps.ipr.substitution.EmptySubstitution
+import bps.ipr.substitution.GeneralRecursiveDescentTermUnifier
+import bps.ipr.substitution.Substitution
+import bps.ipr.substitution.TermUnifier
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.booleans.shouldBeTrue
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
 
-class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(FolDagTermImplementation()) {
+class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(FolTermImplementation()) {
+//class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(FolDagTermImplementation()) {
 
     data class TermUnificationTest(
         val term1: Term,
@@ -18,9 +23,9 @@ class SimpleUnificationTests : FreeSpec(), IprFofTermParser by IprFofTermParser(
 
     init {
         "using GeneralRecursiveDescentUnifier with a FolTermImplementation" - {
-            val x = termImplementation.freeVariableOrNull("X")!!
-            val y = termImplementation.freeVariableOrNull("Y")!!
-            val z = termImplementation.freeVariableOrNull("Z")!!
+            val x = termImplementation.freeVariableForSymbol("X")!!
+            val y = termImplementation.freeVariableForSymbol("Y")!!
+            val z = termImplementation.freeVariableForSymbol("Z")!!
             val ga = "(g (a))".parseTermOrNull()!!.first
             val gx = "(g X)".parseTermOrNull()!!.first
             val a = "(a)".parseTermOrNull()!!.first

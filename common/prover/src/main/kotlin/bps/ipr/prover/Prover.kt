@@ -1,16 +1,15 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.tableau.SignedFormula
 import bps.ipr.prover.tableau.Tableau
-import bps.ipr.terms.Substitution
-import bps.ipr.terms.TermUnifier
+import bps.ipr.substitution.Substitution
 
-interface Prover/*<T : FolFormula, out R : ProofResult>*/ {
+interface Prover {
 
-    fun prove(formula: FolFormula): FolProofResult
-//    fun prove(formula: T): R
+    fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult
 
 }
 
@@ -27,11 +26,12 @@ data object FolProofFailure : FolProofResult
 data object FolProofIncomplete : FolProofResult
 
 class TableauProver(
-    val unifier: FormulaUnifier
-) : Prover/*<FolFormula, FolProofResult>*/ {
+    val unifier: FormulaUnifier,
+    val initialQLimit: Int = 1,
+) : Prover {
 
-    override fun prove(formula: FolFormula): FolProofResult =
-        Tableau(formula)
+    override fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult =
+        Tableau(formula, formulaImplementation, initialQLimit)
             .let { tableau: Tableau ->
                 var result: FolProofResult? = tableau.attemptClose(unifier)
                 while (result === null) {

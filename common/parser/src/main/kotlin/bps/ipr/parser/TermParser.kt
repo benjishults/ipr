@@ -7,6 +7,10 @@ interface TermParser {
 
     val termImplementation: TermImplementation
 
+    fun clear() {
+        termImplementation.clear()
+    }
+
     /**
      * Attempts to parse the string as a term and returns a pair containing the parsed term
      * and the position in the string where parsing stopped.  Trailing whitespace should be consumed.

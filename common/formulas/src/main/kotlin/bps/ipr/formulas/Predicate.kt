@@ -1,8 +1,7 @@
 package bps.ipr.formulas
 
 import bps.ipr.terms.ArgumentList
-import bps.ipr.terms.IdempotentSubstitution
-import bps.ipr.terms.Substitution
+import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.terms.Variable
 
 class Predicate(
@@ -16,7 +15,7 @@ class Predicate(
                 it.variablesFreeIn
             }
 
-    fun apply(substitution: Substitution, formulaImplementation: FolFormulaImplementation): Predicate =
+    override fun apply(substitution: IdempotentSubstitution, formulaImplementation: FolFormulaImplementation): Predicate =
         // short-circuit if we know the substitution won't disturb this term
         if (substitution.domain.firstOrNull { it in this.variablesFreeIn } !== null)
             formulaImplementation.predicateOrNull(

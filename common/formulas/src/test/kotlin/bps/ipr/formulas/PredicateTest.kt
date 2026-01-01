@@ -11,8 +11,8 @@ class PredicateTest : FreeSpec() {
     init {
         with(FolFormulaImplementation()) {
             val P = predicateOrNull("P")!!
-            val x: FreeVariable = termImplementation.freeVariableOrNull("x")!!
-            val c: Constant = termImplementation.constantOrNull("c")!!
+            val x: FreeVariable = termImplementation.freeVariableForSymbol("x")!!
+            val c: Constant = termImplementation.constantForSymbol("c")!!
             val Qx = predicateOrNull("Q", listOf(x))!!
             "plain predicate" {
                 P.display() shouldBe "P()"
