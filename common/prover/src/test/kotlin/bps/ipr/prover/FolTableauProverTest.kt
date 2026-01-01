@@ -16,6 +16,7 @@ class FolTableauProverTest :
     FreeSpec(),
     FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }),
     WhitespaceParser by IprWhitespaceParser {
+
     data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
 
     init {

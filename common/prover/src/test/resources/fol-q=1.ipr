@@ -1,1 +1,1 @@
-(implies (p) (p))
+(implies (forall ((x)) (f x)) (for-some ((x)) (f x)))

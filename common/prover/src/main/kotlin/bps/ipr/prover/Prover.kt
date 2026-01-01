@@ -7,10 +7,9 @@ import bps.ipr.prover.tableau.SignedFormula
 import bps.ipr.prover.tableau.Tableau
 import bps.ipr.substitution.Substitution
 
-interface Prover/*<T : FolFormula, out R : ProofResult>*/ {
+interface Prover {
 
     fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult
-//    fun prove(formula: T): R
 
 }
 
@@ -29,7 +28,7 @@ data object FolProofIncomplete : FolProofResult
 class TableauProver(
     val unifier: FormulaUnifier,
     val initialQLimit: Int = 1,
-) : Prover/*<FolFormula, FolProofResult>*/ {
+) : Prover {
 
     override fun prove(formula: FolFormula, formulaImplementation: FolFormulaImplementation): FolProofResult =
         Tableau(formula, formulaImplementation, initialQLimit)

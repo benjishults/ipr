@@ -1,3 +1,10 @@
+(implies (and (for-some ((x)) (f x))
+              (for-some ((x)) (g x)))
+  (iff (and (forall ((x)) (implies (f x) (h x)))
+            (forall ((x)) (implies (g x) (j x))))
+       (forall ((x) (y))
+         (implies (and (f x) (g y)) (and (h x) (j y))))))
+
 (implies (and (for-some ((x)) (implies (p0) (f x)))
               (for-some ((x)) (implies (f x) (p0))))
   (for-some ((x)) (iff (p0) (f x))))
@@ -38,13 +45,6 @@
               (implies (for-some ((x)) (s x))
                 (forall ((x)) (implies (f x) (g x)))))
   (forall ((x)) (implies (and (p x) (f x)) (g x))))
-
-(implies (and (for-some ((x)) (f x))
-              (for-some ((x)) (g x)))
-  (iff (and (forall ((x)) (implies (f x) (h x)))
-            (forall ((x)) (implies (g x) (j x))))
-       (forall ((x) (y))
-         (implies (and (f x) (g y)) (and (h x) (j y))))))
 
 (implies (and (forall ((x)) (implies (or (f x) (g x)) (not (h x))))
               (forall ((x)) (implies (implies (g x) (not (i x)))
@@ -274,8 +274,6 @@
 (forall ((x) (y)) (implies (and (t (i x y)) (t x)) (t y))))
 (forall ((x) (y)) (t (i (b2 (i x y)) (i (b2 x) (b2 y)))))
 (forall ((x)) (implies (t x) (t (b2 x))))
-
-;; passing
 
 (for-some ((y)) (forall ((x)) (implies (f y) (f x))))
 

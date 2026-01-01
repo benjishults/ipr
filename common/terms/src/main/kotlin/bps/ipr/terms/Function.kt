@@ -64,7 +64,12 @@ class ProperFunction(
 ) : Function(functor, arguments.count()) {
 
     init {
-        require(arguments.firstOrNull() !== null)
+        require(
+            arguments.firstOrNull() !== null ||
+                    false.also {
+                        println("arguments $arguments")
+                    },
+        )
     }
 
     override val variablesFreeIn: Set<Variable> =

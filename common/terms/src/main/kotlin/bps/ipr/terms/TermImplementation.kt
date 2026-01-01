@@ -253,7 +253,6 @@ open class FolTermImplementation(
             Constant(functorForSymbol(symbol, 0))
         }
 
-    //    getSkolemSymbol
     override fun properFunction(functor: Functor, arguments: Iterable<Term>): ProperFunction =
         ProperFunction(functor, ArgumentList(arguments))
 

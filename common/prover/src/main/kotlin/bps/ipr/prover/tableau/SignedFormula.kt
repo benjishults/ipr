@@ -493,21 +493,33 @@ sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
                                 .fold(
                                     SingletonIdempotentSubstitution(
                                         key = firstBv,
-                                        value = properFunction(
-                                            // NOTE does this need to be new?
-                                            newFunctorForSymbol(firstBv.symbol, freeVariables.size),
-                                            freeVariables,
-                                        ),
+                                        value =
+                                            newFunctorForSymbol(firstBv.symbol, freeVariables.size)
+                                                .let { functor ->
+                                                    if (freeVariables.isEmpty()) {
+                                                        constantForSymbol(functor.symbol)
+                                                    } else
+                                                        properFunction(
+                                                            functor,
+                                                            freeVariables,
+                                                        )
+                                                },
                                     ),
                                 ) { subst: IdempotentSubstitution, bv: Variable ->
                                     subst.composeIdempotent(
                                         theta = SingletonIdempotentSubstitution(
                                             key = bv,
-                                            value = properFunction(
-                                                // NOTE does this need to be new?
-                                                newFunctorForSymbol(bv.symbol, freeVariables.size),
-                                                freeVariables,
-                                            ),
+                                            value =
+                                                newFunctorForSymbol(bv.symbol, freeVariables.size)
+                                                    .let { functor ->
+                                                        if (freeVariables.isEmpty()) {
+                                                            constantForSymbol(functor.symbol)
+                                                        } else
+                                                            properFunction(
+                                                                functor,
+                                                                freeVariables,
+                                                            )
+                                                    },
                                         ),
                                         termImplementation = this@with,
                                     )
