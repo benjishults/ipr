@@ -55,5 +55,38 @@ class FolTableauProverTest :
                     }
             }
         }
+        "invalid formulas" - {
+                clear()
+                val fileAsString = buildString {
+                    FolTableauProverTest::class.java.classLoader
+                        .getResourceAsStream("invalid.ipr")!!
+                        .bufferedReader()
+                        .useLines { lines: Sequence<String> ->
+                            lines.forEach {
+                                append(it)
+                                append('\n')
+                            }
+                        }
+                }
+                var startIndex = fileAsString.indexOfFirstNonWhitespace()
+                val formulas = generateSequence {
+                    fileAsString.parseFormulaOrNull(startIndex)
+                }
+                    .map {
+                        it.shouldNotBeNull()
+                        val (formula, index) = it
+                        startIndex = index
+                        ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    }
+                    .toList()
+                formulas
+                    .forEach { (formula, expectedResult) ->
+                        "attempt ${formula.display()} expecting failure" {
+                            TableauProver(GeneralRecursiveDescentFormulaUnifier(), 6)
+                                .prove(formula, this@FolTableauProverTest.formulaImplementation)
+                                .shouldBeInstanceOf<FolProofIncomplete>()
+                        }
+                    }
+        }
     }
 }
