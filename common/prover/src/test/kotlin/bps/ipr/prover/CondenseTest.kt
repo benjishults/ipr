@@ -49,8 +49,8 @@ class CondenseTest :
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(GeneralRecursiveDescentFormulaUnifier(), 2)
-                            .prove(formula, this@CondenseTest.formulaImplementation)
+                        TableauProver(GeneralRecursiveDescentFormulaUnifier(), 2, this@CondenseTest.formulaImplementation)
+                            .prove(formula)
                             .shouldBeInstanceOf<FolProofSuccess>()
                     }
                 }

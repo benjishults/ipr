@@ -5,9 +5,9 @@ import bps.ipr.parser.ipr.IprWhitespaceParser.Companion.indexOfFirstNonWhitespac
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
 
-private val atomInitial = (('a'..'z') + ('A'..'Z')).toSet()
-private val termInitial = atomInitial + '('
-private val atomNonInitial = atomInitial + '-' + '_' + ('0'..'9').toSet()
+private val atomInitial: Set<Char> = (('a'..'z') + ('A'..'Z')).toSet() + '<' + '>' + '='
+private val termInitial: Set<Char> = atomInitial + '('
+private val atomNonInitial: Set<Char> = atomInitial + '-' + '_' + ('0'..'9').toSet() + '*'
 
 interface IprFofTermParser : TermParser {
 

@@ -5,7 +5,7 @@ import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.ForAll
 import bps.ipr.formulas.ForSome
 import bps.ipr.formulas.VariablesBindingFolFormula
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.substitution.SingletonIdempotentSubstitution
 import bps.ipr.terms.Variable
@@ -17,13 +17,13 @@ sealed interface GammaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
     fun applyGammaRule() =
         birthPlace
             .leaves()
-            .forEach { leaf: TableauNode ->
+            .forEach { leaf: BaseTableauNode ->
                 // NOTE we want fresh free variables on each branch
                 createGammaChild()
                     .let { childFormula: FolFormula ->
                         leaf.setChildren(
                             listOf(
-                                createNodeForReducedFormulas { node: TableauNode ->
+                                createNodeForReducedFormulas { node: BaseTableauNode ->
                                     SignedFormula.create(childFormula, sign, node, formulaImplementation)
                                         .reduceAlpha(node)
                                 },
@@ -79,7 +79,7 @@ sealed interface GammaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
 
 data class NegativeForSomeFormula(
     override val formula: ForSome,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : GammaFormula<ForSome>, NegativeSignedFormula<ForSome>() {
 
@@ -89,7 +89,7 @@ data class NegativeForSomeFormula(
 
 data class PositiveForAllFormula(
     override val formula: ForAll,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : GammaFormula<ForAll>, PositiveSignedFormula<ForAll>() {
 
