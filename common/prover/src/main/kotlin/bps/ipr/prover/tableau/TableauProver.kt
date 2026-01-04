@@ -5,6 +5,7 @@ import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofIncomplete
 import bps.ipr.prover.FolProofResult
+import bps.ipr.prover.FolTableauProofIncomplete
 import bps.ipr.prover.Prover
 import bps.ipr.prover.tableau.rule.Rule
 
@@ -37,8 +38,6 @@ class TableauProver(
 //    val ruleDequeueListeners: List<RuleDequeueListener> = emptyList(),
 ) : Prover<FolFormula, FolProofResult> {
 
-
-
     override fun prove(formula: FolFormula): FolProofResult =
         require(formula.variablesFreeIn.isEmpty()) { "Quantify all free variables before calling prove.  Formula $formula has free variables ${formula.variablesFreeIn}." }
             .run {
@@ -60,7 +59,7 @@ class TableauProver(
                                     rule.apply()
                                     result = tableau.attemptClose(unifier)
                                 }
-                                ?: run { result = FolProofIncomplete }
+                                ?: run { result = FolTableauProofIncomplete(tableau) }
                         }
                         result!!
                     }

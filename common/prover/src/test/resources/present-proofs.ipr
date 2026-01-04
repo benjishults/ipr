@@ -1,0 +1,13 @@
+;; I'm "proving" this with q=2 and {z_0 ↦ (a_0), x_2 ↦ (a_0), z_1 ↦ (b_0), x_0 ↦ (b_0)})
+(forall ((a) (b))
+  (implies (forall ((z)) (implies (q z) (p z))) ; not a theorem
+    (for-some ((x)) (and (implies (p x) (p a))
+                         (implies (q x) (p b))))))
+
+;; I'm "proving" this with q=2 and {x_27 ↦ (x_12), x_30 ↦ (x_11), x_31 ↦ (x_10), x_28 ↦ (x_11), x_29 ↦ (x_10)}
+(implies (and (for-some ((x)) (a x))
+              (for-some ((x)) (b x)) ;not a theorem
+              (implies (r0) (for-some ((x)) (and (a x) (b x))))
+              (implies (and (p0) (q0)) (r0)) )
+  (for-some ((x)) (and (implies (p0) (a x)) (implies (q0) (b x)))))
+;;0.07 no
