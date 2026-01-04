@@ -8,16 +8,15 @@ import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
 import bps.ipr.prover.tableau.TableauProver
-import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class PropositionalTableauProverTest :
     FreeSpec(),
     FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }),
     WhitespaceParser by IprWhitespaceParser {
-    data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
+    data class ProverTest(val formula: FolFormula)
 
     init {
         val fileAsString = buildString {
@@ -39,17 +38,17 @@ class PropositionalTableauProverTest :
                     it.shouldNotBeNull()
                     val (formula, index) = it
                     startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    ProverTest(formula)
                 }
                 .toList()
             formulas
-                .forEach { (formula, expectedResult) ->
-                    "attempt ${formula.display(0)} expecting $expectedResult" {
+                .forEach { (formula: FolFormula) ->
+                    "attempt ${formula.display(0)} expecting success" {
                         TableauProver(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             formulaImplementation = this@PropositionalTableauProverTest.formulaImplementation,
                         )
-                            .prove(formula) shouldBe expectedResult
+                            .prove(formula).shouldBeInstanceOf<FolTableauProofSuccess>()
                     }
                 }
         }

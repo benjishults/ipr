@@ -3,7 +3,6 @@ package bps.ipr.prover.tableau
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
-import bps.ipr.prover.FolProofIncomplete
 import bps.ipr.prover.FolProofResult
 import bps.ipr.prover.FolTableauProofIncomplete
 import bps.ipr.prover.Prover
@@ -28,14 +27,11 @@ fun interface AddNodeToTableauListener {
  *                             ),
  * ```
  */
-
 class TableauProver(
     val unifier: FormulaUnifier,
     val initialQLimit: Int = 1,
     val formulaImplementation: FolFormulaImplementation,
     val addNodeToTableauListeners: List<AddNodeToTableauListener>? = null,
-//    val ruleAddedListeners: List<RuleAddedListener> = emptyList(),
-//    val ruleDequeueListeners: List<RuleDequeueListener> = emptyList(),
 ) : Prover<FolFormula, FolProofResult> {
 
     override fun prove(formula: FolFormula): FolProofResult =
@@ -46,8 +42,6 @@ class TableauProver(
                     formulaImplementation = formulaImplementation,
                     initialQLimit = initialQLimit,
                     addNodeToTableauListeners = addNodeToTableauListeners,
-//            ruleAddedListeners = ruleAddedListeners,
-//            ruleDequeueListeners = ruleDequeueListeners
                 )
                     .let { tableau: BaseTableau ->
                         var result: FolProofResult? = tableau.attemptClose(unifier)

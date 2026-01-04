@@ -6,38 +6,34 @@ import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.prover.tableau.TableauProver
-import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
-import io.kotest.matchers.shouldBe
+import io.kotest.matchers.types.shouldBeInstanceOf
 
 class TableauProverTest : FreeSpec(),
     FolFormulaParser by IprFofFormulaParser(termParserFactory = { IprFofTermParser(it) }) {
-    data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
+    data class ProverTest(val formula: FolFormula)
 
     init {
         listOf(
             ProverTest(
                 formula = "(implies (A) (A))".parseFormulaOrNull()!!.first,
-                expectedResult = FolProofSuccess(EmptySubstitution),
             ),
             // passing
             ProverTest(
                 formula = "(truth)".parseFormulaOrNull()!!.first,
-                expectedResult = FolProofSuccess(EmptySubstitution),
             ),
             ProverTest(
                 formula = "(not (falsity))".parseFormulaOrNull()!!.first,
-                expectedResult = FolProofSuccess(EmptySubstitution),
             ),
         )
 //            .reversed()
-            .forEach { (formula, expectedResult) ->
-                "attempt $formula expecting $expectedResult" {
+            .forEach { (formula: FolFormula) ->
+                "attempt $formula expecting success" {
                     TableauProver(
                         unifier = GeneralRecursiveDescentFormulaUnifier(),
                         formulaImplementation = this@TableauProverTest.formulaImplementation
                     )
-                        .prove(formula) shouldBe expectedResult
+                        .prove(formula).shouldBeInstanceOf<FolTableauProofSuccess>()
                 }
             }
     }
