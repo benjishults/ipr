@@ -2,7 +2,7 @@ package bps.ipr.prover.tableau.rule
 
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 
 sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
     /**
@@ -15,7 +15,7 @@ sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
      * Deletes itself.
      */
     override fun reduceAlpha(
-        birthPlace: TableauNode,
+        birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         mutableList
@@ -24,12 +24,12 @@ sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
 
 data class NegativeWastedFormula(
     override val formula: FolFormula,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : WastedSignedFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {}
 
 data class PositiveWastedFormula(
     override val formula: FolFormula,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : WastedSignedFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {}

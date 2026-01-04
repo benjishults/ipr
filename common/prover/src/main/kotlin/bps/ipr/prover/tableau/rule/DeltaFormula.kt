@@ -5,7 +5,7 @@ import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.ForAll
 import bps.ipr.formulas.ForSome
 import bps.ipr.formulas.VariablesBindingFolFormula
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.substitution.IdempotentSubstitution
 import bps.ipr.substitution.SingletonIdempotentSubstitution
 import bps.ipr.terms.FolTermImplementation
@@ -20,10 +20,10 @@ sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
             .let { childFormula: FolFormula ->
                 birthPlace
                     .leaves()
-                    .forEach { leaf: TableauNode ->
+                    .forEach { leaf: BaseTableauNode ->
                         leaf.setChildren(
                             listOf(
-                                createNodeForReducedFormulas { node: TableauNode ->
+                                createNodeForReducedFormulas { node: BaseTableauNode ->
                                     SignedFormula.create(childFormula, sign, node, formulaImplementation)
                                         .reduceAlpha(node)
                                 },
@@ -91,12 +91,12 @@ sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
 
 data class NegativeForAllFormula(
     override val formula: ForAll,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : DeltaFormula<ForAll>, NegativeSignedFormula<ForAll>()
 
 data class PositiveForSomeFormula(
     override val formula: ForSome,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : DeltaFormula<ForSome>, PositiveSignedFormula<ForSome>()

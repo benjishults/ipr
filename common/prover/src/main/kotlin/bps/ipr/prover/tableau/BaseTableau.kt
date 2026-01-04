@@ -8,25 +8,50 @@ import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categoriz
 import bps.ipr.prover.tableau.rule.FolRuleSelector
 import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
 import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
+import bps.ipr.prover.tableau.rule.RuleAddedListener
+import bps.ipr.prover.tableau.rule.RuleDequeueListener
 import bps.ipr.prover.tableau.rule.RuleSelector
 import bps.ipr.prover.tableau.rule.SignedFormula
 import bps.ipr.substitution.EmptySubstitution
 import bps.ipr.substitution.IdempotentSubstitution
 import kotlin.sequences.emptySequence
 
+interface Tableau<out N : TableauNode> {
+    val root: N
+    val applicableRules: RuleSelector
+    fun attemptClose(unifier: FormulaUnifier): FolProofSuccess?
+}
+
 /**
  * This class is not thread-safe.
  */
-open class Tableau(
+open class BaseTableau(
     initialQLimit: Int = 1,
-) {
+//    ruleAddedListeners: List<RuleAddedListener> = emptyList(),
+//    ruleDequeueListeners: List<RuleDequeueListener> = emptyList(),
+) : Tableau<BaseTableauNode> {
 
-    private var _root: TableauNode? = null
+    private val addNodeToTableauListeners: MutableList<AddNodeToTableauListener> = mutableListOf()
+
+    fun addAddNodeToTableauListener(listener: AddNodeToTableauListener) {
+        addNodeToTableauListeners.add(listener)
+    }
+
+    private fun notifyAddNodeToTableauListeners(node: BaseTableauNode) =
+        addNodeToTableauListeners.forEach { listener ->
+            try {
+                listener.addNodeToTableau(node)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    private var _root: BaseTableauNode? = null
 
     /**
      * Can only be set once.
      */
-    var root: TableauNode
+    override var root: BaseTableauNode
         get() = _root!!
         set(value) {
             if (_root === null) {
@@ -36,18 +61,19 @@ open class Tableau(
                 throw IllegalStateException("Root already set")
         }
 
-    val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
+    override val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
 
     private var _size: Long = 0
     val size: Long
         get() = _size
 
-    fun registerNode(node: TableauNode) {
+    fun registerNode(node: BaseTableauNode) {
         node.tableau = this
         node.id = _size++
+        notifyAddNodeToTableauListeners(node)
     }
 
-    fun attemptClose(unifier: FormulaUnifier): FolProofSuccess? {
+    override fun attemptClose(unifier: FormulaUnifier): FolProofSuccess? {
         return root
             .attemptClose(
                 substitution = null,
@@ -64,7 +90,7 @@ open class Tableau(
      * Otherwise, returns a sequence of substitutions under [substitution] that close the tree rooted at this node.
      * @param substitution `null` means that no node has been closed so far, so any substitution is valid.
      */
-    private fun TableauNode.attemptClose(
+    private fun BaseTableauNode.attemptClose(
         substitution: IdempotentSubstitution?,
         positiveAtomsAbove: List<PositiveAtomicFormula>,
         negativeAtomsAbove: List<NegativeAtomicFormula>,
@@ -84,7 +110,7 @@ open class Tableau(
                                 // take the sequence of unifiers from the first child
                                 children
                                     .first()
-                                    .let { firstChild: TableauNode ->
+                                    .let { firstChild: BaseTableauNode ->
                                         firstChild
                                             .attemptClose(
                                                 substitution = substitution,
@@ -93,7 +119,7 @@ open class Tableau(
                                                 formulaUnifier = formulaUnifier,
                                             )
                                     },
-                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<IdempotentSubstitution>, nextChildNode: TableauNode ->
+                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<IdempotentSubstitution>, nextChildNode: BaseTableauNode ->
                                 // create a sequence of unifiers compatible with closers of the previous children
                                 sequenceOfUnifiersOfPreviousChildren
                                     .flatMap { sub: IdempotentSubstitution ->
@@ -110,7 +136,7 @@ open class Tableau(
 
         }
 
-    private fun TableauNode.sequenceOfUnifiersHere(
+    private fun BaseTableauNode.sequenceOfUnifiersHere(
         positiveAtomsAbove: List<PositiveAtomicFormula>,
         negativeAtomsAbove: List<NegativeAtomicFormula>,
         substitution: IdempotentSubstitution?,
@@ -144,7 +170,7 @@ open class Tableau(
 
     fun display(): String =
         buildString {
-            root.preOrderTraverse { node: TableauNode ->
+            root.preOrderTraverse { node: BaseTableauNode ->
                 appendLine("---")
                 append(node.display(2 * node.depth()))
             }
@@ -158,11 +184,18 @@ open class Tableau(
             formula: T,
             formulaImplementation: FolFormulaImplementation,
             initialQLimit: Int = 1,
-        ): Tableau {
-            return Tableau(initialQLimit)
-                .also { tableau: Tableau ->
-                    TableauNode()
-                        .also { root: TableauNode ->
+            addNodeToTableauListeners: List<AddNodeToTableauListener>? = null,
+//            ruleAddedListeners: List<RuleAddedListener> = emptyList(),
+//            ruleDequeueListeners: List<RuleDequeueListener> = emptyList(),
+        ): BaseTableau {
+            return BaseTableau(initialQLimit/*, ruleAddedListeners, ruleDequeueListeners*/)
+                .also { tableau: BaseTableau ->
+                    addNodeToTableauListeners
+                        ?.forEach { addNodeToTableauListener ->
+                            tableau.addAddNodeToTableauListener(addNodeToTableauListener)
+                        }
+                    BaseTableauNode()
+                        .also { root: BaseTableauNode ->
                             tableau.root = root
                             SignedFormula
                                 .create(

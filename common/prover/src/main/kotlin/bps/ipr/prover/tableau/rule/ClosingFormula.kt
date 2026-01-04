@@ -2,7 +2,7 @@ package bps.ipr.prover.tableau.rule
 
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 
 sealed interface ClosingFormula<F : FolFormula> : SignedFormula<F> {
     override fun apply() = Unit
@@ -10,7 +10,7 @@ sealed interface ClosingFormula<F : FolFormula> : SignedFormula<F> {
 
 data class NegativeClosingFormula(
     override val formula: FolFormula,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : ClosingFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {
     override fun apply() = Unit
@@ -18,7 +18,7 @@ data class NegativeClosingFormula(
 
 data class PositiveClosingFormula(
     override val formula: FolFormula,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : ClosingFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {
     override fun apply() = Unit

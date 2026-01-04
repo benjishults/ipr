@@ -36,10 +36,11 @@ constructor(
 //        )
         // NOTE print warning about un-binding bound variable
         boundVariables.all { bv ->
-            (bv in subFormula.variablesFreeIn)
-                .also {
-                    println("bound variable $bv not in subformula $subFormula with free variables ${subFormula.variablesFreeIn}")
-                }
+            (bv in subFormula.variablesFreeIn) ||
+                    false
+                        .also {
+                            println("bound variable $bv not in subformula $subFormula with free variables ${subFormula.variablesFreeIn}")
+                        }
         }
     }
 

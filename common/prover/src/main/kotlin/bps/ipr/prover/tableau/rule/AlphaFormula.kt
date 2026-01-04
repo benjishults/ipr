@@ -7,13 +7,13 @@ import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.Implies
 import bps.ipr.formulas.Not
 import bps.ipr.formulas.Or
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.rule.SignedFormula.Companion.create
 
 sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
     // NOTE force children to implement this
     abstract override fun reduceAlpha(
-        birthPlace: TableauNode,
+        birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>>
 
@@ -24,7 +24,7 @@ sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
 sealed interface SignedNotFormula : AlphaFormula<Not> {
 
     override fun reduceAlpha(
-        birthPlace: TableauNode,
+        birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         formula
@@ -36,23 +36,23 @@ sealed interface SignedNotFormula : AlphaFormula<Not> {
 }
 data class PositiveNotFormula(
     override val formula: Not,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : SignedNotFormula, PositiveSignedFormula<Not>()
 
 data class NegativeNotFormula(
     override val formula: Not,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : SignedNotFormula, NegativeSignedFormula<Not>()
 
 data class NegativeImpliesFormula(
     override val formula: Implies,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : AlphaFormula<Implies>, NegativeSignedFormula<Implies>() {
     override fun reduceAlpha(
-        birthPlace: TableauNode,
+        birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         formula
@@ -72,7 +72,7 @@ data class NegativeImpliesFormula(
  */
 sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : AlphaFormula<T> {
     override fun reduceAlpha(
-        birthPlace: TableauNode,
+        birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
     ): MutableList<SignedFormula<*>> =
         formula
@@ -86,12 +86,12 @@ sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : Alpha
 
 data class NegativeOrFormula(
     override val formula: Or,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : NegativeSignedFormula<Or>(), SimpleMultiSubAlphaFormula<Or>
 
 data class PositiveAndFormula(
     override val formula: And,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : PositiveSignedFormula<And>(), SimpleMultiSubAlphaFormula<And>

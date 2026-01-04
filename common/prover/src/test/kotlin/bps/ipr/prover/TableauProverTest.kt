@@ -33,8 +33,11 @@ class TableauProverTest : FreeSpec(),
 //            .reversed()
             .forEach { (formula, expectedResult) ->
                 "attempt $formula expecting $expectedResult" {
-                    TableauProver(GeneralRecursiveDescentFormulaUnifier())
-                        .prove(formula, this@TableauProverTest.formulaImplementation) shouldBe expectedResult
+                    TableauProver(
+                        unifier = GeneralRecursiveDescentFormulaUnifier(),
+                        formulaImplementation = this@TableauProverTest.formulaImplementation
+                    )
+                        .prove(formula) shouldBe expectedResult
                 }
             }
     }
