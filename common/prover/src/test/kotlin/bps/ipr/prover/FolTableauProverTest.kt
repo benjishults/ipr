@@ -7,8 +7,6 @@ import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
-import bps.ipr.prover.tableau.AddNodeToTableauListener
-import bps.ipr.prover.tableau.DisplayableTableauNodeHelper
 import bps.ipr.prover.tableau.TableauProver
 import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec

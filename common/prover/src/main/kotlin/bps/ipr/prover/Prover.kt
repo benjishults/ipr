@@ -2,6 +2,8 @@ package bps.ipr.prover
 
 import bps.ipr.formulas.Formula
 import bps.ipr.prover.tableau.BaseTableau
+import bps.ipr.prover.tableau.BaseTableauNode
+import bps.ipr.prover.tableau.Tableau
 import bps.ipr.substitution.Substitution
 
 interface Prover<in F: Formula, out R: ProofResult> {
@@ -20,7 +22,7 @@ open class FolProofSuccess(
 
 open class FolTableauProofSuccess(
     substitution: Substitution,
-    val tableau: BaseTableau,
+    val tableau: Tableau<BaseTableauNode>,
 ) : FolProofSuccess(substitution)
 
 data object FolProofFailure : FolProofResult

@@ -4,20 +4,17 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
-import bps.ipr.prover.FolTableauProofSuccess
+import bps.ipr.prover.tableau.preorder.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import bps.ipr.prover.tableau.rule.FolRuleSelector
-import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
-import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
 import bps.ipr.prover.tableau.rule.RuleSelector
 import bps.ipr.prover.tableau.rule.SignedFormula
-import bps.ipr.substitution.EmptySubstitution
-import bps.ipr.substitution.IdempotentSubstitution
 
-interface Tableau<out N : TableauNode> {
+interface Tableau<N : TableauNode<N>> {
     val root: N
     val applicableRules: RuleSelector
-    fun attemptClose(unifier: FormulaUnifier): FolProofSuccess?
+    fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess?
+    fun display(): String
 }
 
 /**
@@ -25,8 +22,7 @@ interface Tableau<out N : TableauNode> {
  */
 open class BaseTableau(
     initialQLimit: Int = 1,
-//    ruleAddedListeners: List<RuleAddedListener> = emptyList(),
-//    ruleDequeueListeners: List<RuleDequeueListener> = emptyList(),
+    val closingAlgorithm: Tableau<BaseTableauNode>.(FormulaUnifier) -> FolProofSuccess?,
 ) : Tableau<BaseTableauNode> {
 
     private val addNodeToTableauListeners: MutableList<AddNodeToTableauListener> = mutableListOf()
@@ -35,7 +31,7 @@ open class BaseTableau(
         addNodeToTableauListeners.add(listener)
     }
 
-    private fun notifyAddNodeToTableauListeners(node: BaseTableauNode) =
+    protected fun notifyAddNodeToTableauListeners(node: BaseTableauNode) =
         addNodeToTableauListeners.forEach { listener ->
             try {
                 listener.addNodeToTableau(node)
@@ -60,6 +56,8 @@ open class BaseTableau(
         }
 
     override val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
+    override fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess? =
+        closingAlgorithm(formulaUnifier)
 
     private var _size: Long = 0
     val size: Long
@@ -71,102 +69,7 @@ open class BaseTableau(
         notifyAddNodeToTableauListeners(node)
     }
 
-    override fun attemptClose(unifier: FormulaUnifier): FolProofSuccess? {
-        return root
-            .attemptClose(
-                substitution = null,
-                positiveAtomsAbove = emptyList(),
-                negativeAtomsAbove = emptyList(),
-                formulaUnifier = unifier,
-            )
-            .firstOrNull()
-            ?.let { FolTableauProofSuccess(it, this) }
-    }
-
-    /**
-     * @return an empty sequence if there is no substitution under [substitution] that closes the tree rooted at this node.
-     * Otherwise, returns a sequence of substitutions under [substitution] that close the tree rooted at this node.
-     * @param substitution `null` means that no node has been closed so far, so any substitution is valid.
-     */
-    private fun BaseTableauNode.attemptClose(
-        substitution: IdempotentSubstitution?,
-        positiveAtomsAbove: List<PositiveAtomicFormula>,
-        negativeAtomsAbove: List<NegativeAtomicFormula>,
-        formulaUnifier: FormulaUnifier,
-    ): Sequence<IdempotentSubstitution> =
-        if (closables.isNotEmpty()) {
-            return sequenceOf(substitution ?: EmptySubstitution)
-        } else {
-            sequenceOfUnifiersHere(positiveAtomsAbove, negativeAtomsAbove, substitution, formulaUnifier) +
-                    if (children.isNotEmpty()) {
-                        val childrensPositiveAtomsAbove = positiveAtomsAbove + newAtomicHyps
-                        val childrensNegativeAtomsAbove = negativeAtomsAbove + newAtomicGoals
-                        children
-                            .asSequence()
-                            .drop(1)
-                            .fold(
-                                // take the sequence of unifiers from the first child
-                                children
-                                    .first()
-                                    .let { firstChild: BaseTableauNode ->
-                                        firstChild
-                                            .attemptClose(
-                                                substitution = substitution,
-                                                positiveAtomsAbove = childrensPositiveAtomsAbove,
-                                                negativeAtomsAbove = childrensNegativeAtomsAbove,
-                                                formulaUnifier = formulaUnifier,
-                                            )
-                                    },
-                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<IdempotentSubstitution>, nextChildNode: BaseTableauNode ->
-                                // create a sequence of unifiers compatible with closers of the previous children
-                                sequenceOfUnifiersOfPreviousChildren
-                                    .flatMap { sub: IdempotentSubstitution ->
-                                        nextChildNode.attemptClose(
-                                            substitution = sub,
-                                            positiveAtomsAbove = childrensPositiveAtomsAbove,
-                                            negativeAtomsAbove = childrensNegativeAtomsAbove,
-                                            formulaUnifier = formulaUnifier,
-                                        )
-                                    }
-                            }
-                    } else
-                        emptySequence()
-
-        }
-
-    private fun BaseTableauNode.sequenceOfUnifiersHere(
-        positiveAtomsAbove: List<PositiveAtomicFormula>,
-        negativeAtomsAbove: List<NegativeAtomicFormula>,
-        substitution: IdempotentSubstitution?,
-        formulaUnifier: FormulaUnifier,
-    ): Sequence<IdempotentSubstitution> =
-        newAtomicHyps
-            .asSequence()
-            .flatMap { newHyp: PositiveAtomicFormula ->
-                (negativeAtomsAbove.asSequence() + newAtomicGoals.asSequence())
-                    .mapNotNull { goalAbove: NegativeAtomicFormula ->
-                        formulaUnifier.unify(
-                            formula1 = newHyp.formula,
-                            formula2 = goalAbove.formula,
-                            under = substitution ?: EmptySubstitution,
-                        )
-                    }
-            } +
-                newAtomicGoals
-                    .asSequence()
-                    .flatMap { newGoal: NegativeAtomicFormula ->
-                        positiveAtomsAbove
-                            .asSequence()
-                            .mapNotNull { hypAbove: PositiveAtomicFormula ->
-                                formulaUnifier.unify(
-                                    formula1 = newGoal.formula,
-                                    formula2 = hypAbove.formula,
-                                    under = substitution ?: EmptySubstitution,
-                                )
-                            }
-                    }
-
-    fun display(): String =
+    override fun display(): String =
         buildString {
             root.preOrderTraverse { node: BaseTableauNode ->
                 appendLine("---")
@@ -183,10 +86,14 @@ open class BaseTableau(
             formulaImplementation: FolFormulaImplementation,
             initialQLimit: Int = 1,
             addNodeToTableauListeners: List<AddNodeToTableauListener>? = null,
-//            ruleAddedListeners: List<RuleAddedListener> = emptyList(),
-//            ruleDequeueListeners: List<RuleDequeueListener> = emptyList(),
+            closingAlgorithm: (Tableau<BaseTableauNode>.(FormulaUnifier) -> FolProofSuccess?)? = null,
         ): BaseTableau {
-            return BaseTableau(initialQLimit/*, ruleAddedListeners, ruleDequeueListeners*/)
+            return BaseTableau(
+                initialQLimit,
+                closingAlgorithm = closingAlgorithm ?: { formulaUnifier ->
+                    with(SimplePreorderTableauClosingAlgorithm) { attemptCloseSimplePreorder(formulaUnifier) }
+                }
+            )
                 .also { tableau: BaseTableau ->
                     addNodeToTableauListeners
                         ?.forEach { addNodeToTableauListener ->

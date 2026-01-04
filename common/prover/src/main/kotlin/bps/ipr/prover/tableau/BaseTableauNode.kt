@@ -14,7 +14,6 @@ import bps.ipr.prover.tableau.rule.SignedFormula
 
 fun interface PopulateNodeWithFormulasListener {
     fun populateNodeWithFormulas(
-        /*node: BaseTableauNode,*/
         newAtomicHyps: List<PositiveAtomicFormula>?,
         newAtomicGoals: List<NegativeAtomicFormula>?,
         closing: List<ClosingFormula<*>>?,
@@ -29,7 +28,7 @@ fun interface PopulateNodeWithFormulasListener {
  */
 open class BaseTableauNode(
     parent: BaseTableauNode? = null,
-) : TableauNode {
+) : TableauNode<BaseTableauNode> {
 
     private var populateListeners: MutableList<PopulateNodeWithFormulasListener>? = null
     private var displayHypsListeners: MutableList<DisplayHypsListener>? = null
@@ -190,7 +189,10 @@ open class BaseTableauNode(
         children
             .takeIf { it.isNotEmpty() }
             ?.flatMap { it.createChildNodes() }
-            ?: listOf(BaseTableauNode(parent = this))
+            ?: listOf(BaseTableauNode(
+                parent = this,
+//                nodeClosingAlgorithm = nodeClosingAlgorithm
+            ))
                 .also { _children = it }
 
     fun depth(): Int =
@@ -288,10 +290,6 @@ class DisplayableTableauNodeHelper :
 
     val nonAtomicGoals: MutableList<NegativeSignedFormula<*>> = mutableListOf()
     val nonAtomicHyps: MutableList<PositiveSignedFormula<*>> = mutableListOf()
-//    val closing: MutableList<ClosingFormula<*>> = mutableListOf()
-//    val betas: MutableList<BetaFormula<*>> = mutableListOf()
-//    val deltas: MutableList<DeltaFormula<*>> = mutableListOf()
-//    val gammas: MutableList<GammaFormula<*>> = mutableListOf()
 
     private fun <T : SignedFormula<*>> distributor(formula: T) {
         when (formula) {
