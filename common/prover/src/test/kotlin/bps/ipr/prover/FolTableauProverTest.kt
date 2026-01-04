@@ -7,11 +7,23 @@ import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
+import bps.ipr.prover.tableau.AddNodeToTableauListener
+import bps.ipr.prover.tableau.DisplayableTableauNodeHelper
+import bps.ipr.prover.tableau.TableauNode
 import bps.ipr.prover.tableau.TableauProver
+import bps.ipr.prover.tableau.rule.AlphaFormula
+import bps.ipr.prover.tableau.rule.AtomicSignedFormula
+import bps.ipr.prover.tableau.rule.BetaFormula
+import bps.ipr.prover.tableau.rule.GammaFormula
+import bps.ipr.prover.tableau.rule.Rule
+import bps.ipr.prover.tableau.rule.RuleAddedListener
+import bps.ipr.prover.tableau.rule.SignedFormula
 import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.types.shouldBeInstanceOf
+
+const val Q_LIMIT_TO_TRY_FOR_INVALID_FORMULAS = 2
 
 class FolTableauProverTest :
     FreeSpec(),
@@ -21,42 +33,90 @@ class FolTableauProverTest :
     data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
 
     init {
-        listOf("invalid-propositional.ipr", "invalid.ipr")
-            .forEach { fileName ->
-                "invalid formulas: $fileName" - {
-                    clear()
-                    val fileAsString = buildString {
-                        FolTableauProverTest::class.java.classLoader
-                            .getResourceAsStream(fileName)!!
-                            .bufferedReader()
-                            .useLines { lines: Sequence<String> ->
-                                lines.forEach {
-                                    append(it)
-                                    append('\n')
-                                }
-                            }
-                    }
-                    var startIndex = fileAsString.indexOfFirstNonWhitespace()
-                    val formulas = generateSequence {
-                        fileAsString.parseFormulaOrNull(startIndex)
-                    }
-                        .map {
-                            it.shouldNotBeNull()
-                            val (formula, index) = it
-                            startIndex = index
-                            ProverTest(formula, FolProofSuccess(EmptySubstitution))
+        "invalid with q-limit = $Q_LIMIT_TO_TRY_FOR_INVALID_FORMULAS" - {
+            clear()
+            val fileAsString = buildString {
+                FolTableauProverTest::class.java.classLoader
+                    .getResourceAsStream("invalid.ipr")!!
+                    .bufferedReader()
+                    .useLines { lines: Sequence<String> ->
+                        lines.forEach {
+                            append(it)
+                            append('\n')
                         }
-                        .toList()
-                    formulas
-                        .forEach { (formula, expectedResult) ->
-                            "attempt ${formula.display(0)} expecting failure" {
-                                TableauProver(GeneralRecursiveDescentFormulaUnifier(), 6)
-                                    .prove(formula, this@FolTableauProverTest.formulaImplementation)
-                                    .shouldBeInstanceOf<FolProofIncomplete>()
-                            }
-                        }
-                }
+                    }
             }
+            var startIndex = fileAsString.indexOfFirstNonWhitespace()
+            val formulas = generateSequence {
+                fileAsString.parseFormulaOrNull(startIndex)
+            }
+                .map {
+                    it.shouldNotBeNull()
+                    val (formula, index) = it
+                    startIndex = index
+                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                }
+                .toList()
+            formulas
+                .forEach { (formula, expectedResult) ->
+                    "attempt ${formula.display(0)} expecting failure" {
+                        TableauProver(
+                            unifier = GeneralRecursiveDescentFormulaUnifier(),
+                            initialQLimit = Q_LIMIT_TO_TRY_FOR_INVALID_FORMULAS,
+                            formulaImplementation = this@FolTableauProverTest.formulaImplementation,
+                            addNodeToTableauListeners = listOf(
+                                AddNodeToTableauListener { node ->
+                                    DisplayableTableauNodeHelper()
+                                        .also {
+                                            node.addPopulateListener(it)
+                                            node.addDisplayHypsListener(it)
+                                            node.addDisplayGoalsListener(it)
+                                        }
+                                },
+                            ),
+                        )
+                            .prove(formula)
+                            .shouldBeInstanceOf<FolProofIncomplete>()
+                    }
+                }
+        }
+        "invalid formulas: invalid-propositional.ipr" - {
+            clear()
+            val fileAsString = buildString {
+                FolTableauProverTest::class.java.classLoader
+                    .getResourceAsStream("invalid-propositional.ipr")!!
+                    .bufferedReader()
+                    .useLines { lines: Sequence<String> ->
+                        lines.forEach {
+                            append(it)
+                            append('\n')
+                        }
+                    }
+            }
+            var startIndex = fileAsString.indexOfFirstNonWhitespace()
+            val formulas = generateSequence {
+                fileAsString.parseFormulaOrNull(startIndex)
+            }
+                .map {
+                    it.shouldNotBeNull()
+                    val (formula, index) = it
+                    startIndex = index
+                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                }
+                .toList()
+            formulas
+                .forEach { (formula, expectedResult) ->
+                    "attempt ${formula.display(0)} expecting failure" {
+                        TableauProver(
+                            unifier = GeneralRecursiveDescentFormulaUnifier(),
+                            initialQLimit = 2,
+                            formulaImplementation = this@FolTableauProverTest.formulaImplementation,
+                        )
+                            .prove(formula)
+                            .shouldBeInstanceOf<FolProofIncomplete>()
+                    }
+                }
+        }
         repeat(2) { index ->
             "q-limit = ${index + 1}" - {
                 clear()
@@ -85,45 +145,130 @@ class FolTableauProverTest :
                 formulas
                     .forEach { (formula, expectedResult) ->
                         "attempt ${formula.display(0)} expecting success" {
-                            TableauProver(GeneralRecursiveDescentFormulaUnifier(), index + 1)
-                                .prove(formula, this@FolTableauProverTest.formulaImplementation)
+                            TableauProver(
+                                unifier = GeneralRecursiveDescentFormulaUnifier(),
+                                initialQLimit = index + 1,
+                                formulaImplementation = this@FolTableauProverTest.formulaImplementation,
+                            )
+                                .prove(formula)
                                 .shouldBeInstanceOf<FolProofSuccess>()
                         }
                     }
             }
         }
-        "more" - {
-            clear()
-            val fileAsString = buildString {
-                FolTableauProverTest::class.java.classLoader
-                    .getResourceAsStream("more.ipr")!!
-                    .bufferedReader()
-                    .useLines { lines: Sequence<String> ->
-                        lines.forEach {
-                            append(it)
-                            append('\n')
+        "more" -
+                {
+                    clear()
+                    val fileAsString = buildString {
+                        FolTableauProverTest::class.java.classLoader
+                            .getResourceAsStream("more.ipr")!!
+                            .bufferedReader()
+                            .useLines { lines: Sequence<String> ->
+                                lines.forEach {
+                                    append(it)
+                                    append('\n')
+                                }
+                            }
+                    }
+                    var startIndex = fileAsString.indexOfFirstNonWhitespace()
+                    val formulas = generateSequence {
+                        fileAsString.parseFormulaOrNull(startIndex)
+                    }
+                        .map {
+                            it.shouldNotBeNull()
+                            val (formula, index) = it
+                            startIndex = index
+                            ProverTest(formula, FolProofSuccess(EmptySubstitution))
                         }
-                    }
-            }
-            var startIndex = fileAsString.indexOfFirstNonWhitespace()
-            val formulas = generateSequence {
-                fileAsString.parseFormulaOrNull(startIndex)
-            }
-                .map {
-                    it.shouldNotBeNull()
-                    val (formula, index) = it
-                    startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                        .toList()
+                    formulas
+                        .forEach { (formula, expectedResult) ->
+                            "attempt ${formula.display(0)} expecting success" {
+                                TableauProver(
+                                    unifier = GeneralRecursiveDescentFormulaUnifier(),
+                                    initialQLimit = 2,
+                                    formulaImplementation = this@FolTableauProverTest.formulaImplementation,
+                                )
+                                    .prove(formula)
+                                    .shouldBeInstanceOf<FolProofSuccess>()
+                            }
+                        }
                 }
-                .toList()
-            formulas
-                .forEach { (formula, expectedResult) ->
-                    "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(GeneralRecursiveDescentFormulaUnifier(), 2)
-                            .prove(formula, this@FolTableauProverTest.formulaImplementation)
-                            .shouldBeInstanceOf<FolProofSuccess>()
+        "relations" -
+                {
+                    clear()
+                    val fileAsString = buildString {
+                        FolTableauProverTest::class.java.classLoader
+                            .getResourceAsStream("relations.ipr")!!
+                            .bufferedReader()
+                            .useLines { lines: Sequence<String> ->
+                                lines.forEach {
+                                    append(it)
+                                    append('\n')
+                                }
+                            }
                     }
+                    var startIndex = fileAsString.indexOfFirstNonWhitespace()
+                    val formulas = generateSequence {
+                        fileAsString.parseFormulaOrNull(startIndex)
+                    }
+                        .map {
+                            it.shouldNotBeNull()
+                            val (formula, index) = it
+                            startIndex = index
+                            ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                        }
+                        .toList()
+                    formulas
+                        .forEach { (formula, expectedResult) ->
+                            "attempt ${formula.display(0)} expecting success" {
+                                TableauProver(
+                                    unifier = GeneralRecursiveDescentFormulaUnifier(),
+                                    initialQLimit = 2,
+                                    formulaImplementation = this@FolTableauProverTest.formulaImplementation,
+                                )
+                                    .prove(formula)
+                                    .shouldBeInstanceOf<FolProofSuccess>()
+                            }
+                        }
                 }
-        }
+        "tests" -
+                {
+                    clear()
+                    val fileAsString = buildString {
+                        FolTableauProverTest::class.java.classLoader
+                            .getResourceAsStream("tests.ipr")!!
+                            .bufferedReader()
+                            .useLines { lines: Sequence<String> ->
+                                lines.forEach {
+                                    append(it)
+                                    append('\n')
+                                }
+                            }
+                    }
+                    var startIndex = fileAsString.indexOfFirstNonWhitespace()
+                    val formulas = generateSequence {
+                        fileAsString.parseFormulaOrNull(startIndex)
+                    }
+                        .map {
+                            it.shouldNotBeNull()
+                            val (formula, index) = it
+                            startIndex = index
+                            ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                        }
+                        .toList()
+                    formulas
+                        .forEach { (formula, expectedResult) ->
+                            "attempt ${formula.display(0)} expecting success" {
+                                TableauProver(
+                                    unifier = GeneralRecursiveDescentFormulaUnifier(),
+                                    initialQLimit = 2,
+                                    formulaImplementation = this@FolTableauProverTest.formulaImplementation,
+                                )
+                                    .prove(formula)
+                                    .shouldBeInstanceOf<FolProofSuccess>()
+                            }
+                        }
+                }
     }
 }

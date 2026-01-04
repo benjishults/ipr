@@ -11,11 +11,23 @@ interface RuleSelector {
      */
     fun addRule(rule: Rule)
 
+    fun addRuleAddedListener(listener: RuleAddedListener)
+
     /**
      * selects what is deemed to be the best rule to apply at the moment
      */
     fun dequeueNextRuleOrNull(): Rule?
 
+    fun addRuleDequeueListener(listener: RuleDequeueListener)
+
+}
+
+fun interface RuleAddedListener {
+    fun onRuleAdded(rule: Rule)
+}
+
+fun interface RuleDequeueListener {
+    fun onRuleDequeued(rule: Rule)
 }
 
 /**
@@ -32,11 +44,13 @@ open class FolRuleSelector(
     initialQLimit: Int = 1,
 ) : RuleSelector {
 
+    private val ruleAddedListeners: MutableList<RuleAddedListener> = mutableListOf()
+    private val ruleDequeueListeners: MutableList<RuleDequeueListener> = mutableListOf()
     private var _qLimit: Int = initialQLimit
     val qLimit: Int
         get() = _qLimit
 
-//    val alphaRules: Queue<AlphaFormula<*>> = queue()
+    //    val alphaRules: Queue<AlphaFormula<*>> = queue()
     val betaRules: Queue<BetaFormula<*>> = queue()
 
     val gammaRules: Queue<GammaFormula<*>> = queue()
@@ -44,6 +58,32 @@ open class FolRuleSelector(
     val closingRules: Queue<ClosingFormula<*>> = queue()
 
     val spentGammaRules: MutableList<GammaFormula<*>> = mutableListOf()
+
+    override fun addRuleAddedListener(listener: RuleAddedListener) {
+        ruleAddedListeners.add(listener)
+    }
+
+    override fun addRuleDequeueListener(listener: RuleDequeueListener) {
+        ruleDequeueListeners.add(listener)
+    }
+
+    private fun notifyRuleAdded(rule: Rule) =
+        ruleAddedListeners.forEach {
+            try {
+                it.onRuleAdded(rule)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    private fun notifyRuleDequeued(rule: Rule) =
+        ruleDequeueListeners.forEach {
+            try {
+                it.onRuleDequeued(rule)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
 
     /**
      * This increases the [qLimit] by [by].  After calling this, [gammaRules] that had been added after reaching the
@@ -76,14 +116,16 @@ open class FolRuleSelector(
                 }
             else -> throw IllegalArgumentException("This rule selector only accepts SignedFormulas: $rule")
         }
+        notifyRuleAdded(rule)
     }
 
     override fun dequeueNextRuleOrNull(): SignedFormula<*>? =
-        closingRules.dequeueOrNull()
+        (closingRules.dequeueOrNull()
 //            ?: alphaRules.dequeueOrNull()
 //                ?.also { throw ImpossibleError("Should be impossible") }
             ?: deltaRules.dequeueOrNull()
             ?: betaRules.dequeueOrNull()
             ?: gammaRules.dequeueOrNull()
-
+                )
+            ?.also { notifyRuleDequeued(it) }
 }

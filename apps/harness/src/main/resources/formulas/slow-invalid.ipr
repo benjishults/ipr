@@ -1,0 +1,23 @@
+(implies
+     (and (implies (a) (and (implies (a) (b)) (implies (b) (a))))
+          (implies (and (implies (a) (b)) (implies (b) (a))) (a)))
+   (and (implies (a) (b)) (implies (b) (a))))
+
+; with q=3, this is really slow
+(forall ((a) (b))
+  (for-some ((x) (y))
+    (implies (q2 a (f b))
+      (and (implies (p (f x)) (and (p (f a)) (p y)))
+           (q2 x y)))))        ; not a theorem
+
+; q=2 slow
+(for-some ((x)) (implies (and (implies (and (q (a0))
+                                            (r (b0)))
+                                (p x))
+                              (implies (and (q* (c)) (r* (d)))
+                                (p x)) (q x) (r (e))
+                                (q* x) (r* (e)) (s (a0))
+                                (s (c)) (s (d)))
+                  (and (p x) (s x)))) ;not a theorem
+;; 0.07 no
+;; 0.11 no

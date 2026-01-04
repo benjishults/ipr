@@ -12,12 +12,12 @@ import bps.ipr.formulas.Not
 import bps.ipr.formulas.Or
 import bps.ipr.formulas.Predicate
 import bps.ipr.formulas.Truth
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import kotlin.collections.forEach
 
 /**
- * An inference rule that can be applied to a [bps.ipr.prover.tableau.Tableau].
+ * An inference rule that can be applied to a [bps.ipr.prover.tableau.BaseTableau].
  */
 fun interface Rule {
 
@@ -31,7 +31,7 @@ fun interface Rule {
 sealed interface SignedFormula<T : FolFormula> : Rule {
     val formula: T
     val sign: Boolean
-    val birthPlace: TableauNode
+    val birthPlace: BaseTableauNode
     val formulaImplementation: FolFormulaImplementation
 
     /**
@@ -45,7 +45,7 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
      * @param mutableList if not null, the result will be added to it instead of a new list being created.
      */
     fun reduceAlpha(
-        birthPlace: TableauNode,
+        birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>? = null,
     ): MutableList<SignedFormula<*>> =
         mutableList
@@ -58,10 +58,10 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
         formula.display(indent)
 
     fun createNodeForReducedFormulas(
-        reducedFormulasFactory: (TableauNode) -> List<SignedFormula<*>>,
-    ): TableauNode =
-        TableauNode()
-            .also { node: TableauNode ->
+        reducedFormulasFactory: (BaseTableauNode) -> List<SignedFormula<*>>,
+    ): BaseTableauNode =
+        BaseTableauNode()
+            .also { node: BaseTableauNode ->
                 birthPlace.tableau.registerNode(node)
                 reducedFormulasFactory(node)
                     .also { reducedSignedFormulas: List<SignedFormula<*>> ->
@@ -81,7 +81,7 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
         fun <F : FolFormula> create(
             formula: F,
             sign: Boolean,
-            birthPlace: TableauNode,
+            birthPlace: BaseTableauNode,
             formulaImplementation: FolFormulaImplementation,
         ): SignedFormula<F> =
             (if (sign) {
@@ -115,35 +115,35 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
 }
 
 data class CategorizedSignedFormulas(
-    val positiveAtoms: List<PositiveAtomicFormula>,
-    val negativeAtoms: List<NegativeAtomicFormula>,
-    val closingFormulas: List<ClosingFormula<*>>,
-    val betas: List<BetaFormula<*>>,
-    val deltas: List<DeltaFormula<*>>,
-    val gammas: List<GammaFormula<*>>,
+    val positiveAtoms: List<PositiveAtomicFormula>?,
+    val negativeAtoms: List<NegativeAtomicFormula>?,
+    val closingFormulas: List<ClosingFormula<*>>?,
+    val betas: List<BetaFormula<*>>?,
+    val deltas: List<DeltaFormula<*>>?,
+    val gammas: List<GammaFormula<*>>?,
 ) {
     companion object {
         fun List<SignedFormula<*>>.categorizeSignedFormulas(): CategorizedSignedFormulas {
-            val pos = mutableListOf<PositiveAtomicFormula>()
-            val neg = mutableListOf<NegativeAtomicFormula>()
-            val closing = mutableListOf<ClosingFormula<*>>()
-            val betas = mutableListOf<BetaFormula<*>>()
-            val deltas = mutableListOf<DeltaFormula<*>>()
-            val gammas = mutableListOf<GammaFormula<*>>()
+            var pos: MutableList<PositiveAtomicFormula>? = null
+            var neg: MutableList<NegativeAtomicFormula>? = null
+            var closing: MutableList<ClosingFormula<*>>? = null
+            var betas: MutableList<BetaFormula<*>>? = null
+            var deltas: MutableList<DeltaFormula<*>>? = null
+            var gammas: MutableList<GammaFormula<*>>? = null
             forEach { signedFormula ->
                 when (signedFormula) {
                     is PositiveAtomicFormula ->
-                        pos.add(signedFormula)
+                        pos?.add(signedFormula) ?: run { pos = mutableListOf(signedFormula) }
                     is NegativeAtomicFormula ->
-                        neg.add(signedFormula)
+                        neg?.add(signedFormula) ?: run { neg = mutableListOf(signedFormula) }
                     is ClosingFormula<*> ->
-                        closing.add(signedFormula)
+                        closing?.add(signedFormula) ?: run { closing = mutableListOf(signedFormula) }
                     is BetaFormula<*> ->
-                        betas.add(signedFormula)
+                        betas?.add(signedFormula) ?: run { betas = mutableListOf(signedFormula) }
                     is DeltaFormula<*> ->
-                        deltas.add(signedFormula)
+                        deltas?.add(signedFormula) ?: run { deltas = mutableListOf(signedFormula) }
                     is GammaFormula<*> ->
-                        gammas.add(signedFormula)
+                        gammas?.add(signedFormula) ?: run { gammas = mutableListOf(signedFormula) }
                     else ->
                         Unit
                 }

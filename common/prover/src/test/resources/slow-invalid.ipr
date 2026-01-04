@@ -1,8 +1,0 @@
-(implies
-     (and (implies (a) (and (implies (a) (b)) (implies (b) (a))))
-          (implies (and (implies (a) (b)) (implies (b) (a))) (a)))
-   (and (implies (a) (b)) (implies (b) (a))))
-                                        ;not a taut
-;;0.03 no
-;;0.04 no
-

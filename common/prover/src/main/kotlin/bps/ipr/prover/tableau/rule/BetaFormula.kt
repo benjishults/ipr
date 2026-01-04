@@ -7,7 +7,7 @@ import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.Iff
 import bps.ipr.formulas.Implies
 import bps.ipr.formulas.Or
-import bps.ipr.prover.tableau.TableauNode
+import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.rule.SignedFormula.Companion.create
 import kotlin.collections.forEach
 
@@ -20,12 +20,12 @@ sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFo
     override fun apply() {
         birthPlace
             .leaves()
-            .forEach { leaf: TableauNode ->
+            .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     formula
                         .subFormulas
                         .map { folFormula: FolFormula ->
-                            createNodeForReducedFormulas { node: TableauNode ->
+                            createNodeForReducedFormulas { node: BaseTableauNode ->
                                 create(
                                     formula = folFormula,
                                     sign = sign,
@@ -42,29 +42,29 @@ sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFo
 
 data class PositiveOrFormula(
     override val formula: Or,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : SimpleMultiSubBetaFormula<Or>, PositiveSignedFormula<Or>()
 
 data class NegativeAndFormula(
     override val formula: And,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : SimpleMultiSubBetaFormula<And>, NegativeSignedFormula<And>()
 
 data class PositiveImpliesFormula(
     override val formula: Implies,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : BetaFormula<Implies>, PositiveSignedFormula<Implies>() {
 
     override fun apply() =
         birthPlace
             .leaves()
-            .forEach { leaf: TableauNode ->
+            .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     listOf(
-                        createNodeForReducedFormulas { node: TableauNode ->
+                        createNodeForReducedFormulas { node: BaseTableauNode ->
                             create(
                                 formula = formula.consequent,
                                 sign = true,
@@ -73,7 +73,7 @@ data class PositiveImpliesFormula(
                             )
                                 .reduceAlpha(birthPlace = node)
                         },
-                        createNodeForReducedFormulas { node: TableauNode ->
+                        createNodeForReducedFormulas { node: BaseTableauNode ->
                             create(
                                 formula = formula.antecedent,
                                 sign = false,
@@ -90,17 +90,17 @@ data class PositiveImpliesFormula(
 
 data class NegativeIffFormula(
     override val formula: Iff,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : BetaFormula<Iff>, NegativeSignedFormula<Iff>() {
 
     override fun apply() =
         birthPlace
             .leaves()
-            .forEach { leaf: TableauNode ->
+            .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     listOf(
-                        createNodeForReducedFormulas { node: TableauNode ->
+                        createNodeForReducedFormulas { node: BaseTableauNode ->
                             create(
                                 formula = formula.subFormulas[0],
                                 sign = false,
@@ -119,7 +119,7 @@ data class NegativeIffFormula(
                                             .reduceAlpha(birthPlace = node),
                                 )
                         },
-                        createNodeForReducedFormulas { node: TableauNode ->
+                        createNodeForReducedFormulas { node: BaseTableauNode ->
                             create(
                                 formula = formula.subFormulas[0],
                                 sign = true,
@@ -146,17 +146,17 @@ data class NegativeIffFormula(
 
 data class PositiveIffFormula(
     override val formula: Iff,
-    override val birthPlace: TableauNode,
+    override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
 ) : BetaFormula<Iff>, PositiveSignedFormula<Iff>() {
 
     override fun apply() =
         birthPlace
             .leaves()
-            .forEach { leaf: TableauNode ->
+            .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     listOf(
-                        createNodeForReducedFormulas { node: TableauNode ->
+                        createNodeForReducedFormulas { node: BaseTableauNode ->
                             formula
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
@@ -166,7 +166,7 @@ data class PositiveIffFormula(
                                     r
                                 }
                         },
-                        createNodeForReducedFormulas { node: TableauNode ->
+                        createNodeForReducedFormulas { node: BaseTableauNode ->
                             formula
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap

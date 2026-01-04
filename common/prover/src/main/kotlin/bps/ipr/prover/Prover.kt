@@ -1,12 +1,11 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.Formula
-import bps.ipr.formulas.FormulaImplementation
 import bps.ipr.substitution.Substitution
 
-interface Prover<in F: Formula, in I: FormulaImplementation, out R: ProofResult> {
+interface Prover<in F: Formula, out R: ProofResult> {
 
-    fun prove(formula: F, formulaImplementation: I): R
+    fun prove(formula: F): R
 
 }
 

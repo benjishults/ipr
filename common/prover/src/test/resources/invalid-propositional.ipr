@@ -11,6 +11,15 @@
 (implies (a)
   (and (b) (c) (d)))
 
+(implies (or (a0) (b0)) (or (c) (b0))); not a theorem
+;; 0.07 no
+
+(implies (implies (a0) (or (b0) (c))) (c)) ;not a theorem
+;; 0.07 no
+
+(implies (a0) (or (b0) (c)))                        ;not a theorem
+;; 0.07 no
+
 (implies
     (implies (a) (b))
   (c))

@@ -45,11 +45,11 @@ class PropositionalTableauProverTest :
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting $expectedResult" {
-                        TableauProver(GeneralRecursiveDescentFormulaUnifier())
-                            .prove(
-                                formula,
-                                this@PropositionalTableauProverTest.formulaImplementation,
-                            ) shouldBe expectedResult
+                        TableauProver(
+                            unifier = GeneralRecursiveDescentFormulaUnifier(),
+                            formulaImplementation = this@PropositionalTableauProverTest.formulaImplementation,
+                        )
+                            .prove(formula) shouldBe expectedResult
                     }
                 }
         }
