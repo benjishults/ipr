@@ -4,17 +4,15 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
+import bps.ipr.prover.FolTableauProofSuccess
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import bps.ipr.prover.tableau.rule.FolRuleSelector
 import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
 import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
-import bps.ipr.prover.tableau.rule.RuleAddedListener
-import bps.ipr.prover.tableau.rule.RuleDequeueListener
 import bps.ipr.prover.tableau.rule.RuleSelector
 import bps.ipr.prover.tableau.rule.SignedFormula
 import bps.ipr.substitution.EmptySubstitution
 import bps.ipr.substitution.IdempotentSubstitution
-import kotlin.sequences.emptySequence
 
 interface Tableau<out N : TableauNode> {
     val root: N
@@ -82,7 +80,7 @@ open class BaseTableau(
                 formulaUnifier = unifier,
             )
             .firstOrNull()
-            ?.let { FolProofSuccess(it) }
+            ?.let { FolTableauProofSuccess(it, this) }
     }
 
     /**
@@ -172,7 +170,7 @@ open class BaseTableau(
         buildString {
             root.preOrderTraverse { node: BaseTableauNode ->
                 appendLine("---")
-                append(node.display(2 * node.depth()))
+                append(node.display(node.depth()))
             }
         }
 

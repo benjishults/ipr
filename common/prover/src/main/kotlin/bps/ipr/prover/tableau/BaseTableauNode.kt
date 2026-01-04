@@ -31,20 +31,20 @@ open class BaseTableauNode(
     parent: BaseTableauNode? = null,
 ) : TableauNode {
 
-    private val populateListeners: MutableList<PopulateNodeWithFormulasListener> = mutableListOf()
-    private val displayHypsListeners: MutableList<DisplayHypsListener> = mutableListOf()
-    private val displayGoalsListeners: MutableList<DisplayGoalsListener> = mutableListOf()
+    private var populateListeners: MutableList<PopulateNodeWithFormulasListener>? = null
+    private var displayHypsListeners: MutableList<DisplayHypsListener>? = null
+    private var displayGoalsListeners: MutableList<DisplayGoalsListener>? = null
 
     fun addPopulateListener(listener: PopulateNodeWithFormulasListener) {
-        populateListeners.add(listener)
+        populateListeners?.add(listener) ?: run { populateListeners = mutableListOf(listener) }
     }
 
     fun addDisplayHypsListener(listener: DisplayHypsListener) {
-        displayHypsListeners.add(listener)
+        displayHypsListeners?.add(listener) ?: run { displayHypsListeners = mutableListOf(listener) }
     }
 
     fun addDisplayGoalsListener(listener: DisplayGoalsListener) {
-        displayGoalsListeners.add(listener)
+        displayGoalsListeners?.add(listener) ?: run { displayGoalsListeners = mutableListOf(listener) }
     }
 
     private fun notifyPopulateListeners(
@@ -55,7 +55,7 @@ open class BaseTableauNode(
         deltas: List<DeltaFormula<*>>? = null,
         gammas: List<GammaFormula<*>>? = null,
     ) =
-        populateListeners.forEach {
+        populateListeners?.forEach {
             try {
                 it.populateNodeWithFormulas(
                     newAtomicHyps = newAtomicHyps,
@@ -71,7 +71,7 @@ open class BaseTableauNode(
         }
 
     private fun notifyDisplayHypsListeners(builder: StringBuilder, indent: Int) =
-        displayHypsListeners.forEach {
+        displayHypsListeners?.forEach {
             try {
                 it.displayHyps(builder, indent)
             } catch (e: Exception) {
@@ -80,7 +80,7 @@ open class BaseTableauNode(
         }
 
     private fun notifyDisplayGoalsListeners(builder: StringBuilder, indent: Int) =
-        displayGoalsListeners.forEach {
+        displayGoalsListeners?.forEach {
             try {
                 it.displayGoals(builder, indent)
             } catch (e: Exception) {
@@ -162,7 +162,16 @@ open class BaseTableauNode(
             closing?.forEach { form: SignedFormula<*> ->
                 this.tableau.applicableRules.addRule(form)
             }
-            notifyPopulateListeners(newAtomicHyps, newAtomicGoals, closing, betas, deltas, gammas)
+            populateListeners?.run {
+                notifyPopulateListeners(
+                    newAtomicHyps = newAtomicHyps,
+                    newAtomicGoals = newAtomicGoals,
+                    closing = closing,
+                    betas = betas,
+                    deltas = deltas,
+                    gammas = gammas,
+                )
+            }
         } else {
             throw IllegalStateException("New hyps and new goals already set")
         }
@@ -244,19 +253,23 @@ open class BaseTableauNode(
         buildString {
             append(" ".repeat(indent))
             append("Suppose\n")
-            newAtomicHyps.forEach { hyp ->
+            newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
                 appendLine(hyp.display(indent + 1))
+            }
+            displayHypsListeners?.let {
                 notifyDisplayHypsListeners(this, indent)
             }
             append(" ".repeat(indent))
-            appendLine("Then")
-            newAtomicGoals.forEach { goal ->
+            appendLine("Show")
+            newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
                 appendLine(goal.display(indent + 1))
+            }
+            displayGoalsListeners?.let {
                 notifyDisplayGoalsListeners(this, indent)
             }
         }
 
-    override fun toString(): String = display(0)
+//    override fun toString(): String = display(0)
 
 }
 
@@ -280,7 +293,7 @@ class DisplayableTableauNodeHelper :
 //    val deltas: MutableList<DeltaFormula<*>> = mutableListOf()
 //    val gammas: MutableList<GammaFormula<*>> = mutableListOf()
 
-    private fun <T: SignedFormula<*>> distributor(formula: T) {
+    private fun <T : SignedFormula<*>> distributor(formula: T) {
         when (formula) {
             is NegativeSignedFormula<*> -> nonAtomicGoals.add(formula)
             is PositiveSignedFormula<*> -> nonAtomicHyps.add(formula)
@@ -306,10 +319,14 @@ class DisplayableTableauNodeHelper :
     }
 
     override fun displayHyps(builder: StringBuilder, indent: Int) {
-        nonAtomicHyps.forEach { builder.appendLine(it.display(indent)) }
+        nonAtomicHyps.forEach {
+            builder.appendLine(it.display(indent + 1))
+        }
     }
 
     override fun displayGoals(builder: StringBuilder, indent: Int) {
-        nonAtomicGoals.forEach { builder.appendLine(it.display(indent)) }
+        nonAtomicGoals.forEach {
+            builder.appendLine(it.display(indent + 1))
+        }
     }
 }

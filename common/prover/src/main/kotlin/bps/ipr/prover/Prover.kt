@@ -1,6 +1,7 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.Formula
+import bps.ipr.prover.tableau.BaseTableau
 import bps.ipr.substitution.Substitution
 
 interface Prover<in F: Formula, out R: ProofResult> {
@@ -13,10 +14,21 @@ interface ProofResult
 
 sealed interface FolProofResult : ProofResult
 
-data class FolProofSuccess(
+open class FolProofSuccess(
     val substitution: Substitution,
 ) : FolProofResult
 
+open class FolTableauProofSuccess(
+    substitution: Substitution,
+    val tableau: BaseTableau,
+) : FolProofSuccess(substitution)
+
 data object FolProofFailure : FolProofResult
 
-data object FolProofIncomplete : FolProofResult
+interface FolProofIncomplete: FolProofResult {
+    companion object: FolProofIncomplete
+}
+
+open class FolTableauProofIncomplete(
+    val tableau: BaseTableau,
+) : FolProofIncomplete

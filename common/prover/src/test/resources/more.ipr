@@ -18,15 +18,13 @@
 
 ;; requires q >= 2
 (forall ((b) (c))
-  (implies
-      (forall ((z)) (q (f z)))
-    (for-some ((x)) (for-some ((y)) (and (implies
-                                             (p (f y))
-                                           (and (p x)
-                                                (implies
-                                                    (r y)
-                                                  (and (r b) (r c)))))
-                                         (q x))))))
+  (implies (forall ((z)) (q (f z)))
+    (for-some ((x) (y))
+      (and (implies (p (f y))
+             (and (p x)
+                  (implies (r y)
+                    (and (r b) (r c)))))
+           (q x)))))
 
 ;; requires q >= 2
 (forall ((b) (c))
@@ -106,12 +104,6 @@
     (forall ((x)) (for-some ((y)) (and (a2 x y) (a2 y y))))
   (for-some ((z)) (a2 z z)))
 
-(forall ((a) (b) (c))
-  (implies (and (s a) (s b) (r2 b c)
-                (forall ((x)) (implies (s x) (p x)))
-                (forall ((x)) (forall ((y)) (implies (r2 x y) (q2 x y)))))
-    (for-some ((x)) (for-some ((y)) (and (p x) (q2 x y))))))
-
 ;; requires q >= 2
 (forall ((a) (b))
   (implies (forall ((y)) (implies (q y) (p y)))
@@ -188,12 +180,6 @@
     (implies (eq a b) (eq b a))))
 
 ;; requires q >= 2
-(forall ((a) (b))
-  (implies (forall ((y)) (implies (q y) (p y)))
-    (for-some ((x)) (and (implies (p x) (p a))
-                         (implies (q x) (p b))))))
-
-;; requires q >= 2
 (for-some ((x))
   (forall ((y)) (implies (p x) (p y))))
 
@@ -223,8 +209,6 @@
   (forall ((y)) (for-some ((x)) (p2 x y))))
 
 ;;;;;;;;  Tested MCB1.13 Q=2
-
-(implies (p z) (p z))
 
 ;; From Smullyan FOL 1968
 (forall ((y)) (implies (forall ((x)) (p x)) (p y)))

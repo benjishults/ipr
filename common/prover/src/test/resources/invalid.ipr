@@ -1,62 +1,33 @@
-;; I'm "proving" this with q=2 and {x ↦ (x_29)}
-;;; (implies (for-some ((x)) (p x)) (for-some ((z)) (p x)))
-;;; Decided that this shouldn't be attempted since the last `x` is free.
-                                        ; not a theorem
-;; 0.07 does not parse.
-;; 0.08 does not parse.
-
-(forall ((x)) (implies (for-some ((x)) (p x)) (for-some ((z)) (p x))))
-
-;; I'm "proving" this with q=2 and {x_33 ↦ (f b), y_11 ↦ b, a ↦ (f b), y_10 ↦ b}
-;;; (implies  (forall ((y)) (implies (implies (r b) (r y))
-;;;                                      (p2 (f y) y)))
-;;;                 (for-some ((x)) (for-some ((y)) (and (p2 x y) (implies (q2 a b)
-;;;                                                        (q2 x y))))) )
-;;;                                         ;not a theorem
-;;; Decided that this shouldn't be attempted since it has free variables.
-;; 0.07
+(forall ((a) (b))
+  (implies
+    (forall ((y))
+      (implies (implies (r b) (r y))
+                 (p2 (f y) y)))
+        (for-some ((x))
+          (for-some ((y))
+            (and (p2 x y)
+                 (implies (q2 a b)
+                   (q2 x y))))) ))
 
 (forall ((a) (b))
-  (implies  (forall ((y)) (implies (implies (r b) (r y))
-                                       (p2 (f y) y)))
-                  (for-some ((x)) (for-some ((y)) (and (p2 x y) (implies (q2 a b)
-                                                         (q2 x y))))) ))
-
-;; I'm "proving" this with q=2 and {x_32 ↦ (f b), y_8 ↦ b, a ↦ (f b), y_7 ↦ b}
-;;; (implies (and (q2 a b) (r b)
-;;;               (forall ((y)) (implies (r y) (p2 (f y) y))))
-;;;   (for-some ((x)) (for-some ((y)) (and (p2 x y) (q2 x y)))))
-;;; Decided that this shouldn't be attempted since it has free variables.
-                                        ;not a theorem
-;; 0.07
-
-(forall ((a) (b))
-  (implies (and (q2 a b) (r b)
-                (forall ((y)) (implies (r y) (p2 (f y) y))))
-    (for-some ((x)) (for-some ((y)) (and (p2 x y) (q2 x y))))))
-
-;; I'm "proving" this with q=2 and {z_0 ↦ (a_0), x_2 ↦ (a_0), z_1 ↦ (b_0), x_0 ↦ (b_0)})
-(forall ((a) (b))
-  (implies (forall ((z)) (implies (q z) (p z)))
-    (for-some ((x)) (and (implies (p x) (p a))
-                         (implies (q x) (p b))))))
-                                        ; not a theorem
-
-;; I'm "proving" this with q=2 and {x_27 ↦ (x_12), x_30 ↦ (x_11), x_31 ↦ (x_10), x_28 ↦ (x_11), x_29 ↦ (x_10)}
-(implies (and (for-some ((x)) (a x))
-              (for-some ((x)) (b x)) ;not a theorem
-              (implies (r0) (for-some ((x)) (and (a x) (b x))))
-              (implies (and (p0) (q0)) (r0)) )
-  (for-some ((x)) (and (implies (p0) (a x)) (implies (q0) (b x)))))
-;;0.07 no
+  (implies (and (q2 a b)
+                (r b)
+                (forall ((y))
+                  (implies (r y) (p2 (f y) y))))
+    (for-some ((x))
+      (for-some ((y))
+        (and (p2 x y)
+             (q2 x y))))))
 
 (forall ((a) (b) (c))
   (implies (and (p a) (p b) (p c))
-    (for-some ((x)) (and (p x) (q x))))) ; not a theorem
+    (for-some ((x))
+      (and (p x) (q x))))) ; not a theorem
 
 (forall ((a) (b))
-  (for-some ((x)) (implies (and (p a) (q b))
-                    (and (p x) (q x))))) ; not a theorem
+  (for-some ((x))
+    (implies (and (p a) (q b))
+      (and (p x) (q x))))) ; not a theorem
 
 (forall ((x)) (implies (t x) (t (b2 x))))
 (forall ((x) (y)) (t (i (b2 (i x y)) (i (b2 x) (b2 y)))))
@@ -98,15 +69,15 @@
               (implies (truth) (a0))) (c)) ;not a theorem
 ;; 0.07 no
 
-(for-some ((x)) (and (< a x) (< x b)))    ;not a theorem
+(forall ((a) (b)) (for-some ((x)) (and (< a x) (< x b))))    ;not a theorem
 ;;0.07
 
 (implies (or (r0) (p0)) (or (and (p0) (q0)) (r0))) ; not a theorem
 ;;; this tests to make sure condense is sound.
 
 (implies
-                   (forall ((x)) (for-some ((y)) (a2         x y)))
-                 (for-some ((z)) (a2         z z)))                ; not a theorem
+    (forall ((x)) (for-some ((y)) (a2         x y)))
+  (for-some ((z)) (a2         z z)))                ; not a theorem
 ;; 0.07 no
 ;; 0.08 yes
 ;; (shows need to check if a unifier satisfies old goals,
@@ -115,13 +86,13 @@
 ;; 0.11 no
 
 (forall ((a) (b) (c) (d) (e) (f) (z) (y) (x))
-                 (implies (and (p3 a b z) (q4 a b d y) (r3 a b f) (r3 e c d))
-                   (and (p3 x y z) (q4 a y z c) (r3 x y z)))) ; not a theorem
+  (implies (and (p3 a b z) (q4 a b d y) (r3 a b f) (r3 e c d))
+    (and (p3 x y z) (q4 a y z c) (r3 x y z)))) ; not a theorem
 ;; 0.08 no
 ;; 0.11 no (halts)
 
 (implies (forall ((x)) (or (p x) (q x))) ; not a theorem
-                 (or (forall ((x)) (p x)) (forall ((x)) (q x))))
+  (or (forall ((x)) (p x)) (forall ((x)) (q x))))
 ;; 0.06 no
 ;; 0.08 yes
 ;; (the problem is that the unifier doesn't keep track
@@ -168,63 +139,63 @@
 ;; 0.11 no (halts)
 
 (forall ((x)) (implies (implies (p x) (q x)) ; not a theorem
-                               (implies (forall ((x)) (p x))
-                                 (forall ((x)) (q x)))))
+                (implies (forall ((x)) (p x))
+                  (forall ((x)) (q x)))))
 ;; 0.06 no
 ;; 0.08 no
 ;; 0.11 no (halts)
 
 (and (forall ((x)) (for-some ((y)) (r2 x y)))
-                    (not (for-some ((x)) (r2 x x)))        ; not a theorem
-                    (forall ((x) (y) (z)) (implies (and (r2 x y) (r2 y z))
-                                            (r2 x z))))
+     (not (for-some ((x)) (r2 x x)))        ; not a theorem
+     (forall ((x) (y) (z)) (implies (and (r2 x y) (r2 y z))
+                             (r2 x z))))
 ;; 0.06 no
 ;; 0.08 no
 ;; 0.11 no (halts)
 
 (implies (for-some ((x) (y)) (p2 x y))
-                 (for-some ((x)) (p2 x x))) ; not a theorem
+  (for-some ((x)) (p2 x x))) ; not a theorem
 ;; 0.06 no
 ;; 0.08 no
 ;; 0.11 no (halts)
 
 (implies (for-some ((x)) (p x)) (forall ((z)) (p z)))
-                                        ; not a theorem
+                         ; not a theorem
 ;; 0.07 no
 ;; 0.08 no
 ;; 0.11 no (halts)
 
 (forall ((x)) (implies (for-some ((x)) (p x))
-                               (for-some ((z)) (p x)))) ; not a theorem
+                (for-some ((z)) (p x)))) ; not a theorem
 ;; 0.08 no
 ;; 0.11 no
 
 (not (for-some ((x)) (forall ((y))        ; not a theorem
-                       (iff (a-member-of y x) (a-member-of y y)))))
+        (iff (a-member-of y x) (a-member-of y y)))))
 
 ; q=3 slow and fails to prove
 (forall ((a) (b))                        ; not a theorem
   (implies (q a)
     (for-some ((x)) (and (implies (p x) (p a))
-                         (implies (p x) (p b))
-                         (q x)))))
+          (implies (p x) (p b))
+          (q x)))))
 ;; 0.11 no (runs forever)
 ;; set0.03 yes
 ;; relset0.05 no
 
 ; q=3 slow
 (implies (and (forall ((x)) (not (less-than x x)))
-                             (forall ((x1) (x2) (x3))
-                               (implies (and (less-than x1 x2)
-                                             (less-than x2 x3))
-                                 (less-than x1 x3)))) ; not a theorem
-                 (forall ((x)) (for-some ((y)) (less-than x y))))
+              (forall ((x1) (x2) (x3))
+                (implies (and (less-than x1 x2)
+                              (less-than x2 x3))
+                  (less-than x1 x3)))) ; not a theorem
+  (forall ((x)) (for-some ((y)) (less-than x y))))
 
 ; q=3 slow
 (implies (and (forall ((x) (y) (z))        ; not a theorem
-                               (implies (and (r2 x y) (r2 y z)) (r2 x z)))
-                             (forall ((x)) (for-some ((y)) (r2 x y))))
-                 (for-some ((x)) (r2 x x)))
+                (implies (and (r2 x y) (r2 y z)) (r2 x z)))
+              (forall ((x)) (for-some ((y)) (r2 x y))))
+  (for-some ((x)) (r2 x x)))
 ;; 0.06 no
 ;; with interaction: yes
 ;; 0.07 no
