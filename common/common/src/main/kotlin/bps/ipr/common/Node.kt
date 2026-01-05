@@ -28,10 +28,7 @@ data class Node<T>(
                 ?: -1
 }
 
-fun <T> Node<T>?.addToEnd(element: T): Node<T> =
-    Node(element, null)
-        .also { this?.next = it }
-
 fun <T> Node<T>?.addToBeginning(element: T): Node<T> =
     Node(element, this)
+
 

@@ -3,12 +3,32 @@ package bps.ipr.common
 /**
  * This class is not thread-safe.
  */
-class LinkedList<T> {
+class LinkedList<T>(
+    head: Node<T>?,
+) : Collection<T> {
+
+    constructor(
+        vararg elements: T,
+    ) : this(
+        elements.fold(null as Node<T>?) { acc, element ->
+            acc
+                ?.addToBeginning(element)
+                ?: Node(element, null)
+        },
+    )
 
     private var head: Node<T>? = null
     private var _size: Int = 0
 
-    val size: Int get() = _size
+    override val size: Int get() = _size
+
+    init {
+        this.head = head
+//        elements
+//            .forEach {
+//                add(it)
+//            }
+    }
 
     fun add(element: T): Boolean =
         true
@@ -17,13 +37,13 @@ class LinkedList<T> {
                 _size++
             }
 
-    fun isEmpty(): Boolean =
+    override fun isEmpty(): Boolean =
         _size == 0
 
-    operator fun contains(element: T): Boolean =
+    override operator fun contains(element: T): Boolean =
         head?.contains(element) ?: false
 
-    operator fun iterator(): Iterator<T> =
+    override operator fun iterator(): Iterator<T> =
         object : Iterator<T> {
 
             var current: Node<T>? = head
@@ -42,6 +62,9 @@ class LinkedList<T> {
             override fun hasNext(): Boolean =
                 current != null
         }
+
+    override fun containsAll(elements: Collection<T>): Boolean =
+        elements.all { contains(it) }
 
     operator fun get(index: Int): T =
         when (index) {
