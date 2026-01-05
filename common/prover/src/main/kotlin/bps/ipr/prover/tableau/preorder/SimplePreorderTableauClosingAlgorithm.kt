@@ -15,8 +15,8 @@ object SimplePreorderTableauClosingAlgorithm {
         root
             .attemptCloseNode(
                 substitution = null,
-                positiveAtomsAbove = emptyList(),
-                negativeAtomsAbove = emptyList(),
+                positiveAtomsAbove = null,
+                negativeAtomsAbove = null,
                 formulaUnifier = formulaUnifier,
             )
             .firstOrNull()

@@ -1,6 +1,6 @@
 package bps.ipr.common
 
-interface Queue<T: Any> {
+interface Queue<T : Any> {
     fun enqueue(element: T)
     fun dequeueOrNull(): T?
 }
@@ -13,7 +13,7 @@ fun <T : Any> queue(type: String = QUEUE_TYPE): Queue<T> =
         else -> throw IllegalArgumentException("Unknown queue type: $type")
     }
 
-class LinkedQueue<T : Any> : Queue<T>{
+class LinkedQueue<T : Any> : Queue<T> {
     private var head: Node<T>? = null
     private var tail: Node<T>? = null
     private var _size: Int = 0
@@ -26,7 +26,11 @@ class LinkedQueue<T : Any> : Queue<T>{
             head = Node(element, null)
             tail = head
         } else {
-            tail = tail.addToEnd(element)
+            Node(element, null)
+                .also {
+                    tail!!.next = it
+                    tail = it
+                }
         }
     }
 

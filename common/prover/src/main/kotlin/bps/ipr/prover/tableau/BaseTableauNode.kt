@@ -1,5 +1,6 @@
 package bps.ipr.prover.tableau
 
+import bps.ipr.common.Node
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
 import bps.ipr.prover.tableau.rule.BetaFormula
@@ -30,62 +31,14 @@ open class BaseTableauNode(
     parent: BaseTableauNode? = null,
 ) : TableauNode<BaseTableauNode> {
 
-    private var populateListeners: MutableList<PopulateNodeWithFormulasListener>? = null
+    var positiveAtomsFromHereUp: Node<PositiveAtomicFormula>? = null
+        private set
+    var negativeAtomsFromHereUp: Node<NegativeAtomicFormula>? = null
+        private set
+
+    private var populateFormulasListeners: MutableList<PopulateNodeWithFormulasListener>? = null
     private var displayHypsListeners: MutableList<DisplayHypsListener>? = null
     private var displayGoalsListeners: MutableList<DisplayGoalsListener>? = null
-
-    fun addPopulateListener(listener: PopulateNodeWithFormulasListener) {
-        populateListeners?.add(listener) ?: run { populateListeners = mutableListOf(listener) }
-    }
-
-    fun addDisplayHypsListener(listener: DisplayHypsListener) {
-        displayHypsListeners?.add(listener) ?: run { displayHypsListeners = mutableListOf(listener) }
-    }
-
-    fun addDisplayGoalsListener(listener: DisplayGoalsListener) {
-        displayGoalsListeners?.add(listener) ?: run { displayGoalsListeners = mutableListOf(listener) }
-    }
-
-    private fun notifyPopulateListeners(
-        newAtomicHyps: List<PositiveAtomicFormula>? = null,
-        newAtomicGoals: List<NegativeAtomicFormula>? = null,
-        closing: List<ClosingFormula<*>>? = null,
-        betas: List<BetaFormula<*>>? = null,
-        deltas: List<DeltaFormula<*>>? = null,
-        gammas: List<GammaFormula<*>>? = null,
-    ) =
-        populateListeners?.forEach {
-            try {
-                it.populateNodeWithFormulas(
-                    newAtomicHyps = newAtomicHyps,
-                    newAtomicGoals = newAtomicGoals,
-                    closing = closing,
-                    betas = betas,
-                    deltas = deltas,
-                    gammas = gammas,
-                )
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-    private fun notifyDisplayHypsListeners(builder: StringBuilder, indent: Int) =
-        displayHypsListeners?.forEach {
-            try {
-                it.displayHyps(builder, indent)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-
-    private fun notifyDisplayGoalsListeners(builder: StringBuilder, indent: Int) =
-        displayGoalsListeners?.forEach {
-            try {
-                it.displayGoals(builder, indent)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
 
     private var _tableau: BaseTableau? = null
 
@@ -161,7 +114,7 @@ open class BaseTableauNode(
             closing?.forEach { form: SignedFormula<*> ->
                 this.tableau.applicableRules.addRule(form)
             }
-            populateListeners?.run {
+            populateFormulasListeners?.run {
                 notifyPopulateListeners(
                     newAtomicHyps = newAtomicHyps,
                     newAtomicGoals = newAtomicGoals,
@@ -184,16 +137,6 @@ open class BaseTableauNode(
                     add(it)
             }
         }
-
-    fun createChildNodes(): List<BaseTableauNode> =
-        children
-            .takeIf { it.isNotEmpty() }
-            ?.flatMap { it.createChildNodes() }
-            ?: listOf(BaseTableauNode(
-                parent = this,
-//                nodeClosingAlgorithm = nodeClosingAlgorithm
-            ))
-                .also { _children = it }
 
     fun depth(): Int =
         parent
@@ -240,8 +183,53 @@ open class BaseTableauNode(
                 }
             }
 
+    /**
+     * Only generated when this node is about to have children
+     */
+    private fun generatePositiveAtomsFromHereUp(): Node<PositiveAtomicFormula>? =
+        _newAtomicHyps
+            ?.fold(null as Node<PositiveAtomicFormula>? to null as Node<PositiveAtomicFormula>?) {
+                    headToTail: Pair<Node<PositiveAtomicFormula>?, Node<PositiveAtomicFormula>?>,
+                    formula: PositiveAtomicFormula,
+                ->
+                Node(formula, headToTail.first)
+                    .let { newbie ->
+                        newbie to (headToTail.second ?: newbie)
+                    }
+            }
+            ?.let { (head: Node<PositiveAtomicFormula>?, tail: Node<PositiveAtomicFormula>?) ->
+                head
+                    ?.also {
+                        tail!!.next = parent?.positiveAtomsFromHereUp
+                    }
+                    ?: parent?.positiveAtomsFromHereUp
+            }
+            ?: parent?.positiveAtomsFromHereUp
+
+    private fun generateNegativeAtomsFromHereUp(): Node<NegativeAtomicFormula>? =
+        _newAtomicGoals
+            ?.fold(null as Node<NegativeAtomicFormula>? to null as Node<NegativeAtomicFormula>?) {
+                    headToTail: Pair<Node<NegativeAtomicFormula>?, Node<NegativeAtomicFormula>?>,
+                    formula: NegativeAtomicFormula,
+                ->
+                Node(formula, headToTail.first)
+                    .let { newbie ->
+                        newbie to (headToTail.second ?: newbie)
+                    }
+            }
+            ?.let { (head: Node<NegativeAtomicFormula>?, tail: Node<NegativeAtomicFormula>?) ->
+                head
+                    ?.also {
+                        tail!!.next = parent?.negativeAtomsFromHereUp
+                    }
+                    ?: parent?.negativeAtomsFromHereUp
+            }
+            ?: parent?.negativeAtomsFromHereUp
+
     fun setChildren(newChildrenList: List<BaseTableauNode>) {
         if (_children.isEmpty()) {
+            positiveAtomsFromHereUp = generatePositiveAtomsFromHereUp()
+            negativeAtomsFromHereUp = generateNegativeAtomsFromHereUp()
             _children = newChildrenList
             newChildrenList.forEach { newChildNode: BaseTableauNode ->
                 newChildNode._parent = this@BaseTableauNode
@@ -268,6 +256,59 @@ open class BaseTableauNode(
             }
             displayGoalsListeners?.let {
                 notifyDisplayGoalsListeners(this, indent)
+            }
+        }
+
+    fun addPopulateListener(listener: PopulateNodeWithFormulasListener) {
+        populateFormulasListeners?.add(listener) ?: run { populateFormulasListeners = mutableListOf(listener) }
+    }
+
+    fun addDisplayHypsListener(listener: DisplayHypsListener) {
+        displayHypsListeners?.add(listener) ?: run { displayHypsListeners = mutableListOf(listener) }
+    }
+
+    fun addDisplayGoalsListener(listener: DisplayGoalsListener) {
+        displayGoalsListeners?.add(listener) ?: run { displayGoalsListeners = mutableListOf(listener) }
+    }
+
+    private fun notifyPopulateListeners(
+        newAtomicHyps: List<PositiveAtomicFormula>? = null,
+        newAtomicGoals: List<NegativeAtomicFormula>? = null,
+        closing: List<ClosingFormula<*>>? = null,
+        betas: List<BetaFormula<*>>? = null,
+        deltas: List<DeltaFormula<*>>? = null,
+        gammas: List<GammaFormula<*>>? = null,
+    ) =
+        populateFormulasListeners?.forEach {
+            try {
+                it.populateNodeWithFormulas(
+                    newAtomicHyps = newAtomicHyps,
+                    newAtomicGoals = newAtomicGoals,
+                    closing = closing,
+                    betas = betas,
+                    deltas = deltas,
+                    gammas = gammas,
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    private fun notifyDisplayHypsListeners(builder: StringBuilder, indent: Int) =
+        displayHypsListeners?.forEach {
+            try {
+                it.displayHyps(builder, indent)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    private fun notifyDisplayGoalsListeners(builder: StringBuilder, indent: Int) =
+        displayGoalsListeners?.forEach {
+            try {
+                it.displayGoals(builder, indent)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
 

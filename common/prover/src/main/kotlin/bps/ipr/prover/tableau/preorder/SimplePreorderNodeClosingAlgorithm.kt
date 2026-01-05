@@ -1,5 +1,7 @@
 package bps.ipr.prover.tableau.preorder
 
+import bps.ipr.common.LinkedList
+import bps.ipr.common.Node
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
@@ -15,8 +17,8 @@ object SimplePreorderNodeClosingAlgorithm {
      */
     fun BaseTableauNode.attemptCloseNode(
         substitution: IdempotentSubstitution?,
-        positiveAtomsAbove: List<PositiveAtomicFormula>,
-        negativeAtomsAbove: List<NegativeAtomicFormula>,
+        positiveAtomsAbove: Node<PositiveAtomicFormula>?,
+        negativeAtomsAbove: Node<NegativeAtomicFormula>?,
         formulaUnifier: FormulaUnifier,
     ): Sequence<IdempotentSubstitution> =
         if (closables.isNotEmpty()) {
@@ -24,10 +26,6 @@ object SimplePreorderNodeClosingAlgorithm {
         } else {
             sequenceOfUnifiersHere(positiveAtomsAbove, negativeAtomsAbove, substitution, formulaUnifier) +
                     if (children.isNotEmpty()) {
-                        val childrensPositiveAtomsAbove: List<PositiveAtomicFormula> =
-                            positiveAtomsAbove + newAtomicHyps
-                        val childrensNegativeAtomsAbove: List<NegativeAtomicFormula> =
-                            negativeAtomsAbove + newAtomicGoals
                         children
                             .asSequence()
                             .drop(1)
@@ -39,8 +37,8 @@ object SimplePreorderNodeClosingAlgorithm {
                                         firstChild
                                             .attemptCloseNode(
                                                 substitution = substitution,
-                                                positiveAtomsAbove = childrensPositiveAtomsAbove,
-                                                negativeAtomsAbove = childrensNegativeAtomsAbove,
+                                                positiveAtomsAbove = positiveAtomsFromHereUp,
+                                                negativeAtomsAbove = negativeAtomsFromHereUp,
                                                 formulaUnifier = formulaUnifier,
                                             )
                                     },
@@ -50,8 +48,8 @@ object SimplePreorderNodeClosingAlgorithm {
                                     .flatMap { sub: IdempotentSubstitution ->
                                         nextChildNode.attemptCloseNode(
                                             substitution = sub,
-                                            positiveAtomsAbove = childrensPositiveAtomsAbove,
-                                            negativeAtomsAbove = childrensNegativeAtomsAbove,
+                                            positiveAtomsAbove = positiveAtomsFromHereUp,
+                                            negativeAtomsAbove = negativeAtomsFromHereUp,
                                             formulaUnifier = formulaUnifier,
                                         )
                                     }
@@ -62,15 +60,15 @@ object SimplePreorderNodeClosingAlgorithm {
         }
 
     fun BaseTableauNode.sequenceOfUnifiersHere(
-        positiveAtomsAbove: List<PositiveAtomicFormula>,
-        negativeAtomsAbove: List<NegativeAtomicFormula>,
+        positiveAtomsAbove: Node<PositiveAtomicFormula>?,
+        negativeAtomsAbove: Node<NegativeAtomicFormula>?,
         substitution: IdempotentSubstitution?,
         formulaUnifier: FormulaUnifier,
     ): Sequence<IdempotentSubstitution> =
         newAtomicHyps
             .asSequence()
             .flatMap { newHyp: PositiveAtomicFormula ->
-                (negativeAtomsAbove.asSequence() + newAtomicGoals.asSequence())
+                (LinkedList(negativeAtomsAbove).asSequence() + newAtomicGoals.asSequence())
                     .mapNotNull { goalAbove: NegativeAtomicFormula ->
                         formulaUnifier.unify(
                             formula1 = newHyp.formula,
@@ -82,7 +80,7 @@ object SimplePreorderNodeClosingAlgorithm {
                 newAtomicGoals
                     .asSequence()
                     .flatMap { newGoal: NegativeAtomicFormula ->
-                        positiveAtomsAbove
+                        LinkedList(positiveAtomsAbove)
                             .asSequence()
                             .mapNotNull { hypAbove: PositiveAtomicFormula ->
                                 formulaUnifier.unify(

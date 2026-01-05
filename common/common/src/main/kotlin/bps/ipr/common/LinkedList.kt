@@ -4,8 +4,18 @@ package bps.ipr.common
  * This class is not thread-safe.
  */
 class LinkedList<T>(
-    vararg elements: T,
+    head: Node<T>?,
 ) : Collection<T> {
+
+    constructor(
+        vararg elements: T,
+    ) : this(
+        elements.fold(null as Node<T>?) { acc, element ->
+            acc
+                ?.addToBeginning(element)
+                ?: Node(element, null)
+        },
+    )
 
     private var head: Node<T>? = null
     private var _size: Int = 0
@@ -13,10 +23,11 @@ class LinkedList<T>(
     override val size: Int get() = _size
 
     init {
-        elements
-            .forEach {
-                add(it)
-            }
+        this.head = head
+//        elements
+//            .forEach {
+//                add(it)
+//            }
     }
 
     fun add(element: T): Boolean =
