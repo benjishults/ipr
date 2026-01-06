@@ -15,7 +15,7 @@ sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
     abstract override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
-        parent: SignedFormula<*>?,
+        parent: SignedFormula<*>?
     ): MutableList<SignedFormula<*>>
 
     override fun apply() =
@@ -27,7 +27,7 @@ sealed interface SignedNotFormula : AlphaFormula<Not> {
     override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
-        parent: SignedFormula<*>?,
+        parent: SignedFormula<*>?
     ): MutableList<SignedFormula<*>> =
         formula
             .subFormula
