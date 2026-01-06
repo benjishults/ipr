@@ -6,6 +6,7 @@ plugins {
 dependencies {
 
     implementation(libs.konf)
+    implementation(project(":common"))
 
     testImplementation(project(":tptp-parser"))
     testImplementation(project(":ipr-parser"))

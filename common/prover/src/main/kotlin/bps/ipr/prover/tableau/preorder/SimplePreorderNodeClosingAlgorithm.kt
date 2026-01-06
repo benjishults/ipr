@@ -11,20 +11,30 @@ import bps.ipr.substitution.IdempotentSubstitution
 
 object SimplePreorderNodeClosingAlgorithm {
     /**
-     * @return an empty sequence if there is no substitution under [substitution] that closes the tree rooted at this node.
-     * Otherwise, returns a sequence of substitutions under [substitution] that close the tree rooted at this node.
-     * @param substitution `null` means that no node has been closed so far, so any substitution is valid.
+     * @return an empty sequence if there is no substitution under [branchClosingSubstitution] that closes the tree rooted at this node.
+     * Otherwise, returns a sequence of substitutions under [branchClosingSubstitution] that close the tree rooted at this node.
+     * @param branchClosingSubstitution `null` means that no node has been closed so far, so any substitution is valid.
      */
     fun BaseTableauNode.attemptCloseNode(
-        substitution: IdempotentSubstitution?,
-        positiveAtomsAbove: Node<PositiveAtomicFormula>?,
-        negativeAtomsAbove: Node<NegativeAtomicFormula>?,
+        branchClosingSubstitution: BranchClosingSubstitution?,
         formulaUnifier: FormulaUnifier,
-    ): Sequence<IdempotentSubstitution> =
+    ): Sequence<BranchClosingSubstitution> =
         if (closables.isNotEmpty()) {
-            return sequenceOf(substitution ?: EmptySubstitution)
+            closables
+                .asSequence()
+                .map { closingFormula ->
+                    BranchClosingSubstitution(
+                        substitution = branchClosingSubstitution?.substitution ?: EmptySubstitution,
+                        splits =
+                            closingFormula
+                                .splits
+                                .combineNullable(
+                                    branchClosingSubstitution?.splits,
+                                ),
+                    )
+                }
         } else {
-            sequenceOfUnifiersHere(positiveAtomsAbove, negativeAtomsAbove, substitution, formulaUnifier) +
+            sequenceOfUnifiersHere(branchClosingSubstitution, formulaUnifier) +
                     if (children.isNotEmpty()) {
                         children
                             .asSequence()
@@ -36,22 +46,19 @@ object SimplePreorderNodeClosingAlgorithm {
                                     .let { firstChild: BaseTableauNode ->
                                         firstChild
                                             .attemptCloseNode(
-                                                substitution = substitution,
-                                                positiveAtomsAbove = positiveAtomsFromHereUp,
-                                                negativeAtomsAbove = negativeAtomsFromHereUp,
+                                                branchClosingSubstitution = branchClosingSubstitution,
                                                 formulaUnifier = formulaUnifier,
                                             )
                                     },
-                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<IdempotentSubstitution>, nextChildNode: BaseTableauNode ->
+                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<BranchClosingSubstitution>, nextChildNode: BaseTableauNode ->
                                 // create a sequence of unifiers compatible with closers of the previous children
                                 sequenceOfUnifiersOfPreviousChildren
-                                    .flatMap { sub: IdempotentSubstitution ->
-                                        nextChildNode.attemptCloseNode(
-                                            substitution = sub,
-                                            positiveAtomsAbove = positiveAtomsFromHereUp,
-                                            negativeAtomsAbove = negativeAtomsFromHereUp,
-                                            formulaUnifier = formulaUnifier,
-                                        )
+                                    .flatMap { sub: BranchClosingSubstitution ->
+                                        nextChildNode
+                                            .attemptCloseNode(
+                                                branchClosingSubstitution = sub,
+                                                formulaUnifier = formulaUnifier,
+                                            )
                                     }
                             }
                     } else
@@ -60,35 +67,59 @@ object SimplePreorderNodeClosingAlgorithm {
         }
 
     fun BaseTableauNode.sequenceOfUnifiersHere(
-        positiveAtomsAbove: Node<PositiveAtomicFormula>?,
-        negativeAtomsAbove: Node<NegativeAtomicFormula>?,
-        substitution: IdempotentSubstitution?,
+        branchClosingSubstitution: BranchClosingSubstitution?,
         formulaUnifier: FormulaUnifier,
-    ): Sequence<IdempotentSubstitution> =
+    ): Sequence<BranchClosingSubstitution> =
         newAtomicHyps
             .asSequence()
             .flatMap { newHyp: PositiveAtomicFormula ->
-                (LinkedList(negativeAtomsAbove).asSequence() + newAtomicGoals.asSequence())
+                (LinkedList(parent?.negativeAtomsFromHereUp).asSequence() + newAtomicGoals.asSequence())
                     .mapNotNull { goalAbove: NegativeAtomicFormula ->
                         formulaUnifier.unify(
                             formula1 = newHyp.formula,
                             formula2 = goalAbove.formula,
-                            under = substitution ?: EmptySubstitution,
-                        )
+                            under = branchClosingSubstitution?.substitution ?: EmptySubstitution,
+                        )?.let { sub ->
+                            BranchClosingSubstitution(
+                                substitution = sub,
+                                splits = newHyp.splits.combineNullable(goalAbove.splits),
+                            )
+                        }
                     }
             } +
                 newAtomicGoals
                     .asSequence()
                     .flatMap { newGoal: NegativeAtomicFormula ->
-                        LinkedList(positiveAtomsAbove)
+                        LinkedList(parent?.positiveAtomsFromHereUp)
                             .asSequence()
                             .mapNotNull { hypAbove: PositiveAtomicFormula ->
                                 formulaUnifier.unify(
                                     formula1 = newGoal.formula,
                                     formula2 = hypAbove.formula,
-                                    under = substitution ?: EmptySubstitution,
-                                )
+                                    under = branchClosingSubstitution?.substitution ?: EmptySubstitution,
+                                )?.let { sub ->
+                                    BranchClosingSubstitution(
+                                        substitution = sub,
+                                        splits = hypAbove.splits.combineNullable(newGoal.splits),
+                                    )
+                                }
                             }
+
                     }
 
+
 }
+
+fun <T> List<T>?.combineNullable(
+    rest: List<T>?,
+): List<T>? =
+    this?.let { rest?.plus(it) ?: it }
+
+data class BranchClosingSubstitution(
+    val substitution: IdempotentSubstitution,
+    // val node: BaseTableauNode,
+    /**
+     * A [split] is non-empty [List] of [BaseTableauNode]s with multiple children or `null`.
+     */
+    val splits: Node<BaseTableauNode>?,
+)

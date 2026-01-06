@@ -87,6 +87,7 @@
                     (implies (or (f2 y z) (g2 y z)) (h2 x z))))))
   (forall ((x)) (for-some ((y)) (h2 x y))))
 
+;; this slowed down when I switched to linked lists?
 (implies (and (forall ((z))
                 (for-some ((w))
                   (forall ((x))

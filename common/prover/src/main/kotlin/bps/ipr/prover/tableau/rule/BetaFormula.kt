@@ -31,8 +31,12 @@ sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFo
                                     sign = sign,
                                     birthPlace = node,
                                     formulaImplementation = formulaImplementation,
+                                    parent = this,
                                 )
-                                    .reduceAlpha(birthPlace = node)
+                                    .reduceAlpha(
+                                        birthPlace = node,
+                                        parent = this,
+                                    )
                             }
                         },
                 )
@@ -44,18 +48,21 @@ data class PositiveOrFormula(
     override val formula: Or,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : SimpleMultiSubBetaFormula<Or>, PositiveSignedFormula<Or>()
 
 data class NegativeAndFormula(
     override val formula: And,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : SimpleMultiSubBetaFormula<And>, NegativeSignedFormula<And>()
 
 data class PositiveImpliesFormula(
     override val formula: Implies,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : BetaFormula<Implies>, PositiveSignedFormula<Implies>() {
 
     override fun apply() =
@@ -70,8 +77,12 @@ data class PositiveImpliesFormula(
                                 sign = true,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
+                                parent = this,
                             )
-                                .reduceAlpha(birthPlace = node)
+                                .reduceAlpha(
+                                    birthPlace = node,
+                                    parent = this
+                                )
                         },
                         createNodeForReducedFormulas { node: BaseTableauNode ->
                             create(
@@ -79,8 +90,12 @@ data class PositiveImpliesFormula(
                                 sign = false,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
+                                parent = this,
                             )
-                                .reduceAlpha(birthPlace = node)
+                                .reduceAlpha(
+                                    birthPlace = node,
+                                    parent = this
+                                )
                         },
                     ),
                 )
@@ -92,6 +107,7 @@ data class NegativeIffFormula(
     override val formula: Iff,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : BetaFormula<Iff>, NegativeSignedFormula<Iff>() {
 
     override fun apply() =
@@ -106,6 +122,7 @@ data class NegativeIffFormula(
                                 sign = false,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
+                                parent = this,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
@@ -115,8 +132,13 @@ data class NegativeIffFormula(
                                             sign = true,
                                             birthPlace = node,
                                             formulaImplementation = formulaImplementation,
+                                            parent = this,
                                         )
-                                            .reduceAlpha(birthPlace = node),
+                                            .reduceAlpha(
+                                                birthPlace = node,
+                                                parent = this
+                                            ),
+                                    parent = this,
                                 )
                         },
                         createNodeForReducedFormulas { node: BaseTableauNode ->
@@ -125,6 +147,7 @@ data class NegativeIffFormula(
                                 sign = true,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
+                                parent = this,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
@@ -134,8 +157,13 @@ data class NegativeIffFormula(
                                             sign = false,
                                             birthPlace = node,
                                             formulaImplementation = formulaImplementation,
+                                            parent = this,
                                         )
-                                            .reduceAlpha(birthPlace = node),
+                                            .reduceAlpha(
+                                                birthPlace = node,
+                                                parent = this
+                                            ),
+                                    parent = this,
                                 )
                         },
                     ),
@@ -148,6 +176,7 @@ data class PositiveIffFormula(
     override val formula: Iff,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : BetaFormula<Iff>, PositiveSignedFormula<Iff>() {
 
     override fun apply() =
@@ -161,8 +190,18 @@ data class PositiveIffFormula(
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
                                 .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                                    create(t, true, node, formulaImplementation)
-                                        .reduceAlpha(node, r)
+                                    create(
+                                        formula = t,
+                                        sign = true,
+                                        birthPlace = node,
+                                        formulaImplementation = formulaImplementation,
+                                        parent = this
+                                    )
+                                        .reduceAlpha(
+                                            birthPlace = node,
+                                            mutableList = r,
+                                            parent = this,
+                                        )
                                     r
                                 }
                         },
@@ -171,8 +210,18 @@ data class PositiveIffFormula(
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
                                 .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                                    create(t, false, node, formulaImplementation)
-                                        .reduceAlpha(node, r)
+                                    create(
+                                        formula = t,
+                                        sign = false,
+                                        birthPlace = node,
+                                        formulaImplementation = formulaImplementation,
+                                        parent = this
+                                    )
+                                        .reduceAlpha(
+                                            birthPlace = node,
+                                            mutableList = r,
+                                            parent = this,
+                                        )
                                     r
                                 }
                         },

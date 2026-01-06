@@ -12,6 +12,7 @@ data class NegativeClosingFormula(
     override val formula: FolFormula,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : ClosingFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {
     override fun apply() = Unit
 }
@@ -20,6 +21,7 @@ data class PositiveClosingFormula(
     override val formula: FolFormula,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : ClosingFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {
     override fun apply() = Unit
 }

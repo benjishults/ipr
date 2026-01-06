@@ -24,8 +24,17 @@ sealed interface GammaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
                         leaf.setChildren(
                             listOf(
                                 createNodeForReducedFormulas { node: BaseTableauNode ->
-                                    SignedFormula.create(childFormula, sign, node, formulaImplementation)
-                                        .reduceAlpha(node)
+                                    SignedFormula.create(
+                                        formula = childFormula,
+                                        sign = sign,
+                                        birthPlace = node,
+                                        formulaImplementation = formulaImplementation,
+                                        parent = this
+                                    )
+                                        .reduceAlpha(
+                                            birthPlace = node,
+                                            parent = this,
+                                        )
                                 },
                             ),
                         )
@@ -81,6 +90,7 @@ data class NegativeForSomeFormula(
     override val formula: ForSome,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : GammaFormula<ForSome>, NegativeSignedFormula<ForSome>() {
 
     override var applications: Int = 0
@@ -91,6 +101,7 @@ data class PositiveForAllFormula(
     override val formula: ForAll,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : GammaFormula<ForAll>, PositiveSignedFormula<ForAll>() {
 
     override var applications: Int = 0

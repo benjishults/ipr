@@ -17,6 +17,7 @@ sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
     override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
+        parent: SignedFormula<*>?
     ): MutableList<SignedFormula<*>> =
         mutableList
             ?: mutableListOf()
@@ -26,10 +27,12 @@ data class NegativeWastedFormula(
     override val formula: FolFormula,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : WastedSignedFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {}
 
 data class PositiveWastedFormula(
     override val formula: FolFormula,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : WastedSignedFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {}

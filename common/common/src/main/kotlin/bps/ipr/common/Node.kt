@@ -1,6 +1,6 @@
 package bps.ipr.common
 
-data class Node<T>(
+data class Node<T : Any>(
     val value: T,
     var next: Node<T>?,
 ) {
@@ -26,9 +26,21 @@ data class Node<T>(
                 ?.indexOf(element)
                 ?.let { it + 1 }
                 ?: -1
+
+    fun forEach(action: (T) -> Unit) {
+        action(value)
+        next?.forEach(action)
+    }
+
+    fun deepCopy(): Node<T> =
+        Node(value, next?.deepCopy())
+
+    fun toList(): List<T> =
+        buildList { forEach { add(it) } }
+
 }
 
-fun <T> Node<T>?.addToBeginning(element: T): Node<T> =
+fun <T : Any> Node<T>?.addToBeginning(element: T): Node<T> =
     Node(element, this)
 
 

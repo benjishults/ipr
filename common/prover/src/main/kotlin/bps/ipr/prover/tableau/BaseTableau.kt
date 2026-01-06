@@ -108,8 +108,12 @@ open class BaseTableau(
                                     sign = false,
                                     birthPlace = root,
                                     formulaImplementation = formulaImplementation,
+                                    parent = null,
                                 )
-                                .reduceAlpha(birthPlace = root)
+                                .reduceAlpha(
+                                    birthPlace = root,
+                                    parent = null
+                                )
                                 .also {
                                     val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
                                     root.populate(
