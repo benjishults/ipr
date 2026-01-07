@@ -8,7 +8,6 @@ import bps.ipr.formulas.Iff
 import bps.ipr.formulas.Implies
 import bps.ipr.formulas.Or
 import bps.ipr.prover.tableau.BaseTableauNode
-import bps.ipr.prover.tableau.rule.SignedFormula.Companion.create
 import kotlin.collections.forEach
 
 sealed interface BetaFormula<T : FolFormula> : SignedFormula<T>
@@ -25,13 +24,13 @@ sealed interface SimpleMultiSubBetaFormula<T : AbstractMultiFolFormula> : BetaFo
                     formula
                         .subFormulas
                         .map { folFormula: FolFormula ->
-                            createNodeForReducedFormulas { node: BaseTableauNode ->
-                                create(
+                            createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                                SignedFormula.create(
                                     formula = folFormula,
                                     sign = sign,
                                     birthPlace = node,
                                     formulaImplementation = formulaImplementation,
-                                    parent = this,
+                                    parentFormula = this,
                                 )
                                     .reduceAlpha(
                                         birthPlace = node,
@@ -49,14 +48,22 @@ data class PositiveOrFormula(
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
     override val parentFormula: SignedFormula<*>?,
-) : SimpleMultiSubBetaFormula<Or>, PositiveSignedFormula<Or>()
+) : SimpleMultiSubBetaFormula<Or>, PositiveSignedFormula<Or>() {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class NegativeAndFormula(
     override val formula: And,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
     override val parentFormula: SignedFormula<*>?,
-) : SimpleMultiSubBetaFormula<And>, NegativeSignedFormula<And>()
+) : SimpleMultiSubBetaFormula<And>, NegativeSignedFormula<And>() {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class PositiveImpliesFormula(
     override val formula: Implies,
@@ -65,32 +72,36 @@ data class PositiveImpliesFormula(
     override val parentFormula: SignedFormula<*>?,
 ) : BetaFormula<Implies>, PositiveSignedFormula<Implies>() {
 
+    init {
+        splits = computeSplits()
+    }
+
     override fun apply() =
         birthPlace
             .leaves()
             .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     listOf(
-                        createNodeForReducedFormulas { node: BaseTableauNode ->
-                            create(
+                        createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                            SignedFormula.create(
                                 formula = formula.consequent,
                                 sign = true,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
-                                parent = this,
+                                parentFormula = this,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
                                     parent = this
                                 )
                         },
-                        createNodeForReducedFormulas { node: BaseTableauNode ->
-                            create(
+                        createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                            SignedFormula.create(
                                 formula = formula.antecedent,
                                 sign = false,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
-                                parent = this,
+                                parentFormula = this,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
@@ -110,29 +121,33 @@ data class NegativeIffFormula(
     override val parentFormula: SignedFormula<*>?,
 ) : BetaFormula<Iff>, NegativeSignedFormula<Iff>() {
 
+    init {
+        splits = computeSplits()
+    }
+
     override fun apply() =
         birthPlace
             .leaves()
             .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     listOf(
-                        createNodeForReducedFormulas { node: BaseTableauNode ->
-                            create(
+                        createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                            SignedFormula.create(
                                 formula = formula.subFormulas[0],
                                 sign = false,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
-                                parent = this,
+                                parentFormula = this,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
                                     mutableList =
-                                        create(
+                                        SignedFormula.create(
                                             formula = formula.subFormulas[1],
                                             sign = true,
                                             birthPlace = node,
                                             formulaImplementation = formulaImplementation,
-                                            parent = this,
+                                            parentFormula = this,
                                         )
                                             .reduceAlpha(
                                                 birthPlace = node,
@@ -141,23 +156,23 @@ data class NegativeIffFormula(
                                     parent = this,
                                 )
                         },
-                        createNodeForReducedFormulas { node: BaseTableauNode ->
-                            create(
+                        createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                            SignedFormula.create(
                                 formula = formula.subFormulas[0],
                                 sign = true,
                                 birthPlace = node,
                                 formulaImplementation = formulaImplementation,
-                                parent = this,
+                                parentFormula = this,
                             )
                                 .reduceAlpha(
                                     birthPlace = node,
                                     mutableList =
-                                        create(
+                                        SignedFormula.create(
                                             formula = formula.subFormulas[1],
                                             sign = false,
                                             birthPlace = node,
                                             formulaImplementation = formulaImplementation,
-                                            parent = this,
+                                            parentFormula = this,
                                         )
                                             .reduceAlpha(
                                                 birthPlace = node,
@@ -179,23 +194,27 @@ data class PositiveIffFormula(
     override val parentFormula: SignedFormula<*>?,
 ) : BetaFormula<Iff>, PositiveSignedFormula<Iff>() {
 
+    init {
+        splits = computeSplits()
+    }
+
     override fun apply() =
         birthPlace
             .leaves()
             .forEach { leaf: BaseTableauNode ->
                 leaf.setChildren(
                     listOf(
-                        createNodeForReducedFormulas { node: BaseTableauNode ->
+                        createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
                             formula
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
                                 .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                                    create(
+                                    SignedFormula.create(
                                         formula = t,
                                         sign = true,
                                         birthPlace = node,
                                         formulaImplementation = formulaImplementation,
-                                        parent = this
+                                        parentFormula = this
                                     )
                                         .reduceAlpha(
                                             birthPlace = node,
@@ -205,17 +224,17 @@ data class PositiveIffFormula(
                                     r
                                 }
                         },
-                        createNodeForReducedFormulas { node: BaseTableauNode ->
+                        createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
                             formula
                                 .subFormulas
                                 // NOTE this generates less garbage than the flatMap
                                 .fold(mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                                    create(
+                                    SignedFormula.create(
                                         formula = t,
                                         sign = false,
                                         birthPlace = node,
                                         formulaImplementation = formulaImplementation,
-                                        parent = this
+                                        parentFormula = this
                                     )
                                         .reduceAlpha(
                                             birthPlace = node,

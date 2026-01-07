@@ -70,9 +70,10 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
         formula.display(indent)
 
     fun createNodeForReducedFormulas(
+        leaf: BaseTableauNode,
         reducedFormulasFactory: (BaseTableauNode) -> List<SignedFormula<*>>,
     ): BaseTableauNode =
-        BaseTableauNode()
+        BaseTableauNode(leaf)
             .also { node: BaseTableauNode ->
                 birthPlace.tableau.registerNode(node)
                 reducedFormulasFactory(node)
@@ -95,33 +96,33 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
             sign: Boolean,
             birthPlace: BaseTableauNode,
             formulaImplementation: FolFormulaImplementation,
-            parent: SignedFormula<*>?,
+            parentFormula: SignedFormula<*>?,
         ): SignedFormula<F> =
             (if (sign) {
                 when (formula) {
-                    is And -> PositiveAndFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Or -> PositiveOrFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Implies -> PositiveImpliesFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Iff -> PositiveIffFormula(formula, birthPlace, formulaImplementation, parent)
-                    is ForAll -> PositiveForAllFormula(formula, birthPlace, formulaImplementation, parent)
-                    is ForSome -> PositiveForSomeFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Not -> PositiveNotFormula(formula, birthPlace, formulaImplementation, parent)
-                    Falsity -> PositiveClosingFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Predicate -> PositiveAtomicFormula(formula, birthPlace, formulaImplementation, parent)
-                    Truth -> PositiveWastedFormula(formula, birthPlace, formulaImplementation, parent)
+                    is And -> PositiveAndFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Or -> PositiveOrFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Implies -> PositiveImpliesFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Iff -> PositiveIffFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForAll -> PositiveForAllFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForSome -> PositiveForSomeFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Not -> PositiveNotFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Falsity -> PositiveClosingFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Predicate -> PositiveAtomicFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Truth -> PositiveWastedFormula(formula, birthPlace, formulaImplementation, parentFormula)
                 }
             } else {
                 when (formula) {
-                    is And -> NegativeAndFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Or -> NegativeOrFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Implies -> NegativeImpliesFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Iff -> NegativeIffFormula(formula, birthPlace, formulaImplementation, parent)
-                    is ForAll -> NegativeForAllFormula(formula, birthPlace, formulaImplementation, parent)
-                    is ForSome -> NegativeForSomeFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Not -> NegativeNotFormula(formula, birthPlace, formulaImplementation, parent)
-                    Truth -> NegativeClosingFormula(formula, birthPlace, formulaImplementation, parent)
-                    is Predicate -> NegativeAtomicFormula(formula, birthPlace, formulaImplementation, parent)
-                    Falsity -> NegativeWastedFormula(formula, birthPlace, formulaImplementation, parent)
+                    is And -> NegativeAndFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Or -> NegativeOrFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Implies -> NegativeImpliesFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Iff -> NegativeIffFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForAll -> NegativeForAllFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForSome -> NegativeForSomeFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Not -> NegativeNotFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Truth -> NegativeClosingFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Predicate -> NegativeAtomicFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Falsity -> NegativeWastedFormula(formula, birthPlace, formulaImplementation, parentFormula)
                 }
             }) as SignedFormula<F>
     }
@@ -129,7 +130,7 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
 
 fun SignedFormula<*>.computeSplits(): Node<BaseTableauNode>? =
     if (isSplitting)
-        Node(birthPlace.parent!!, parentFormula!!.splits!!)
+        Node(birthPlace.parent!!, parentFormula!!.splits) // FIXME can I improve this since all children will have the same splits?
     else
         parentFormula?.splits
 
@@ -174,10 +175,12 @@ data class CategorizedSignedFormulas(
 
 sealed class PositiveSignedFormula<F : FolFormula> : SignedFormula<F> {
     override val sign: Boolean = true
-    override val splits: Node<BaseTableauNode>? = computeSplits()
+    final override var splits: Node<BaseTableauNode>? = null
+        protected set
 }
 
 sealed class NegativeSignedFormula<F : FolFormula> : SignedFormula<F> {
     override val sign: Boolean = false
-    override val splits: Node<BaseTableauNode>? = computeSplits()
+    final override var splits: Node<BaseTableauNode>? = null
+        protected set
 }

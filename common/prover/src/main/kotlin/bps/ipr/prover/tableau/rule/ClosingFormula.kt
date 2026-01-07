@@ -15,6 +15,9 @@ data class NegativeClosingFormula(
     override val parentFormula: SignedFormula<*>?,
 ) : ClosingFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {
     override fun apply() = Unit
+    init {
+        splits = computeSplits()
+    }
 }
 
 data class PositiveClosingFormula(
@@ -24,4 +27,7 @@ data class PositiveClosingFormula(
     override val parentFormula: SignedFormula<*>?,
 ) : ClosingFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {
     override fun apply() = Unit
+    init {
+        splits = computeSplits()
+    }
 }

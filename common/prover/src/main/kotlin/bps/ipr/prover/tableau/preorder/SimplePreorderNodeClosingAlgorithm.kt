@@ -1,9 +1,9 @@
 package bps.ipr.prover.tableau.preorder
 
 import bps.ipr.common.LinkedList
-import bps.ipr.common.Node
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.tableau.BaseTableauNode
+import bps.ipr.prover.tableau.rule.ClosingFormula
 import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
 import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
 import bps.ipr.substitution.EmptySubstitution
@@ -22,51 +22,56 @@ object SimplePreorderNodeClosingAlgorithm {
         if (closables.isNotEmpty()) {
             closables
                 .asSequence()
-                .map { closingFormula ->
-                    BranchClosingSubstitution(
-                        substitution = branchClosingSubstitution?.substitution ?: EmptySubstitution,
-                        splits =
-                            closingFormula
-                                .splits
-                                .combineNullable(
-                                    branchClosingSubstitution?.splits,
-                                ),
-                    )
+                .map { closingFormula: ClosingFormula<*> ->
+                    branchClosingSubstitution.extendBy(closingFormula)
                 }
         } else {
-            sequenceOfUnifiersHere(branchClosingSubstitution, formulaUnifier) +
-                    if (children.isNotEmpty()) {
-                        children
-                            .asSequence()
-                            .drop(1)
-                            .fold(
-                                // take the sequence of unifiers from the first child
-                                children
-                                    .first()
-                                    .let { firstChild: BaseTableauNode ->
-                                        firstChild
-                                            .attemptCloseNode(
-                                                branchClosingSubstitution = branchClosingSubstitution,
-                                                formulaUnifier = formulaUnifier,
-                                            )
-                                    },
-                            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<BranchClosingSubstitution>, nextChildNode: BaseTableauNode ->
-                                // create a sequence of unifiers compatible with closers of the previous children
-                                sequenceOfUnifiersOfPreviousChildren
-                                    .flatMap { sub: BranchClosingSubstitution ->
-                                        nextChildNode
-                                            .attemptCloseNode(
-                                                branchClosingSubstitution = sub,
-                                                formulaUnifier = formulaUnifier,
-                                            )
-                                    }
-                            }
-                    } else
-                        emptySequence()
-
+            branchClosersHere(branchClosingSubstitution, formulaUnifier) +
+                    branchClosersOfChildren(branchClosingSubstitution, formulaUnifier)
         }
 
-    fun BaseTableauNode.sequenceOfUnifiersHere(
+    private fun BaseTableauNode.branchClosersOfChildren(
+        branchClosingSubstitution: BranchClosingSubstitution?,
+        formulaUnifier: FormulaUnifier,
+    ): Sequence<BranchClosingSubstitution> = if (children.isNotEmpty()) {
+        children
+            .asSequence()
+            .drop(1)
+            .fold(
+                // take the sequence of unifiers from the first child
+                children
+                    .first()
+                    .let { firstChild: BaseTableauNode ->
+                        firstChild
+                            .attemptCloseNode(
+                                branchClosingSubstitution = branchClosingSubstitution,
+                                formulaUnifier = formulaUnifier,
+                            )
+                    },
+            ) { sequenceOfUnifiersOfPreviousChildren: Sequence<BranchClosingSubstitution>, nextChildNode: BaseTableauNode ->
+                // create a sequence of unifiers compatible with closers of the previous children
+                sequenceOfUnifiersOfPreviousChildren
+                    .flatMap { sub: BranchClosingSubstitution ->
+                        if (sub.splits?.let { nextChildNode.parent in it } == true) {
+                            // if this node needs to be closed
+                            nextChildNode
+                                .attemptCloseNode(
+                                    branchClosingSubstitution = sub,
+                                    formulaUnifier = formulaUnifier,
+                                )
+                        } else {
+                            // NOTE return an empty sequence
+                            //   we wouldn't be here if the first child didn't have a closer
+                            //   but we know that closer doesn't need this child to be added
+                            FIXME I'm here
+                            emptySequence()
+                        }
+                    }
+            }
+    } else
+        emptySequence()
+
+    fun BaseTableauNode.branchClosersHere(
         branchClosingSubstitution: BranchClosingSubstitution?,
         formulaUnifier: FormulaUnifier,
     ): Sequence<BranchClosingSubstitution> =
@@ -80,9 +85,10 @@ object SimplePreorderNodeClosingAlgorithm {
                             formula2 = goalAbove.formula,
                             under = branchClosingSubstitution?.substitution ?: EmptySubstitution,
                         )?.let { sub ->
-                            BranchClosingSubstitution(
-                                substitution = sub,
-                                splits = newHyp.splits.combineNullable(goalAbove.splits),
+                            branchClosingSubstitution.extendBy(
+                                hyp = newHyp,
+                                goal = goalAbove,
+                                sub = sub,
                             )
                         }
                     }
@@ -98,22 +104,27 @@ object SimplePreorderNodeClosingAlgorithm {
                                     formula2 = hypAbove.formula,
                                     under = branchClosingSubstitution?.substitution ?: EmptySubstitution,
                                 )?.let { sub ->
-                                    BranchClosingSubstitution(
-                                        substitution = sub,
-                                        splits = hypAbove.splits.combineNullable(newGoal.splits),
+                                    branchClosingSubstitution?.extendBy(
+                                        hyp = hypAbove,
+                                        goal = newGoal,
+                                        sub = sub,
                                     )
                                 }
                             }
 
                     }
 
-
 }
 
 fun <T> List<T>?.combineNullable(
     rest: List<T>?,
 ): List<T>? =
-    this?.let { rest?.plus(it) ?: it }
+    this
+        ?.let {
+            rest
+                ?.plus(it)
+                ?: it
+        }
 
 data class BranchClosingSubstitution(
     val substitution: IdempotentSubstitution,
@@ -121,5 +132,32 @@ data class BranchClosingSubstitution(
     /**
      * A [split] is non-empty [List] of [BaseTableauNode]s with multiple children or `null`.
      */
-    val splits: Node<BaseTableauNode>?,
+    val splits: List<BaseTableauNode>?,  // TODO consider making this a set
 )
+
+fun BranchClosingSubstitution?.extendBy(
+    hyp: PositiveAtomicFormula,
+    goal: NegativeAtomicFormula,
+    sub: IdempotentSubstitution,
+) =
+    BranchClosingSubstitution(
+        substitution = sub,
+        splits =
+            hyp
+                .splits
+                ?.toList()
+                .combineNullable(goal.splits?.toList()) // TODO consider making this a set
+                .combineNullable(this?.splits),
+    )
+
+fun BranchClosingSubstitution?.extendBy(
+    closingFormula: ClosingFormula<*>,
+) =
+    BranchClosingSubstitution(
+        substitution = this?.substitution ?: EmptySubstitution,
+        splits =
+            closingFormula
+                .splits
+                ?.toList()
+                .combineNullable(this?.splits),
+    )

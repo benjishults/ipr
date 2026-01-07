@@ -28,11 +28,19 @@ data class NegativeWastedFormula(
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
     override val parentFormula: SignedFormula<*>?,
-) : WastedSignedFormula<FolFormula>, NegativeSignedFormula<FolFormula>() {}
+) : WastedSignedFormula<FolFormula>, NegativeSignedFormula<FolFormula>()  {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class PositiveWastedFormula(
     override val formula: FolFormula,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
     override val parentFormula: SignedFormula<*>?,
-) : WastedSignedFormula<FolFormula>, PositiveSignedFormula<FolFormula>() {}
+) : WastedSignedFormula<FolFormula>, PositiveSignedFormula<FolFormula>()  {
+    init {
+        splits = computeSplits()
+    }
+}

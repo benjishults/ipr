@@ -1,5 +1,3 @@
-;used fo
-
 (or (and (A) (B))
     (and (C) (D))
     (and (implies (Q) (Q)) (implies (P) (P)))

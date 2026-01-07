@@ -108,7 +108,7 @@ open class BaseTableau(
                                     sign = false,
                                     birthPlace = root,
                                     formulaImplementation = formulaImplementation,
-                                    parent = null,
+                                    parentFormula = null,
                                 )
                                 .reduceAlpha(
                                     birthPlace = root,

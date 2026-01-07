@@ -36,7 +36,11 @@ data class Node<T : Any>(
         Node(value, next?.deepCopy())
 
     fun toList(): List<T> =
-        buildList { forEach { add(it) } }
+        buildList {
+            this@Node.forEach {
+                add(it)
+            }
+        }
 
 }
 
