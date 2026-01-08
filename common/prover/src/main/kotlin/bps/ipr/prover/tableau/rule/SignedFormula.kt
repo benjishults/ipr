@@ -1,5 +1,6 @@
 package bps.ipr.prover.tableau.rule
 
+import bps.ipr.common.Node
 import bps.ipr.formulas.And
 import bps.ipr.formulas.Falsity
 import bps.ipr.formulas.FolFormula
@@ -33,6 +34,16 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
     val sign: Boolean
     val birthPlace: BaseTableauNode
     val formulaImplementation: FolFormulaImplementation
+    val parentFormula: SignedFormula<*>?
+    val isSplitting: Boolean
+        get() =
+            parentFormula is BetaFormula<*>
+
+    /**
+     * If my parent was a Beta formula, then my birthplace's parent is the split node I depend on.
+     * I also depend on all the splits of my parent.
+     */
+    val splits: Node<BaseTableauNode>?
 
     /**
      * Applies the rule for the given [formula] at its [birthPlace].  This is expected to add nodes to the tableau
@@ -47,6 +58,7 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
     fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>? = null,
+        parent: SignedFormula<*>?,
     ): MutableList<SignedFormula<*>> =
         mutableList
             ?.apply {
@@ -58,9 +70,10 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
         formula.display(indent)
 
     fun createNodeForReducedFormulas(
+        leaf: BaseTableauNode,
         reducedFormulasFactory: (BaseTableauNode) -> List<SignedFormula<*>>,
     ): BaseTableauNode =
-        BaseTableauNode()
+        BaseTableauNode(leaf)
             .also { node: BaseTableauNode ->
                 birthPlace.tableau.registerNode(node)
                 reducedFormulasFactory(node)
@@ -83,36 +96,43 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
             sign: Boolean,
             birthPlace: BaseTableauNode,
             formulaImplementation: FolFormulaImplementation,
+            parentFormula: SignedFormula<*>?,
         ): SignedFormula<F> =
             (if (sign) {
                 when (formula) {
-                    is And -> PositiveAndFormula(formula, birthPlace, formulaImplementation)
-                    is Or -> PositiveOrFormula(formula, birthPlace, formulaImplementation)
-                    is Implies -> PositiveImpliesFormula(formula, birthPlace, formulaImplementation)
-                    is Iff -> PositiveIffFormula(formula, birthPlace, formulaImplementation)
-                    is ForAll -> PositiveForAllFormula(formula, birthPlace, formulaImplementation)
-                    is ForSome -> PositiveForSomeFormula(formula, birthPlace, formulaImplementation)
-                    is Not -> PositiveNotFormula(formula, birthPlace, formulaImplementation)
-                    Falsity -> PositiveClosingFormula(formula, birthPlace, formulaImplementation)
-                    is Predicate -> PositiveAtomicFormula(formula, birthPlace, formulaImplementation)
-                    Truth -> PositiveWastedFormula(formula, birthPlace, formulaImplementation)
+                    is And -> PositiveAndFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Or -> PositiveOrFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Implies -> PositiveImpliesFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Iff -> PositiveIffFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForAll -> PositiveForAllFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForSome -> PositiveForSomeFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Not -> PositiveNotFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Falsity -> PositiveClosingFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Predicate -> PositiveAtomicFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Truth -> PositiveWastedFormula(formula, birthPlace, formulaImplementation, parentFormula)
                 }
             } else {
                 when (formula) {
-                    is And -> NegativeAndFormula(formula, birthPlace, formulaImplementation)
-                    is Or -> NegativeOrFormula(formula, birthPlace, formulaImplementation)
-                    is Implies -> NegativeImpliesFormula(formula, birthPlace, formulaImplementation)
-                    is Iff -> NegativeIffFormula(formula, birthPlace, formulaImplementation)
-                    is ForAll -> NegativeForAllFormula(formula, birthPlace, formulaImplementation)
-                    is ForSome -> NegativeForSomeFormula(formula, birthPlace, formulaImplementation)
-                    is Not -> NegativeNotFormula(formula, birthPlace, formulaImplementation)
-                    Truth -> NegativeClosingFormula(formula, birthPlace, formulaImplementation)
-                    is Predicate -> NegativeAtomicFormula(formula, birthPlace, formulaImplementation)
-                    Falsity -> NegativeWastedFormula(formula, birthPlace, formulaImplementation)
+                    is And -> NegativeAndFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Or -> NegativeOrFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Implies -> NegativeImpliesFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Iff -> NegativeIffFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForAll -> NegativeForAllFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is ForSome -> NegativeForSomeFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Not -> NegativeNotFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Truth -> NegativeClosingFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    is Predicate -> NegativeAtomicFormula(formula, birthPlace, formulaImplementation, parentFormula)
+                    Falsity -> NegativeWastedFormula(formula, birthPlace, formulaImplementation, parentFormula)
                 }
             }) as SignedFormula<F>
     }
 }
+
+fun SignedFormula<*>.computeSplits(): Node<BaseTableauNode>? =
+    if (isSplitting)
+        Node(birthPlace.parent!!, parentFormula!!.splits) // FIXME can I improve this since all children will have the same splits?
+    else
+        parentFormula?.splits
 
 data class CategorizedSignedFormulas(
     val positiveAtoms: List<PositiveAtomicFormula>?,
@@ -155,8 +175,12 @@ data class CategorizedSignedFormulas(
 
 sealed class PositiveSignedFormula<F : FolFormula> : SignedFormula<F> {
     override val sign: Boolean = true
+    final override var splits: Node<BaseTableauNode>? = null
+        protected set
 }
 
 sealed class NegativeSignedFormula<F : FolFormula> : SignedFormula<F> {
     override val sign: Boolean = false
+    final override var splits: Node<BaseTableauNode>? = null
+        protected set
 }

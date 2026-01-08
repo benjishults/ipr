@@ -9,6 +9,7 @@ interface FormulaParser<T: Formula> {
 
     val whitespaceParser: WhitespaceParser
     val formulaImplementation: FormulaImplementation
+    // TODO make a version that works on a Reader
 
     /**
      * Attempts to parse the string (from [startIndex]) as a formula and returns a pair containing the parsed formula

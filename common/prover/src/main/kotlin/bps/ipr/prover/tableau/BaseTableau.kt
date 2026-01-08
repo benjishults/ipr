@@ -4,18 +4,12 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
+import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
 import bps.ipr.prover.tableau.preorder.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import bps.ipr.prover.tableau.rule.FolRuleSelector
 import bps.ipr.prover.tableau.rule.RuleSelector
 import bps.ipr.prover.tableau.rule.SignedFormula
-
-interface Tableau<N : TableauNode<N>> {
-    val root: N
-    val applicableRules: RuleSelector
-    fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess?
-    fun display(): String
-}
 
 /**
  * This class is not thread-safe.
@@ -24,21 +18,6 @@ open class BaseTableau(
     initialQLimit: Int = 1,
     val closingAlgorithm: Tableau<BaseTableauNode>.(FormulaUnifier) -> FolProofSuccess?,
 ) : Tableau<BaseTableauNode> {
-
-    private val addNodeToTableauListeners: MutableList<AddNodeToTableauListener> = mutableListOf()
-
-    fun addAddNodeToTableauListener(listener: AddNodeToTableauListener) {
-        addNodeToTableauListeners.add(listener)
-    }
-
-    protected fun notifyAddNodeToTableauListeners(node: BaseTableauNode) =
-        addNodeToTableauListeners.forEach { listener ->
-            try {
-                listener.addNodeToTableau(node)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
 
     private var _root: BaseTableauNode? = null
 
@@ -56,12 +35,29 @@ open class BaseTableau(
         }
 
     override val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
-    override fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess? =
-        closingAlgorithm(formulaUnifier)
 
     private var _size: Long = 0
+
     val size: Long
         get() = _size
+
+    private val addNodeToTableauListeners: MutableList<AddNodeToTableauListener> = mutableListOf()
+
+    fun addAddNodeToTableauListener(listener: AddNodeToTableauListener) {
+        addNodeToTableauListeners.add(listener)
+    }
+
+    protected fun notifyAddNodeToTableauListeners(node: BaseTableauNode) =
+        addNodeToTableauListeners.forEach { listener ->
+            try {
+                listener.addNodeToTableau(node)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    override fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess? =
+        closingAlgorithm(formulaUnifier)
 
     fun registerNode(node: BaseTableauNode) {
         node.tableau = this
@@ -108,8 +104,12 @@ open class BaseTableau(
                                     sign = false,
                                     birthPlace = root,
                                     formulaImplementation = formulaImplementation,
+                                    parentFormula = null,
                                 )
-                                .reduceAlpha(birthPlace = root)
+                                .reduceAlpha(
+                                    birthPlace = root,
+                                    parent = null
+                                )
                                 .also {
                                     val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
                                     root.populate(

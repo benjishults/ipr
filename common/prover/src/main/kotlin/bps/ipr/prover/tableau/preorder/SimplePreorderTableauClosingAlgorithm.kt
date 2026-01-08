@@ -5,20 +5,19 @@ import bps.ipr.prover.FolProofSuccess
 import bps.ipr.prover.FolTableauProofSuccess
 import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.Tableau
-import bps.ipr.prover.tableau.preorder.SimplePreorderNodeClosingAlgorithm.attemptCloseNode
 
 object SimplePreorderTableauClosingAlgorithm {
 
     fun Tableau<BaseTableauNode>.attemptCloseSimplePreorder(
         formulaUnifier: FormulaUnifier,
     ): FolProofSuccess? =
-        root
-            .attemptCloseNode(
-                substitution = null,
-                positiveAtomsAbove = null,
-                negativeAtomsAbove = null,
-                formulaUnifier = formulaUnifier,
-            )
-            .firstOrNull()
-            ?.let { FolTableauProofSuccess(it, this) }
+        with(SimplePreorderNodeClosingAlgorithm) {
+            root
+                .attemptCloseNode(
+                    branchClosingSubstitution = null,
+                    formulaUnifier = formulaUnifier,
+                )
+                .firstOrNull()
+                ?.let { FolTableauProofSuccess(it.substitution, this@attemptCloseSimplePreorder) }
+        }
 }

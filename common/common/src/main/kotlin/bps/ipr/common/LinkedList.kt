@@ -3,8 +3,9 @@ package bps.ipr.common
 /**
  * This class is not thread-safe.
  */
-class LinkedList<T>(
+class LinkedList<T: Any>(
     head: Node<T>?,
+    copy: Boolean = false,
 ) : Collection<T> {
 
     constructor(
@@ -23,7 +24,7 @@ class LinkedList<T>(
     override val size: Int get() = _size
 
     init {
-        this.head = head
+        this.head = if (copy) head?.deepCopy() else head
 //        elements
 //            .forEach {
 //                add(it)

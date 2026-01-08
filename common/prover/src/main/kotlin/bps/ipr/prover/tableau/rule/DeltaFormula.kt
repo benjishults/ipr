@@ -23,9 +23,18 @@ sealed interface DeltaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
                     .forEach { leaf: BaseTableauNode ->
                         leaf.setChildren(
                             listOf(
-                                createNodeForReducedFormulas { node: BaseTableauNode ->
-                                    SignedFormula.create(childFormula, sign, node, formulaImplementation)
-                                        .reduceAlpha(node)
+                                createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                                    SignedFormula.create(
+                                        formula = childFormula,
+                                        sign = sign,
+                                        birthPlace = node,
+                                        formulaImplementation = formulaImplementation,
+                                        parentFormula = this
+                                    )
+                                        .reduceAlpha(
+                                            birthPlace = node,
+                                            parent = this,
+                                        )
                                 },
                             ),
                         )
@@ -93,10 +102,20 @@ data class NegativeForAllFormula(
     override val formula: ForAll,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : DeltaFormula<ForAll>, NegativeSignedFormula<ForAll>()
+    override val parentFormula: SignedFormula<*>?,
+) : DeltaFormula<ForAll>, NegativeSignedFormula<ForAll>() {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class PositiveForSomeFormula(
     override val formula: ForSome,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : DeltaFormula<ForSome>, PositiveSignedFormula<ForSome>()
+    override val parentFormula: SignedFormula<*>?,
+) : DeltaFormula<ForSome>, PositiveSignedFormula<ForSome>() {
+    init {
+        splits = computeSplits()
+    }
+}

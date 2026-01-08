@@ -15,6 +15,7 @@ sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
     abstract override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
+        parent: SignedFormula<*>?,
     ): MutableList<SignedFormula<*>>
 
     override fun apply() =
@@ -26,42 +27,81 @@ sealed interface SignedNotFormula : AlphaFormula<Not> {
     override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
+        parent: SignedFormula<*>?,
     ): MutableList<SignedFormula<*>> =
         formula
             .subFormula
             .let {
-                create(it, !sign, birthPlace, formulaImplementation)
-                    .reduceAlpha(birthPlace, mutableList)
+                create(
+                    formula = it,
+                    sign = !sign,
+                    birthPlace = birthPlace,
+                    formulaImplementation = formulaImplementation,
+                    parentFormula = parent,
+                )
+                    .reduceAlpha(
+                        birthPlace = birthPlace,
+                        mutableList = mutableList,
+                        parent = parent,
+                    )
             }
 }
+
 data class PositiveNotFormula(
     override val formula: Not,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : SignedNotFormula, PositiveSignedFormula<Not>()
+    override val parentFormula: SignedFormula<*>?,
+) : SignedNotFormula, PositiveSignedFormula<Not>() {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class NegativeNotFormula(
     override val formula: Not,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : SignedNotFormula, NegativeSignedFormula<Not>()
+    override val parentFormula: SignedFormula<*>?,
+) : SignedNotFormula, NegativeSignedFormula<Not>() {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class NegativeImpliesFormula(
     override val formula: Implies,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : AlphaFormula<Implies>, NegativeSignedFormula<Implies>() {
+    init {
+        splits = computeSplits()
+    }
+
     override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
+        parent: SignedFormula<*>?,
     ): MutableList<SignedFormula<*>> =
         formula
             .let { implies ->
-                create(implies.antecedent, true, birthPlace, formulaImplementation)
+                create(implies.antecedent, true, birthPlace, formulaImplementation, parent)
                     .reduceAlpha(
                         birthPlace,
-                        create(implies.consequent, false, birthPlace, formulaImplementation)
-                            .reduceAlpha(birthPlace, mutableList),
+                        create(
+                            formula = implies.consequent,
+                            sign = false,
+                            birthPlace = birthPlace,
+                            formulaImplementation = formulaImplementation,
+                            parentFormula = parent,
+                        )
+                            .reduceAlpha(
+                                birthPlace = birthPlace,
+                                parent = parent,
+                                mutableList = mutableList,
+                            ),
+                        parent = parent,
                     )
             }
 
@@ -74,12 +114,23 @@ sealed interface SimpleMultiSubAlphaFormula<T : AbstractMultiFolFormula> : Alpha
     override fun reduceAlpha(
         birthPlace: BaseTableauNode,
         mutableList: MutableList<SignedFormula<*>>?,
+        parent: SignedFormula<*>?,
     ): MutableList<SignedFormula<*>> =
         formula
             .subFormulas
             .fold(mutableList ?: mutableListOf()) { r: MutableList<SignedFormula<*>>, t: FolFormula ->
-                create(t, sign, birthPlace, formulaImplementation)
-                    .reduceAlpha(birthPlace, r)
+                create(
+                    formula = t,
+                    sign = sign,
+                    birthPlace = birthPlace,
+                    formulaImplementation = formulaImplementation,
+                    parentFormula = parent,
+                )
+                    .reduceAlpha(
+                        birthPlace = birthPlace,
+                        mutableList = r,
+                        parent = parent,
+                    )
                 r
             }
 }
@@ -88,10 +139,20 @@ data class NegativeOrFormula(
     override val formula: Or,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : NegativeSignedFormula<Or>(), SimpleMultiSubAlphaFormula<Or>
+    override val parentFormula: SignedFormula<*>?,
+) : NegativeSignedFormula<Or>(), SimpleMultiSubAlphaFormula<Or> {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class PositiveAndFormula(
     override val formula: And,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : PositiveSignedFormula<And>(), SimpleMultiSubAlphaFormula<And>
+    override val parentFormula: SignedFormula<*>?,
+) : PositiveSignedFormula<And>(), SimpleMultiSubAlphaFormula<And> {
+    init {
+        splits = computeSplits()
+    }
+}

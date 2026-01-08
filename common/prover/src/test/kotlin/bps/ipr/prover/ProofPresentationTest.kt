@@ -7,10 +7,8 @@ import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
-import bps.ipr.prover.tableau.AddNodeToTableauListener
-import bps.ipr.prover.tableau.DisplayableTableauNodeHelper
+import bps.ipr.prover.tableau.display.DisplayingAddNodeToTableauListener
 import bps.ipr.prover.tableau.TableauProver
-import bps.ipr.substitution.Substitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -52,92 +50,84 @@ class ProofPresentationTest :
                     ProverTest(
                         formula,
                         when (i) {
+                            // this proof is longer without condense
                             0 -> """---
-Suppose
+(0) Suppose
 Show
  (FORALL (a b) (IMPLIES (FORALL (z) (IMPLIES (q z) (p z))) (EXISTS (x) (AND (IMPLIES (p x) (p a)) (IMPLIES (q x) (p b))))))
 ---
- Suppose
+ (1) Suppose
   (FORALL (z) (IMPLIES (q z) (p z)))
  Show
   (EXISTS (x) (AND (IMPLIES (p x) (p (a))) (IMPLIES (q x) (p (b)))))
 ---
-  Suppose
+  (2) Suppose
   Show
    (AND (IMPLIES (p x_0) (p (a))) (IMPLIES (q x_0) (p (b))))
 ---
-   Suppose
+   (3) Suppose
     (p x_0)
    Show
     (p (a))
 ---
-    Suppose
+    (5) Suppose
      (IMPLIES (q z_0) (p z_0))
     Show
 ---
-     Suppose
+     (7) Suppose
       (p z_0)
      Show
 ---
-      Suppose
+      (11) Suppose
       Show
        (AND (IMPLIES (p x_1) (p (a))) (IMPLIES (q x_1) (p (b))))
 ---
-       Suppose
+       (15) Suppose
         (p x_1)
        Show
         (p (a))
 ---
-       Suppose
+       (16) Suppose
         (q x_1)
        Show
         (p (b))
 ---
-     Suppose
+     (8) Suppose
      Show
       (q z_0)
 ---
-      Suppose
+      (12) Suppose
       Show
        (AND (IMPLIES (p x_2) (p (a))) (IMPLIES (q x_2) (p (b))))
 ---
-       Suppose
-        (p x_2)
-       Show
-        (p (a))
----
-       Suppose
-        (q x_2)
-       Show
-        (p (b))
----
-   Suppose
+   (4) Suppose
     (q x_0)
    Show
     (p (b))
 ---
-    Suppose
+    (6) Suppose
      (IMPLIES (q z_1) (p z_1))
     Show
 ---
-     Suppose
+     (9) Suppose
       (p z_1)
      Show
 ---
-      Suppose
+      (13) Suppose
       Show
        (AND (IMPLIES (p x_3) (p (a))) (IMPLIES (q x_3) (p (b))))
 ---
-     Suppose
+     (10) Suppose
      Show
       (q z_1)
 ---
-      Suppose
+      (14) Suppose
       Show
        (AND (IMPLIES (p x_4) (p (a))) (IMPLIES (q x_4) (p (b))))
 """
+                            // this proof is longer without condense
                             1 -> """---
-Suppose
+(0) Suppose
  (IMPLIES (r0) (EXISTS (x) (AND (a x) (b x))))
  (IMPLIES (AND (p0) (q0)) (r0))
  (EXISTS (x) (a x))
@@ -145,139 +135,119 @@ Suppose
 Show
  (EXISTS (x) (AND (IMPLIES (p0) (a x)) (IMPLIES (q0) (b x))))
 ---
- Suppose
+ (1) Suppose
   (a (x))
  Show
 ---
-  Suppose
+  (2) Suppose
    (b (x_0))
   Show
 ---
-   Suppose
+   (3) Suppose
     (EXISTS (x) (AND (a x) (b x)))
    Show
 ---
-    Suppose
+    (5) Suppose
      (a (x_1))
      (b (x_1))
     Show
 ---
-     Suppose
+     (8) Suppose
       (r0)
      Show
 ---
-      Suppose
+      (15) Suppose
       Show
        (AND (IMPLIES (p0) (a x_6)) (IMPLIES (q0) (b x_6)))
 ---
-       Suppose
+       (22) Suppose
         (p0)
        Show
         (a x_6)
 ---
-       Suppose
+       (23) Suppose
         (q0)
        Show
         (b x_6)
 ---
-     Suppose
+     (9) Suppose
      Show
       (AND (p0) (q0))
 ---
-      Suppose
+      (12) Suppose
       Show
        (p0)
 ---
-       Suppose
+       (18) Suppose
        Show
         (AND (IMPLIES (p0) (a x_9)) (IMPLIES (q0) (b x_9)))
 ---
-        Suppose
-         (p0)
-        Show
-         (a x_9)
----
-        Suppose
-         (q0)
-        Show
-         (b x_9)
----
-      Suppose
+      (13) Suppose
       Show
        (q0)
 ---
-       Suppose
+       (19) Suppose
        Show
         (AND (IMPLIES (p0) (a x_10)) (IMPLIES (q0) (b x_10)))
 ---
-        Suppose
-         (p0)
-        Show
-         (a x_10)
----
-        Suppose
-         (q0)
-        Show
-         (b x_10)
----
-   Suppose
+   (4) Suppose
    Show
     (r0)
 ---
-    Suppose
+    (6) Suppose
      (r0)
     Show
 ---
-     Suppose
+     (14) Suppose
      Show
       (AND (IMPLIES (p0) (a x_5)) (IMPLIES (q0) (b x_5)))
 ---
-      Suppose
+      (20) Suppose
        (p0)
       Show
        (a x_5)
 ---
-      Suppose
+      (21) Suppose
        (q0)
       Show
        (b x_5)
 ---
-    Suppose
+    (7) Suppose
     Show
      (AND (p0) (q0))
 ---
-     Suppose
+     (10) Suppose
      Show
       (p0)
 ---
-      Suppose
+      (16) Suppose
       Show
        (AND (IMPLIES (p0) (a x_7)) (IMPLIES (q0) (b x_7)))
 ---
-       Suppose
+       (24) Suppose
         (p0)
        Show
         (a x_7)
 ---
-       Suppose
+       (25) Suppose
         (q0)
        Show
         (b x_7)
 ---
-     Suppose
+     (11) Suppose
      Show
       (q0)
 ---
-      Suppose
+      (17) Suppose
       Show
        (AND (IMPLIES (p0) (a x_8)) (IMPLIES (q0) (b x_8)))
 ---
-       Suppose
+       (26) Suppose
         (p0)
        Show
         (a x_8)
 ---
-       Suppose
+       (27) Suppose
         (q0)
        Show
         (b x_8)
@@ -285,8 +255,9 @@ Show
                             else -> error("unexpected index")
                         },
                         when (i) {
-                            0 -> "{z_0 ↦ (a), x_2 ↦ (a), z_1 ↦ (b), x_0 ↦ (b)}"
-                            1 -> "{x_6 ↦ (x_1), x_9 ↦ (x_1), x_10 ↦ (x_1), x_7 ↦ (x_0), x_8 ↦ (x)}"
+                            // this substitution has two more elements without condense
+                            0 -> "{x_1 ↦ (a), x_0 ↦ (b), z_1 ↦ (b)}"
+                            1 -> "{x_6 ↦ (x_1), x_7 ↦ (x_0), x_8 ↦ (x)}"
                             else -> error("unexpected index")
                         },
                     )
@@ -299,16 +270,7 @@ Show
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = 2,
                             formulaImplementation = this@ProofPresentationTest.formulaImplementation,
-                            addNodeToTableauListeners = listOf(
-                                AddNodeToTableauListener { node ->
-                                    DisplayableTableauNodeHelper()
-                                        .also {
-                                            node.addPopulateListener(it)
-                                            node.addDisplayHypsListener(it)
-                                            node.addDisplayGoalsListener(it)
-                                        }
-                                },
-                            ),
+                            addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener),
                         )
                             .prove(formula)
                         with(folProofResult) {

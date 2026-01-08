@@ -3,26 +3,16 @@ package bps.ipr.prover.tableau
 import bps.ipr.common.Node
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
+import bps.ipr.prover.tableau.listener.DisplayGoalsListener
+import bps.ipr.prover.tableau.listener.DisplayHypsListener
+import bps.ipr.prover.tableau.listener.PopulateNodeWithFormulasListener
 import bps.ipr.prover.tableau.rule.BetaFormula
 import bps.ipr.prover.tableau.rule.ClosingFormula
 import bps.ipr.prover.tableau.rule.DeltaFormula
 import bps.ipr.prover.tableau.rule.GammaFormula
 import bps.ipr.prover.tableau.rule.NegativeAtomicFormula
-import bps.ipr.prover.tableau.rule.NegativeSignedFormula
 import bps.ipr.prover.tableau.rule.PositiveAtomicFormula
-import bps.ipr.prover.tableau.rule.PositiveSignedFormula
 import bps.ipr.prover.tableau.rule.SignedFormula
-
-fun interface PopulateNodeWithFormulasListener {
-    fun populateNodeWithFormulas(
-        newAtomicHyps: List<PositiveAtomicFormula>?,
-        newAtomicGoals: List<NegativeAtomicFormula>?,
-        closing: List<ClosingFormula<*>>?,
-        betas: List<BetaFormula<*>>?,
-        deltas: List<DeltaFormula<*>>?,
-        gammas: List<GammaFormula<*>>?,
-    )
-}
 
 /**
  * This class is not thread-safe.
@@ -242,7 +232,7 @@ open class BaseTableauNode(
     fun display(indent: Int) =
         buildString {
             append(" ".repeat(indent))
-            append("Suppose\n")
+            append("(${id}) Suppose\n")
             newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
                 appendLine(hyp.display(indent + 1))
             }
@@ -314,58 +304,4 @@ open class BaseTableauNode(
 
 //    override fun toString(): String = display(0)
 
-}
-
-fun interface DisplayHypsListener {
-    fun displayHyps(builder: StringBuilder, indent: Int)
-}
-
-fun interface DisplayGoalsListener {
-    fun displayGoals(builder: StringBuilder, indent: Int)
-}
-
-class DisplayableTableauNodeHelper :
-    PopulateNodeWithFormulasListener,
-    DisplayHypsListener,
-    DisplayGoalsListener {
-
-    val nonAtomicGoals: MutableList<NegativeSignedFormula<*>> = mutableListOf()
-    val nonAtomicHyps: MutableList<PositiveSignedFormula<*>> = mutableListOf()
-
-    private fun <T : SignedFormula<*>> distributor(formula: T) {
-        when (formula) {
-            is NegativeSignedFormula<*> -> nonAtomicGoals.add(formula)
-            is PositiveSignedFormula<*> -> nonAtomicHyps.add(formula)
-        }
-    }
-
-    override fun populateNodeWithFormulas(
-        newAtomicHyps: List<PositiveAtomicFormula>?,
-        newAtomicGoals: List<NegativeAtomicFormula>?,
-        closing: List<ClosingFormula<*>>?,
-        betas: List<BetaFormula<*>>?,
-        deltas: List<DeltaFormula<*>>?,
-        gammas: List<GammaFormula<*>>?,
-    ) {
-        closing
-            ?.forEach(::distributor)
-        betas
-            ?.forEach(::distributor)
-        deltas
-            ?.forEach(::distributor)
-        gammas
-            ?.forEach(::distributor)
-    }
-
-    override fun displayHyps(builder: StringBuilder, indent: Int) {
-        nonAtomicHyps.forEach {
-            builder.appendLine(it.display(indent + 1))
-        }
-    }
-
-    override fun displayGoals(builder: StringBuilder, indent: Int) {
-        nonAtomicGoals.forEach {
-            builder.appendLine(it.display(indent + 1))
-        }
-    }
 }

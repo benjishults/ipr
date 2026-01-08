@@ -23,9 +23,18 @@ sealed interface GammaFormula<T : VariablesBindingFolFormula> : SignedFormula<T>
                     .let { childFormula: FolFormula ->
                         leaf.setChildren(
                             listOf(
-                                createNodeForReducedFormulas { node: BaseTableauNode ->
-                                    SignedFormula.create(childFormula, sign, node, formulaImplementation)
-                                        .reduceAlpha(node)
+                                createNodeForReducedFormulas(leaf) { node: BaseTableauNode ->
+                                    SignedFormula.create(
+                                        formula = childFormula,
+                                        sign = sign,
+                                        birthPlace = node,
+                                        formulaImplementation = formulaImplementation,
+                                        parentFormula = this,
+                                    )
+                                        .reduceAlpha(
+                                            birthPlace = node,
+                                            parent = this,
+                                        )
                                 },
                             ),
                         )
@@ -81,7 +90,11 @@ data class NegativeForSomeFormula(
     override val formula: ForSome,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : GammaFormula<ForSome>, NegativeSignedFormula<ForSome>() {
+    init {
+        splits = computeSplits()
+    }
 
     override var applications: Int = 0
 
@@ -91,7 +104,12 @@ data class PositiveForAllFormula(
     override val formula: ForAll,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
+    override val parentFormula: SignedFormula<*>?,
 ) : GammaFormula<ForAll>, PositiveSignedFormula<ForAll>() {
+
+    init {
+        splits = computeSplits()
+    }
 
     override var applications: Int = 0
 

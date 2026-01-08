@@ -1,9 +1,3 @@
-;; I'm "proving" this with q=2 and {z_0 ↦ (a_0), x_2 ↦ (a_0), z_1 ↦ (b_0), x_0 ↦ (b_0)})
-(forall ((a) (b))
-  (implies (forall ((z)) (implies (q z) (p z))) ; not a theorem
-    (for-some ((x)) (and (implies (p x) (p a))
-                         (implies (q x) (p b))))))
-
 ;; I'm "proving" this with q=2 and {x_27 ↦ (x_12), x_30 ↦ (x_11), x_31 ↦ (x_10), x_28 ↦ (x_11), x_29 ↦ (x_10)}
 (implies (and (for-some ((x)) (a x))
               (for-some ((x)) (b x)) ;not a theorem
@@ -12,16 +6,36 @@
   (for-some ((x)) (and (implies (p0) (a x)) (implies (q0) (b x)))))
 ;;0.07 no
 
+(implies (and (for-some ((x)) (implies (p0) (f x)))
+              (for-some ((x)) (implies (f x) (p0))))
+  (for-some ((x)) (iff (p0) (f x))))
+
+(implies (and (not (for-some ((x)) (and (f x) (or (g x) (h x)))))
+              (for-some ((x)) (and (i x) (f x)))
+              (forall ((x)) (implies (not (h x)) (j x))))
+  (for-some ((x)) (and (i x) (j x))))
+
+(not (for-some ((y)) (forall ((x)) (iff (a-member-of x y)
+                                        (not (for-some ((z))
+                                               (and (a-member-of x z)
+                                                    (a-member-of z x))))))))
+
+(for-some ((x)) (forall ((y) (z))        ; mixed finds a shorter proof!
+                  (implies (implies (p y) (q x))
+                    (implies (p x) (q z)))))
+
+;; I'm "proving" this with q=2 and {z_0 ↦ (a_0), x_2 ↦ (a_0), z_1 ↦ (b_0), x_0 ↦ (b_0)})
+(forall ((a) (b))
+  (implies (forall ((z)) (implies (q z) (p z))) ; not a theorem
+    (for-some ((x)) (and (implies (p x) (p a))
+                         (implies (q x) (p b))))))
+
 (implies (and (for-some ((x)) (f x))
               (for-some ((x)) (g x)))
   (iff (and (forall ((x)) (implies (f x) (h x)))
             (forall ((x)) (implies (g x) (j x))))
        (forall ((x) (y))
          (implies (and (f x) (g y)) (and (h x) (j y))))))
-
-(implies (and (for-some ((x)) (implies (p0) (f x)))
-              (for-some ((x)) (implies (f x) (p0))))
-  (for-some ((x)) (iff (p0) (f x))))
 
 (implies (forall ((x)) (iff (p0) (f x))) (iff (p0) (forall ((x)) (f x))))
 
@@ -65,11 +79,6 @@
                               (and (f x) (h x)))))
   (forall ((x)) (i x)))
 
-(implies (and (not (for-some ((x)) (and (f x) (or (g x) (h x)))))
-              (for-some ((x)) (and (i x) (f x)))
-              (forall ((x)) (implies (not (h x)) (j x))))
-  (for-some ((x)) (and (i x) (j x))))
-
 (implies (and (forall ((x)) (implies (and (f x) (or (g x) (h x)))
                               (i x)))
               (forall ((x)) (implies (and (i x) (h x)) (j x)))
@@ -87,6 +96,7 @@
                     (implies (or (f2 y z) (g2 y z)) (h2 x z))))))
   (forall ((x)) (for-some ((y)) (h2 x y))))
 
+;; this slowed down when I switched to linked lists?
 (implies (and (forall ((z))
                 (for-some ((w))
                   (forall ((x))
@@ -112,11 +122,6 @@
                (iff (a-member-of x y) (and (a-member-of x z)
                                            (not (a-member-of x x)))))))
   (not (for-some ((z)) (forall ((x)) (a-member-of x z)))))
-
-(not (for-some ((y)) (forall ((x)) (iff (a-member-of x y)
-                                        (not (for-some ((z))
-                                               (and (a-member-of x z)
-                                                    (a-member-of z x))))))))
 
 (implies (forall ((x) (y))
            (iff (eq x y) (forall ((z))
@@ -166,10 +171,6 @@
            (or (not (phi a)) (not (phi (f x))) (phi (f (f x))))))))
 
 (for-some ((y)) (forall ((x)) (implies (f y) (f x))))
-
-(for-some ((x)) (forall ((y) (z))        ; mixed finds a shorter proof!
-                  (implies (implies (p y) (q x))
-                    (implies (p x) (q z)))))
 
 (implies (forall ((x) (y))
            (for-some ((z))

@@ -13,10 +13,20 @@ data class NegativeAtomicFormula(
     override val formula: Predicate,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : AtomicSignedFormula, NegativeSignedFormula<Predicate>()
+    override val parentFormula: SignedFormula<*>?,
+) : AtomicSignedFormula, NegativeSignedFormula<Predicate>() {
+    init {
+        splits = computeSplits()
+    }
+}
 
 data class PositiveAtomicFormula(
     override val formula: Predicate,
     override val birthPlace: BaseTableauNode,
     override val formulaImplementation: FolFormulaImplementation,
-) : AtomicSignedFormula, PositiveSignedFormula<Predicate>()
+    override val parentFormula: SignedFormula<*>?,
+) : AtomicSignedFormula, PositiveSignedFormula<Predicate>() {
+    init {
+        splits = computeSplits()
+    }
+}

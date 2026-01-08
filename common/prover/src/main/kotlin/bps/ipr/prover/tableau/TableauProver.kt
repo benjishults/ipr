@@ -6,25 +6,13 @@ import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofResult
 import bps.ipr.prover.FolTableauProofIncomplete
 import bps.ipr.prover.Prover
+import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
 import bps.ipr.prover.tableau.rule.Rule
-
-fun interface AddNodeToTableauListener {
-    fun addNodeToTableau(node: BaseTableauNode)
-}
 
 /**
  * To make a TableauProver create displayable proofs, add this argument to the constructor:
  * ```kotlin
- *                             addNodeToTableauListeners = listOf(
- *                                 AddNodeToTableauListener { node ->
- *                                     DisplayableTableauNodeHelper()
- *                                         .also {
- *                                             node.addPopulateListener(it)
- *                                             node.addDisplayHypsListener(it)
- *                                             node.addDisplayGoalsListener(it)
- *                                         }
- *                                 },
- *                             ),
+ *    addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener)
  * ```
  */
 class TableauProver(

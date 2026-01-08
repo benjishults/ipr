@@ -1,5 +1,6 @@
 package bps.ipr.substitution
 
+import bps.ipr.common.LinkedList
 import bps.ipr.terms.Term
 import bps.ipr.terms.TermImplementation
 import bps.ipr.terms.Variable
@@ -18,7 +19,7 @@ sealed interface Substitution {
     val domain: Set<Variable>
 
     // FIXME remove this if it is unneeded after algorithms are tested
-    val range: List<Term>
+    val range: Collection<Term>
 
     // FIXME remove this if it is unneeded after algorithms are tested
     // NOTE this is useful for ensuring we don't try to compose incompatible substitutions (where the result would not be idempotent)
@@ -68,10 +69,8 @@ sealed interface IdempotentSubstitution : Substitution {
 data object EmptySubstitution : IdempotentSubstitution {
     override val domain: Set<Variable> =
         emptySet()
-    override val range: List<Term> =
+    override val range: Collection<Term> =
         emptyList()
-//    override val varRange: Set<Variable> =
-//        emptySet()
 
     override fun map(variable: Variable): Term =
         variable
@@ -175,8 +174,8 @@ data class SingletonIdempotentSubstitution(
 
     override val domain: Set<Variable> =
         setOf(key)
-    override val range: List<Term> =
-        listOf(value)
+    override val range: Collection<Term> =
+        LinkedList(value)
 //    override val varRange: Set<Variable> =
 //        value.variablesFreeIn
 
@@ -229,10 +228,9 @@ class MultiIdempotentSubstitution(
         mapping.toMap()
     override val domain: Set<Variable> =
         mapping.keys
-    override val range: List<Term> =
+    override val range: Collection<Term> =
         mapping
             .values
-            .toList()
 //    override val varRange: Set<Variable> =
 //        range.flatMap { it.variablesFreeIn }
 //            .toSet()

@@ -21,7 +21,7 @@ class CondenseTest :
     data class ProverTest(val formula: FolFormula, val expectedResult: ProofResult)
 
     init {
-        "!condense test" - {
+        "condense test" - {
             // TODO implement condense and check that it has happened
             clear()
             val fileAsString = buildString {
@@ -49,7 +49,11 @@ class CondenseTest :
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(GeneralRecursiveDescentFormulaUnifier(), 2, this@CondenseTest.formulaImplementation)
+                        TableauProver(
+                            unifier = GeneralRecursiveDescentFormulaUnifier(),
+                            initialQLimit = 2,
+                            formulaImplementation = this@CondenseTest.formulaImplementation
+                        )
                             .prove(formula)
                             .shouldBeInstanceOf<FolProofSuccess>()
                     }
