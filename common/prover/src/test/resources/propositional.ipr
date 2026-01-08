@@ -1,5 +1,14 @@
 (iff (implies (p) (q)) (implies (not (q)) (not (p))))
 
+(iff (iff (iff (p) (q)) (r)) (iff (p) (iff (q) (r))))
+
+(iff (implies (p) (q)) (or (not (p)) (q)))
+
+(iff (implies (and (p) (implies (q) (r)))
+       (s))
+     (and (or (not (p)) (q) (s))
+	  (or (not (p)) (not (r)) (s))))
+
 (iff (implies (not (p)) (q)) (implies (not (q)) (p)))
 
 (implies (not (implies (p) (q))) (implies (q) (p)))
@@ -17,20 +26,11 @@
 
 (iff (p) (p))
 
-(iff (iff (iff (p) (q)) (r)) (iff (p) (iff (q) (r))))
-
 (iff (or (p) (and (q) (r))) (and (or (p) (q)) (or (p) (r))))
 
 (iff (iff (p) (q)) (and (or (q) (not (p))) (or (not (q)) (p))))
 
-(iff (implies (p) (q)) (or (not (p)) (q)))
-
 (or (implies (p) (q)) (implies (q) (p)))
-
-(iff (implies (and (p) (implies (q) (r)))
-       (s))
-     (and (or (not (p)) (q) (s))
-	  (or (not (p)) (not (r)) (s))))
 
 (iff (p1) (p1))
 

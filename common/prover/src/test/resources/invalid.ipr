@@ -1,13 +1,7 @@
 (forall ((a) (b))
-  (implies
-    (forall ((y))
-      (implies (implies (r b) (r y))
-                 (p2 (f y) y)))
-        (for-some ((x))
-          (for-some ((y))
-            (and (p2 x y)
-                 (implies (q2 a b)
-                   (q2 x y))))) ))
+  (for-some ((x))
+    (implies (and (p a) (q b))
+      (and (p x) (q x))))) ; not a theorem
 
 (forall ((a) (b))
   (implies (and (q2 a b)
@@ -19,15 +13,58 @@
         (and (p2 x y)
              (q2 x y))))))
 
+; q=3 slow
+(implies (and (forall ((x) (y) (z))        ; not a theorem
+                (implies (and (r2 x y) (r2 y z)) (r2 x z)))
+              (forall ((x)) (for-some ((y)) (r2 x y))))
+  (for-some ((x)) (r2 x x)))
+;; 0.06 no
+;; with interaction: yes
+;; 0.07 no
+;; with interaction: yes
+;; 0.08 yes (It would finish sooner if we unified.)
+;; 0.11 no
+;; set0.04 yes
+
+; q=3 slow and fails to prove
+(forall ((a) (b))                        ; not a theorem
+  (implies (q a)
+    (for-some ((x)) (and (implies (p x) (p a))
+          (implies (p x) (p b))
+          (q x)))))
+;; 0.11 no (runs forever)
+;; set0.03 yes
+;; relset0.05 no
+
+(implies (and (for-some ((x)) (p x)) (for-some ((x)) (q x)))
+  (for-some ((y)) (and (p y) (q y))))
+                                        ;not a theorem
+;; 0.07 no
+
+(implies (and (for-some ((x)) (p x)) (for-some ((x)) (q x)))
+                 (for-some ((x)) (and (p x) (q x))))        ; not a theorem
+;; 0.06 no
+;; 0.08 yes (I think I need to keep track of dependencies.)
+;; (shows need to check if a unifier satisfies old goals,
+;; or, as Bledsoe does, apply the old unifier first then
+;; try to get a new one with which the old one will compose.)
+;; 0.11 no (halts)
+
 (forall ((a) (b) (c))
   (implies (and (p a) (p b) (p c))
     (for-some ((x))
       (and (p x) (q x))))) ; not a theorem
 
 (forall ((a) (b))
-  (for-some ((x))
-    (implies (and (p a) (q b))
-      (and (p x) (q x))))) ; not a theorem
+  (implies
+    (forall ((y))
+      (implies (implies (r b) (r y))
+                 (p2 (f y) y)))
+        (for-some ((x))
+          (for-some ((y))
+            (and (p2 x y)
+                 (implies (q2 a b)
+                   (q2 x y))))) ))
 
 (forall ((x)) (implies (t x) (t (b2 x))))
 (forall ((x) (y)) (t (i (b2 (i x y)) (i (b2 x) (b2 y)))))
@@ -37,11 +74,6 @@
 (forall ((x) (y)) (implies (and (t (i x y)) (t x)) (t y)))
 
 (forall ((x)) (implies (p x) (q x))) ;not a theorem
-;; 0.07 no
-
-(implies (and (for-some ((x)) (p x)) (for-some ((x)) (q x)))
-  (for-some ((y)) (and (p y) (q y))))
-                                        ;not a theorem
 ;; 0.07 no
 
 (implies (for-some ((x)) (p x)) (forall ((x)) (p x))) ;not a theorem
@@ -97,15 +129,6 @@
 ;; 0.08 yes
 ;; (the problem is that the unifier doesn't keep track
 ;; of what has been unified with what.)
-;; (shows need to check if a unifier satisfies old goals,
-;; or, as Bledsoe does, apply the old unifier first then
-;; try to get a new one with which the old one will compose.)
-;; 0.11 no (halts)
-
-(implies (and (for-some ((x)) (p x)) (for-some ((x)) (q x)))
-                 (for-some ((x)) (and (p x) (q x))))        ; not a theorem
-;; 0.06 no
-;; 0.08 yes (I think I need to keep track of dependencies.)
 ;; (shows need to check if a unifier satisfies old goals,
 ;; or, as Bledsoe does, apply the old unifier first then
 ;; try to get a new one with which the old one will compose.)
@@ -173,16 +196,6 @@
 (not (for-some ((x)) (forall ((y))        ; not a theorem
         (iff (a-member-of y x) (a-member-of y y)))))
 
-; q=3 slow and fails to prove
-(forall ((a) (b))                        ; not a theorem
-  (implies (q a)
-    (for-some ((x)) (and (implies (p x) (p a))
-          (implies (p x) (p b))
-          (q x)))))
-;; 0.11 no (runs forever)
-;; set0.03 yes
-;; relset0.05 no
-
 ; q=3 slow
 (implies (and (forall ((x)) (not (less-than x x)))
               (forall ((x1) (x2) (x3))
@@ -190,16 +203,3 @@
                               (less-than x2 x3))
                   (less-than x1 x3)))) ; not a theorem
   (forall ((x)) (for-some ((y)) (less-than x y))))
-
-; q=3 slow
-(implies (and (forall ((x) (y) (z))        ; not a theorem
-                (implies (and (r2 x y) (r2 y z)) (r2 x z)))
-              (forall ((x)) (for-some ((y)) (r2 x y))))
-  (for-some ((x)) (r2 x x)))
-;; 0.06 no
-;; with interaction: yes
-;; 0.07 no
-;; with interaction: yes
-;; 0.08 yes (It would finish sooner if we unified.)
-;; 0.11 no
-;; set0.04 yes

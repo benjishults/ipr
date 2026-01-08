@@ -26,11 +26,11 @@ object SimplePreorderNodeClosingAlgorithm {
                     branchClosingSubstitution.extendBy(closingFormula)
                 }
         } else {
-            branchClosersHere(branchClosingSubstitution, formulaUnifier) +
-                    branchClosersOfChildren(branchClosingSubstitution, formulaUnifier)
+            sequenceOfBranchClosersHere(branchClosingSubstitution, formulaUnifier) +
+                    sequenceOfBranchClosersOfChildren(branchClosingSubstitution, formulaUnifier)
         }
 
-    private fun BaseTableauNode.branchClosersOfChildren(
+    private fun BaseTableauNode.sequenceOfBranchClosersOfChildren(
         branchClosingSubstitution: BranchClosingSubstitution?,
         formulaUnifier: FormulaUnifier,
     ): Sequence<BranchClosingSubstitution> = if (children.isNotEmpty()) {
@@ -60,18 +60,16 @@ object SimplePreorderNodeClosingAlgorithm {
                                     formulaUnifier = formulaUnifier,
                                 )
                         } else {
-                            // NOTE return an empty sequence
                             //   we wouldn't be here if the first child didn't have a closer
                             //   but we know that closer doesn't need this child to be added
-                            FIXME I'm here
-                            emptySequence()
+                            sequenceOf(sub)
                         }
                     }
             }
     } else
         emptySequence()
 
-    fun BaseTableauNode.branchClosersHere(
+    fun BaseTableauNode.sequenceOfBranchClosersHere(
         branchClosingSubstitution: BranchClosingSubstitution?,
         formulaUnifier: FormulaUnifier,
     ): Sequence<BranchClosingSubstitution> =
@@ -104,7 +102,7 @@ object SimplePreorderNodeClosingAlgorithm {
                                     formula2 = hypAbove.formula,
                                     under = branchClosingSubstitution?.substitution ?: EmptySubstitution,
                                 )?.let { sub ->
-                                    branchClosingSubstitution?.extendBy(
+                                    branchClosingSubstitution.extendBy(
                                         hyp = hypAbove,
                                         goal = newGoal,
                                         sub = sub,
@@ -120,10 +118,15 @@ fun <T> List<T>?.combineNullable(
     rest: List<T>?,
 ): List<T>? =
     this
-        ?.let {
+        .let { receiver ->
             rest
-                ?.plus(it)
-                ?: it
+                ?.let { rest ->
+                    if (receiver === null)
+                        rest
+                    else
+                        rest.plus(receiver)
+                }
+                ?: receiver
         }
 
 data class BranchClosingSubstitution(

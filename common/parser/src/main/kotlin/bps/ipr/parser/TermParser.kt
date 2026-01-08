@@ -11,6 +11,7 @@ interface TermParser {
         termImplementation.clear()
     }
 
+    // TODO make a version that works on a Reader
     /**
      * Attempts to parse the string as a term and returns a pair containing the parsed term
      * and the position in the string where parsing stopped.  Trailing whitespace should be consumed.

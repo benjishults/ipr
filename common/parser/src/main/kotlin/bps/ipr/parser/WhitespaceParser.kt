@@ -6,6 +6,8 @@ interface WhitespaceParser {
 
     val whitespace: Pattern
 
+    // TODO make a version that works on a Reader
+
     /**
      * @return [String.length] if the receiver is all whitespace after [startingAt].
      * Otherwise, the index of the first non-whitespace character after [startingAt].

@@ -1,3 +1,62 @@
+(implies (for-some ((x)) (p x))
+  (and (for-some ((x)) (p x))
+       (implies (a0) (and (or (b0) (not (b0))) (implies (q0) (q0))))))
+
+(implies (for-some ((x)) (implies (a x) (b x)))
+  (implies (forall ((x)) (a x)) (for-some ((x)) (b x))))
+
+(implies (and (for-some ((x)) (a x)) (forall ((x)) (b x)))
+  (for-some ((x)) (and (a x) (b x))))
+
+(implies (for-some ((x)) (b x)) (for-some ((x)) (or (a x) (b x))))
+
+(iff (for-some ((x) (y)) (a2 x y)) (for-some ((y) (x)) (a2 x y)))
+
+;; requires q >= 2
+;; From Smullyan FOL 1968
+(iff (for-some ((x)) (or (p x) (q x)))
+     (or (for-some ((x)) (p x)) (for-some ((x)) (q x))))
+
+(iff (for-some ((x)) (p x)) (for-some ((y)) (p y)))
+
+(implies (for-some ((x)) (p x)) (for-some ((z)) (p z)))
+
+;; From Smullyan FOL 1968
+(implies (for-some ((x)) (and (p x) (q x)))
+  (and (for-some ((x)) (p x)) (for-some ((x)) (q x))))
+
+;; From Smullyan FOL 1968
+(implies (not (for-some ((y)) (p y)))
+  (forall ((y)) (implies (for-some ((x)) (p x))
+                  (p y))))
+
+(implies (for-some ((x)) (p x)) (for-some ((y)) (p y)))
+
+;; From Smullyan FOL 1968
+(iff (for-some ((x)) (and (p x) (c0)))
+     (and (for-some ((x)) (p x))
+          (c0)))
+
+;; From Smullyan FOL 1968
+(iff (for-some ((x)) (c0)) (c0))
+
+;; From Smullyan FOL 1968
+(iff (forall ((x)) (c0)) (c0))
+
+;; From Smullyan FOL 1968
+(iff (for-some ((x)) (implies (c0) (p x)))
+     (implies (c0) (for-some ((x)) (p x))))
+
+;; From Smullyan FOL 1968
+(iff (for-some ((x)) (implies (p x) (c0)))
+     (implies (forall ((x)) (p x)) (c0)))
+
+(implies (and (a0) (b0)) (iff (a0) (b0)))
+
+(implies (and (forall ((x)) (implies (p x) (q x)))
+              (for-some ((y)) (implies (q y) (r y))))
+  (for-some ((z)) (implies (p z) (r z))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; requires q >= 2
@@ -110,10 +169,6 @@
     (for-some ((x)) (and (implies (p x) (p a))
                          (implies (q x) (p b))))))
 
-(implies (for-some ((x)) (p x))
-  (and (for-some ((x)) (p x))
-       (implies (a0) (and (or (b0) (not (b0))) (implies (q0) (q0))))))
-
 (implies (forall ((x)) (p x)) (for-some ((y)) (p y)))
 
 (implies (forall ((x)) (implies (p x) (q x)))
@@ -128,17 +183,7 @@
 (implies (forall ((x)) (implies (a x) (b x)))
   (implies (for-some ((x)) (a x)) (for-some ((x)) (b x))))
 
-(implies (for-some ((x)) (implies (a x) (b x)))
-  (implies (forall ((x)) (a x)) (for-some ((x)) (b x))))
-
 (not (for-some ((y)) (forall ((x)) (iff (a2 x y) (not (a2 x x))))))
-
-(implies (and (for-some ((x)) (a x)) (forall ((x)) (b x)))
-  (for-some ((x)) (and (a x) (b x))))
-
-(implies (for-some ((x)) (b x)) (for-some ((x)) (or (a x) (b x))))
-
-(iff (for-some ((x) (y)) (a2 x y)) (for-some ((y) (x)) (a2 x y)))
 
 ;; From Smullyan FOL 1968
 ;; requires q >= 2
@@ -156,20 +201,11 @@
   (forall ((x)) (or (p x) (q x))))
 
 ;; requires q >= 2
-;; From Smullyan FOL 1968
-(iff (for-some ((x)) (or (p x) (q x)))
-     (or (for-some ((x)) (p x)) (for-some ((x)) (q x))))
-
-;; requires q >= 2
 (forall ((a) (b)) (implies (forall ((x)) (p x)) (and (p a) (p b))))
 
 ;; requires q >= 2
 (implies (forall ((x)) (p x))
   (and (forall ((x)) (p x)) (forall ((y)) (p y))))
-
-(iff (for-some ((x)) (p x)) (for-some ((y)) (p y)))
-
-(implies (for-some ((x)) (p x)) (for-some ((z)) (p z)))
 
 ;; requires q >= 2
 (implies (forall ((x) (y))
@@ -182,8 +218,6 @@
 ;; requires q >= 2
 (for-some ((x))
   (forall ((y)) (implies (p x) (p y))))
-
-
 
 (forall ((b))
   (implies (and (forall ((x)) (implies (p x) (q x))) (r b))
@@ -201,10 +235,6 @@
 (for-some ((y)) (implies (for-some ((x)) (p x))
                   (p y)))
 
-;; From Smullyan FOL 1968
-(implies (for-some ((x)) (and (p x) (q x)))
-  (and (for-some ((x)) (p x)) (for-some ((x)) (q x))))
-
 (implies (for-some ((x)) (forall ((y)) (p2 x y)))
   (forall ((y)) (for-some ((x)) (p2 x y))))
 
@@ -217,34 +247,8 @@
 (implies (forall ((x)) (p x)) (for-some ((x)) (p x)))
 
 ;; From Smullyan FOL 1968
-(implies (not (for-some ((y)) (p y)))
-  (forall ((y)) (implies (for-some ((x)) (p x))
-                  (p y))))
-
-(implies (for-some ((x)) (p x)) (for-some ((y)) (p y)))
-
-;; From Smullyan FOL 1968
 (iff (forall ((x)) (or (p x) (c0)))
      (or (forall ((x)) (p x)) (c0)))
-
-;; From Smullyan FOL 1968
-(iff (for-some ((x)) (and (p x) (c0)))
-     (and (for-some ((x)) (p x))
-          (c0)))
-
-;; From Smullyan FOL 1968
-(iff (for-some ((x)) (c0)) (c0))
-
-;; From Smullyan FOL 1968
-(iff (forall ((x)) (c0)) (c0))
-
-;; From Smullyan FOL 1968
-(iff (for-some ((x)) (implies (c0) (p x)))
-     (implies (c0) (for-some ((x)) (p x))))
-
-;; From Smullyan FOL 1968
-(iff (for-some ((x)) (implies (p x) (c0)))
-     (implies (forall ((x)) (p x)) (c0)))
 
 ;; From Smullyan FOL 1968
 (iff (forall ((x)) (implies (c0) (p x)))
@@ -262,8 +266,6 @@
     (q a)))
 
 (or (iff (a0) (b0)) (a0) (b0))
-
-(implies (and (a0) (b0)) (iff (a0) (b0)))
 
 (forall ((a) (b))			; thm2
   (for-some ((x) (y))
@@ -283,7 +285,3 @@
       (forall ((y)) (implies (implies (r b) (r y)) (p2 (f y) y)))
     (for-some ((x)) (for-some ((y)) (and (p2 x y) (implies (q2 (f b) b)
                                                    (q2 x y)))))))
-
-(implies (and (forall ((x)) (implies (p x) (q x)))
-              (for-some ((y)) (implies (q y) (r y))))
-  (for-some ((z)) (implies (p z) (r z))))
