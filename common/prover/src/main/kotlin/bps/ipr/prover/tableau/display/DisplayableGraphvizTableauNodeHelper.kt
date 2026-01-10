@@ -69,7 +69,7 @@ DisplayHypsCompactListener{
 
     override fun displayHypsCompact(builder: StringBuilder, maxChars: Int) {
         nonAtomicHyps.forEach {
-            builder.appendLine(it.display(maxChars))
+            builder.appendLine(it.displayCompact(maxChars))
         }
     }
 
