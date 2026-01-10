@@ -1,8 +1,10 @@
 package bps.ipr.prover.tableau.display
 
 import bps.ipr.prover.tableau.BaseTableauNode
+import bps.ipr.prover.tableau.listener.DisplayGoalsCompactListener
 import bps.ipr.prover.tableau.listener.PopulateNodeWithFormulasListener
 import bps.ipr.prover.tableau.listener.DisplayGoalsListener
+import bps.ipr.prover.tableau.listener.DisplayHypsCompactListener
 import bps.ipr.prover.tableau.listener.DisplayHypsListener
 import bps.ipr.prover.tableau.rule.BetaFormula
 import bps.ipr.prover.tableau.rule.ClosingFormula
@@ -18,10 +20,12 @@ import bps.ipr.prover.tableau.rule.SignedFormula
  * An instance of this should be associated to a single [bps.ipr.prover.tableau.BaseTableauNode] in order to make
  * it displayable.
  */
-class DisplayableTableauNodeHelper :
+class DisplayableGraphvizTableauNodeHelper :
     PopulateNodeWithFormulasListener,
     DisplayHypsListener,
-    DisplayGoalsListener {
+    DisplayGoalsListener,
+    DisplayGoalsCompactListener,
+DisplayHypsCompactListener{
 
     val nonAtomicGoals: MutableList<NegativeSignedFormula<*>> = mutableListOf()
     val nonAtomicHyps: MutableList<PositiveSignedFormula<*>> = mutableListOf()
@@ -63,13 +67,27 @@ class DisplayableTableauNodeHelper :
         }
     }
 
+    override fun displayHypsCompact(builder: StringBuilder, maxChars: Int) {
+        nonAtomicHyps.forEach {
+            builder.appendLine(it.display(maxChars))
+        }
+    }
+
+    override fun displayGoalsCompact(builder: StringBuilder, maxChars: Int) {
+        nonAtomicGoals.forEach {
+            builder.appendLine(it.displayCompact(maxChars))
+        }
+    }
+
     companion object {
         fun addToNode(node: BaseTableauNode) {
-            DisplayableTableauNodeHelper()
+            DisplayableGraphvizTableauNodeHelper()
                 .also {
                     node.addPopulateListener(it)
                     node.addDisplayHypsListener(it)
                     node.addDisplayGoalsListener(it)
+                    node.addDisplayHypsCompactListener(it)
+                    node.addDisplayGoalsCompactListener(it)
                 }
         }
     }

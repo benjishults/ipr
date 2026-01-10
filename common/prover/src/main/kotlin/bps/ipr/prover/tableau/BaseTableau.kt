@@ -88,7 +88,7 @@ open class BaseTableau(
                 initialQLimit,
                 closingAlgorithm = closingAlgorithm ?: { formulaUnifier ->
                     with(SimplePreorderTableauClosingAlgorithm) { attemptCloseSimplePreorder(formulaUnifier) }
-                }
+                },
             )
                 .also { tableau: BaseTableau ->
                     addNodeToTableauListeners
@@ -108,7 +108,7 @@ open class BaseTableau(
                                 )
                                 .reduceAlpha(
                                     birthPlace = root,
-                                    parent = null
+                                    parent = null,
                                 )
                                 .also {
                                     val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
@@ -129,5 +129,17 @@ open class BaseTableau(
                 }
         }
     }
+
+    fun displayToDot(): String =
+        buildString {
+            appendLine("digraph G {")
+            appendLine("node [shape=box]")
+            root.breadthFirstTraverse { node: BaseTableauNode ->
+                append(node.displayToDot())
+                if (node.parent != null)
+                    appendLine(""""${node.parent!!.id}" -> "${node.id}"""")
+            }
+            appendLine("}")
+        }
 
 }

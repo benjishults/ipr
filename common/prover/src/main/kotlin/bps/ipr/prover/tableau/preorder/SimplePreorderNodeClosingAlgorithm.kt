@@ -114,9 +114,9 @@ object SimplePreorderNodeClosingAlgorithm {
 
 }
 
-fun <T> List<T>?.combineNullable(
-    rest: List<T>?,
-): List<T>? =
+fun <T> Set<T>?.combineNullable(
+    rest: Set<T>?,
+): Set<T>? =
     this
         .let { receiver ->
             rest
@@ -133,9 +133,9 @@ data class BranchClosingSubstitution(
     val substitution: IdempotentSubstitution,
     // val node: BaseTableauNode,
     /**
-     * A [split] is non-empty [List] of [BaseTableauNode]s with multiple children or `null`.
+     * A [split] is non-empty [Set] of [BaseTableauNode]s with multiple children or `null`.
      */
-    val splits: List<BaseTableauNode>?,  // TODO consider making this a set
+    val splits: Set<BaseTableauNode>?,
 )
 
 fun BranchClosingSubstitution?.extendBy(
@@ -148,8 +148,8 @@ fun BranchClosingSubstitution?.extendBy(
         splits =
             hyp
                 .splits
-                ?.toList()
-                .combineNullable(goal.splits?.toList()) // TODO consider making this a set
+                ?.toSet()
+                .combineNullable(goal.splits?.toSet())
                 .combineNullable(this?.splits),
     )
 
@@ -161,6 +161,6 @@ fun BranchClosingSubstitution?.extendBy(
         splits =
             closingFormula
                 .splits
-                ?.toList()
+                ?.toSet()
                 .combineNullable(this?.splits),
     )

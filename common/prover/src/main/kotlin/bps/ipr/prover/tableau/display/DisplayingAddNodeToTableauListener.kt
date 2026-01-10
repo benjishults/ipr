@@ -9,7 +9,7 @@ import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
 object DisplayingAddNodeToTableauListener : AddNodeToTableauListener {
 
     override fun addNodeToTableau(node: BaseTableauNode) {
-        DisplayableTableauNodeHelper.addToNode(node)
+        DisplayableGraphvizTableauNodeHelper.addToNode(node)
     }
 
 }

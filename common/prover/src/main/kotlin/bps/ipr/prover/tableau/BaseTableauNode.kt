@@ -3,7 +3,9 @@ package bps.ipr.prover.tableau
 import bps.ipr.common.Node
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
+import bps.ipr.prover.tableau.listener.DisplayGoalsCompactListener
 import bps.ipr.prover.tableau.listener.DisplayGoalsListener
+import bps.ipr.prover.tableau.listener.DisplayHypsCompactListener
 import bps.ipr.prover.tableau.listener.DisplayHypsListener
 import bps.ipr.prover.tableau.listener.PopulateNodeWithFormulasListener
 import bps.ipr.prover.tableau.rule.BetaFormula
@@ -29,6 +31,8 @@ open class BaseTableauNode(
     private var populateFormulasListeners: MutableList<PopulateNodeWithFormulasListener>? = null
     private var displayHypsListeners: MutableList<DisplayHypsListener>? = null
     private var displayGoalsListeners: MutableList<DisplayGoalsListener>? = null
+    private var displayHypsCompactListeners: MutableList<DisplayHypsCompactListener>? = null
+    private var displayGoalsCompactListeners: MutableList<DisplayGoalsCompactListener>? = null
 
     private var _tableau: BaseTableau? = null
 
@@ -229,26 +233,6 @@ open class BaseTableauNode(
         }
     }
 
-    fun display(indent: Int) =
-        buildString {
-            append(" ".repeat(indent))
-            append("(${id}) Suppose\n")
-            newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
-                appendLine(hyp.display(indent + 1))
-            }
-            displayHypsListeners?.let {
-                notifyDisplayHypsListeners(this, indent)
-            }
-            append(" ".repeat(indent))
-            appendLine("Show")
-            newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
-                appendLine(goal.display(indent + 1))
-            }
-            displayGoalsListeners?.let {
-                notifyDisplayGoalsListeners(this, indent)
-            }
-        }
-
     fun addPopulateListener(listener: PopulateNodeWithFormulasListener) {
         populateFormulasListeners?.add(listener) ?: run { populateFormulasListeners = mutableListOf(listener) }
     }
@@ -259,6 +243,14 @@ open class BaseTableauNode(
 
     fun addDisplayGoalsListener(listener: DisplayGoalsListener) {
         displayGoalsListeners?.add(listener) ?: run { displayGoalsListeners = mutableListOf(listener) }
+    }
+
+    fun addDisplayHypsCompactListener(listener: DisplayHypsCompactListener) {
+        displayHypsCompactListeners?.add(listener) ?: run { displayHypsCompactListeners = mutableListOf(listener) }
+    }
+
+    fun addDisplayGoalsCompactListener(listener: DisplayGoalsCompactListener) {
+        displayGoalsCompactListeners?.add(listener) ?: run { displayGoalsCompactListeners = mutableListOf(listener) }
     }
 
     private fun notifyPopulateListeners(
@@ -301,6 +293,72 @@ open class BaseTableauNode(
                 e.printStackTrace()
             }
         }
+
+    private fun notifyDisplayHypsCompactListeners(builder: StringBuilder, maxChars: Int = 25) =
+        displayHypsCompactListeners?.forEach {
+            try {
+                it.displayHypsCompact(builder, maxChars)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    private fun notifyDisplayGoalsCompactListeners(builder: StringBuilder, maxChars: Int = 25) =
+        displayGoalsCompactListeners?.forEach {
+            try {
+                it.displayGoalsCompact(builder, maxChars)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
+    fun display(indent: Int) : String =
+        buildString {
+            append(" ".repeat(indent))
+            appendLine("(${id}) Suppose")
+            newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
+                appendLine(hyp.display(indent + 1))
+            }
+            displayHypsListeners?.let {
+                notifyDisplayHypsListeners(this, indent)
+            }
+            append(" ".repeat(indent))
+            appendLine("Show")
+            newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
+                appendLine(goal.display(indent + 1))
+            }
+            displayGoalsListeners?.let {
+                notifyDisplayGoalsListeners(this, indent)
+            }
+        }
+
+    fun displayCompact(): String =
+        buildString {
+            appendLine("(${id}) Suppose")
+            newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
+                appendLine(hyp.displayCompact())
+            }
+            displayHypsCompactListeners?.let {
+                notifyDisplayHypsCompactListeners(this)
+            }
+            appendLine("Show")
+            newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
+                appendLine(goal.displayCompact())
+            }
+            displayGoalsCompactListeners?.let {
+                notifyDisplayGoalsCompactListeners(this)
+            }
+        }
+
+
+    fun displayToDot(): String =
+        buildString {
+            appendLine(
+                """"$id" [label="${displayCompact()}"]"""
+            )
+        }
+
+    // NOTE do not override equals and hashCode.  We want to use identity.
 
 //    override fun toString(): String = display(0)
 
