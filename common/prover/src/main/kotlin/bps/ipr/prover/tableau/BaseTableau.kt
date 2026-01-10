@@ -133,6 +133,8 @@ open class BaseTableau(
     fun displayToDot(): String =
         buildString {
             appendLine("digraph G {")
+            appendLine("layout=dot")
+            appendLine("""root="0" """)
             appendLine("node [shape=box]")
             root.breadthFirstTraverse { node: BaseTableauNode ->
                 append(node.displayToDot())

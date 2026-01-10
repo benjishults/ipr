@@ -73,9 +73,11 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
     fun displayCompact(maxChars: Int = 25): String =
         with(StringUtils) {
             require(maxChars > 3) { "maxChars must be greater than 3" }
-            formula
-                .display()
-                .abbreviate(maxChars)
+            "${
+                formula
+                    .display()
+                    .abbreviate(maxChars)
+            }\\l"
         }
 
     fun createNodeForReducedFormulas(

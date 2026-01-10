@@ -69,13 +69,13 @@ DisplayHypsCompactListener{
 
     override fun displayHypsCompact(builder: StringBuilder, maxChars: Int) {
         nonAtomicHyps.forEach {
-            builder.appendLine(it.displayCompact(maxChars))
+            builder.append(it.displayCompact(maxChars))
         }
     }
 
     override fun displayGoalsCompact(builder: StringBuilder, maxChars: Int) {
         nonAtomicGoals.forEach {
-            builder.appendLine(it.displayCompact(maxChars))
+            builder.append(it.displayCompact(maxChars))
         }
     }
 

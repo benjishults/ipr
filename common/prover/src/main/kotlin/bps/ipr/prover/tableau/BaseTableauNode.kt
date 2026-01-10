@@ -334,16 +334,16 @@ open class BaseTableauNode(
 
     fun displayCompact(): String =
         buildString {
-            appendLine("(${id}) Suppose")
+            append("(${id}) Suppose\\l")
             newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
-                appendLine(hyp.displayCompact())
+                append(hyp.displayCompact())
             }
             displayHypsCompactListeners?.let {
                 notifyDisplayHypsCompactListeners(this)
             }
-            appendLine("Show")
+            append("Show\\l")
             newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
-                appendLine(goal.displayCompact())
+                append(goal.displayCompact())
             }
             displayGoalsCompactListeners?.let {
                 notifyDisplayGoalsCompactListeners(this)
@@ -354,7 +354,11 @@ open class BaseTableauNode(
     fun displayToDot(): String =
         buildString {
             appendLine(
-                """"$id" [label="${displayCompact()}"]"""
+                """"$id" [
+                    |label="${displayCompact()}"
+                    |]"""
+                    .trimMargin()
+//                    |nojustify=true
             )
         }
 
