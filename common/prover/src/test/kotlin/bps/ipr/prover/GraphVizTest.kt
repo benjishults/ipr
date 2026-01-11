@@ -1,6 +1,7 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.formulas.GeneralRecursiveDescentFormulaUnifier
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.WhitespaceParser
@@ -9,7 +10,8 @@ import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
 import bps.ipr.prover.tableau.BaseTableau
 import bps.ipr.prover.tableau.TableauProver
-import bps.ipr.prover.tableau.display.DisplayingAddNodeToTableauListener
+import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
+import bps.ipr.prover.tableau.display.dot.DotDisplayTableauListener
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -52,252 +54,193 @@ class GraphVizTest : FreeSpec(),
                         when (i) {
                             // this proof is longer without condense
                             0 -> """digraph G {
+layout=dot
+root="0"
 node [shape=box]
-"0" [label="(0) Suppose
-Show
-(FORALL (a b) (IMPLIES...
-"]
-"1" [label="(1) Suppose
-(FORALL (z) (IMPLIES (...
-Show
-(EXISTS (x) (AND (IMPL...
-"]
+"0" [
+label="Show\l(FORALL (a b) (IMPLIES...\l"
+]
+"1" [
+label="Suppose\l(FORALL (z) (IMPLIES (...\lShow\l(EXISTS (x) (AND (IMPL...\l"
+]
 "0" -> "1"
-"2" [label="(2) Suppose
-Show
-(AND (IMPLIES (p x_0) ...
-"]
+"2" [
+label="Show\l(AND (IMPLIES (p x_0) ...\l"
+]
 "1" -> "2"
-"3" [label="(3) Suppose
-(p x_0)
-Show
-(p (a))
-"]
+"3" [
+label="Suppose\l(p x_0)\lShow\l(p (a))\l"
+]
 "2" -> "3"
-"4" [label="(4) Suppose
-(q x_0)
-Show
-(p (b))
-"]
+"4" [
+label="Suppose\l(q x_0)\lShow\l(p (b))\l"
+]
 "2" -> "4"
-"5" [label="(5) Suppose
-(IMPLIES (q z_0) (p z_0))
-Show
-"]
+"5" [
+label="Suppose\l(IMPLIES (q z_0) (p z_0))\l"
+]
 "3" -> "5"
-"6" [label="(6) Suppose
-(IMPLIES (q z_1) (p z_1))
-Show
-"]
+"6" [
+label="Suppose\l(IMPLIES (q z_1) (p z_1))\l"
+]
 "4" -> "6"
-"7" [label="(7) Suppose
-(p z_0)
-Show
-"]
+"7" [
+label="Suppose\l(p z_0)\l"
+]
 "5" -> "7"
-"8" [label="(8) Suppose
-Show
-(q z_0)
-"]
+"8" [
+label="Show\l(q z_0)\l"
+]
 "5" -> "8"
-"9" [label="(9) Suppose
-(p z_1)
-Show
-"]
+"9" [
+label="Suppose\l(p z_1)\l"
+]
 "6" -> "9"
-"10" [label="(10) Suppose
-Show
-(q z_1)
-"]
+"10" [
+label="Show\l(q z_1)\l"
+]
 "6" -> "10"
-"11" [label="(11) Suppose
-Show
-(AND (IMPLIES (p x_1) ...
-"]
+"11" [
+label="Show\l(AND (IMPLIES (p x_1) ...\l"
+]
 "7" -> "11"
-"12" [label="(12) Suppose
-Show
-(AND (IMPLIES (p x_2) ...
-"]
+"12" [
+label="Show\l(AND (IMPLIES (p x_2) ...\l"
+]
 "8" -> "12"
-"13" [label="(13) Suppose
-Show
-(AND (IMPLIES (p x_3) ...
-"]
+"13" [
+label="Show\l(AND (IMPLIES (p x_3) ...\l"
+]
 "9" -> "13"
-"14" [label="(14) Suppose
-Show
-(AND (IMPLIES (p x_4) ...
-"]
+"14" [
+label="Show\l(AND (IMPLIES (p x_4) ...\l"
+]
 "10" -> "14"
-"15" [label="(15) Suppose
-(p x_1)
-Show
-(p (a))
-"]
+"15" [
+label="Suppose\l(p x_1)\lShow\l(p (a))\l"
+]
 "11" -> "15"
-"16" [label="(16) Suppose
-(q x_1)
-Show
-(p (b))
-"]
+"16" [
+label="Suppose\l(q x_1)\lShow\l(p (b))\l"
+]
 "11" -> "16"
 }
 """
                             // this proof is longer without condense
                             1 -> """digraph G {
+layout=dot
+root="0"
 node [shape=box]
-"0" [label="(0) Suppose
-(IMPLIES (r0) (EXISTS ...
-(IMPLIES (AND (p0) (q0...
-(EXISTS (x) (a x))
-(EXISTS (x) (b x))
-Show
-(EXISTS (x) (AND (IMPL...
-"]
-"1" [label="(1) Suppose
-(a (x))
-Show
-"]
+"0" [
+label="Suppose\l(IMPLIES (r0) (EXISTS ...\l(IMPLIES (AND (p0) (q0...\l(EXISTS (x) (a x))\l(EXISTS (x) (b x))\lShow\l(EXISTS (x) (AND (IMPL...\l"
+]
+"1" [
+label="Suppose\l(a (x))\l"
+]
 "0" -> "1"
-"2" [label="(2) Suppose
-(b (x_0))
-Show
-"]
+"2" [
+label="Suppose\l(b (x_0))\l"
+]
 "1" -> "2"
-"3" [label="(3) Suppose
-(EXISTS (x) (AND (a x)...
-Show
-"]
+"3" [
+label="Suppose\l(EXISTS (x) (AND (a x)...\l"
+]
 "2" -> "3"
-"4" [label="(4) Suppose
-Show
-(r0)
-"]
+"4" [
+label="Show\l(r0)\l"
+]
 "2" -> "4"
-"5" [label="(5) Suppose
-(a (x_1))
-(b (x_1))
-Show
-"]
+"5" [
+label="Suppose\l(a (x_1))\l(b (x_1))\l"
+]
 "3" -> "5"
-"6" [label="(6) Suppose
-(r0)
-Show
-"]
+"6" [
+label="Suppose\l(r0)\l"
+]
 "4" -> "6"
-"7" [label="(7) Suppose
-Show
-(AND (p0) (q0))
-"]
+"7" [
+label="Show\l(AND (p0) (q0))\l"
+]
 "4" -> "7"
-"8" [label="(8) Suppose
-(r0)
-Show
-"]
+"8" [
+label="Suppose\l(r0)\l"
+]
 "5" -> "8"
-"9" [label="(9) Suppose
-Show
-(AND (p0) (q0))
-"]
+"9" [
+label="Show\l(AND (p0) (q0))\l"
+]
 "5" -> "9"
-"14" [label="(14) Suppose
-Show
-(AND (IMPLIES (p0) (a ...
-"]
+"14" [
+label="Show\l(AND (IMPLIES (p0) (a ...\l"
+]
 "6" -> "14"
-"10" [label="(10) Suppose
-Show
-(p0)
-"]
+"10" [
+label="Show\l(p0)\l"
+]
 "7" -> "10"
-"11" [label="(11) Suppose
-Show
-(q0)
-"]
+"11" [
+label="Show\l(q0)\l"
+]
 "7" -> "11"
-"15" [label="(15) Suppose
-Show
-(AND (IMPLIES (p0) (a ...
-"]
+"15" [
+label="Show\l(AND (IMPLIES (p0) (a ...\l"
+]
 "8" -> "15"
-"12" [label="(12) Suppose
-Show
-(p0)
-"]
+"12" [
+label="Show\l(p0)\l"
+]
 "9" -> "12"
-"13" [label="(13) Suppose
-Show
-(q0)
-"]
+"13" [
+label="Show\l(q0)\l"
+]
 "9" -> "13"
-"20" [label="(20) Suppose
-(p0)
-Show
-(a x_5)
-"]
+"20" [
+label="Suppose\l(p0)\lShow\l(a x_5)\l"
+]
 "14" -> "20"
-"21" [label="(21) Suppose
-(q0)
-Show
-(b x_5)
-"]
+"21" [
+label="Suppose\l(q0)\lShow\l(b x_5)\l"
+]
 "14" -> "21"
-"16" [label="(16) Suppose
-Show
-(AND (IMPLIES (p0) (a ...
-"]
+"16" [
+label="Show\l(AND (IMPLIES (p0) (a ...\l"
+]
 "10" -> "16"
-"17" [label="(17) Suppose
-Show
-(AND (IMPLIES (p0) (a ...
-"]
+"17" [
+label="Show\l(AND (IMPLIES (p0) (a ...\l"
+]
 "11" -> "17"
-"22" [label="(22) Suppose
-(p0)
-Show
-(a x_6)
-"]
+"22" [
+label="Suppose\l(p0)\lShow\l(a x_6)\l"
+]
 "15" -> "22"
-"23" [label="(23) Suppose
-(q0)
-Show
-(b x_6)
-"]
+"23" [
+label="Suppose\l(q0)\lShow\l(b x_6)\l"
+]
 "15" -> "23"
-"18" [label="(18) Suppose
-Show
-(AND (IMPLIES (p0) (a ...
-"]
+"18" [
+label="Show\l(AND (IMPLIES (p0) (a ...\l"
+]
 "12" -> "18"
-"19" [label="(19) Suppose
-Show
-(AND (IMPLIES (p0) (a ...
-"]
+"19" [
+label="Show\l(AND (IMPLIES (p0) (a ...\l"
+]
 "13" -> "19"
-"24" [label="(24) Suppose
-(p0)
-Show
-(a x_7)
-"]
+"24" [
+label="Suppose\l(p0)\lShow\l(a x_7)\l"
+]
 "16" -> "24"
-"25" [label="(25) Suppose
-(q0)
-Show
-(b x_7)
-"]
+"25" [
+label="Suppose\l(q0)\lShow\l(b x_7)\l"
+]
 "16" -> "25"
-"26" [label="(26) Suppose
-(p0)
-Show
-(a x_8)
-"]
+"26" [
+label="Suppose\l(p0)\lShow\l(a x_8)\l"
+]
 "17" -> "26"
-"27" [label="(27) Suppose
-(q0)
-Show
-(b x_8)
-"]
+"27" [
+label="Suppose\l(q0)\lShow\l(b x_8)\l"
+]
 "17" -> "27"
 }
 """
@@ -317,14 +260,33 @@ Show
                     "attempt ${formula.display(0)} expecting success" {
                         val folProofResult = TableauProver(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
-                            initialQLimit = 2,
                             formulaImplementation = this@GraphVizTest.formulaImplementation,
-                            addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener),
+                            tableauFactory = {
+                                BaseTableau(
+                                    initialQLimit = 2,
+                                    closingAlgorithm = { formulaUnifier: FormulaUnifier ->
+                                        with(SimplePreorderTableauClosingAlgorithm) {
+                                            attemptCloseSimplePreorder(formulaUnifier)
+                                        }
+                                    },
+                                )
+                                    .apply {
+                                        DotDisplayTableauListener(tableau = this)
+                                            .also { tableauListener: DotDisplayTableauListener ->
+                                                addAddNodeToTableauListener(tableauListener)
+                                                addDisplayTableauListener(tableauListener)
+                                            }
+                                    }
+                            },
                         )
                             .prove(formula)
                         with(folProofResult) {
                             shouldBeInstanceOf<FolTableauProofSuccess>()
-                            (tableau as BaseTableau).displayToDot() shouldBe expectedResult
+                            StringBuilder()
+                                .also {
+                                    tableau.display(it, "dot")
+                                }
+                                .toString() shouldBe expectedResult
                             substitution.display() shouldBe expectedSubstitution
                         }
                     }

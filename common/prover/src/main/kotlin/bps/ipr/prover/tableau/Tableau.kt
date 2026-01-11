@@ -8,5 +8,5 @@ interface Tableau<N : TableauNode<N>> {
     val root: N
     val applicableRules: RuleSelector
     fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess?
-    fun display(): String
+    fun display(appendable: Appendable, displayKey: String = "plain")
 }

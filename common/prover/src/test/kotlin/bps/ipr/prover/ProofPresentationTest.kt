@@ -1,14 +1,17 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.FolFormula
+import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.formulas.GeneralRecursiveDescentFormulaUnifier
 import bps.ipr.parser.FolFormulaParser
 import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
-import bps.ipr.prover.tableau.display.DisplayingAddNodeToTableauListener
+import bps.ipr.prover.tableau.BaseTableau
 import bps.ipr.prover.tableau.TableauProver
+import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
+import bps.ipr.prover.tableau.display.text.ReadableDisplayTableauListener
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.shouldBe
@@ -51,9 +54,7 @@ class ProofPresentationTest :
                         formula,
                         when (i) {
                             // this proof is longer without condense
-                            0 -> """---
-(0) Suppose
-Show
+                            0 -> """(0) Show
  (FORALL (a b) (IMPLIES (FORALL (z) (IMPLIES (q z) (p z))) (EXISTS (x) (AND (IMPLIES (p x) (p a)) (IMPLIES (q x) (p b))))))
 ---
  (1) Suppose
@@ -61,8 +62,7 @@ Show
  Show
   (EXISTS (x) (AND (IMPLIES (p x) (p (a))) (IMPLIES (q x) (p (b)))))
 ---
-  (2) Suppose
-  Show
+  (2) Show
    (AND (IMPLIES (p x_0) (p (a))) (IMPLIES (q x_0) (p (b))))
 ---
    (3) Suppose
@@ -72,14 +72,10 @@ Show
 ---
     (5) Suppose
      (IMPLIES (q z_0) (p z_0))
-    Show
 ---
-     (7) Suppose
-      (p z_0)
-     Show
+     (7) Show // FIXME
 ---
-      (11) Suppose
-      Show
+      (11) Show
        (AND (IMPLIES (p x_1) (p (a))) (IMPLIES (q x_1) (p (b))))
 ---
        (15) Suppose
@@ -96,8 +92,7 @@ Show
      Show
       (q z_0)
 ---
-      (12) Suppose
-      Show
+      (12) Show
        (AND (IMPLIES (p x_2) (p (a))) (IMPLIES (q x_2) (p (b))))
 ---
    (4) Suppose
@@ -107,22 +102,17 @@ Show
 ---
     (6) Suppose
      (IMPLIES (q z_1) (p z_1))
-    Show
 ---
-     (9) Suppose
-      (p z_1)
-     Show
+     (9) Show // FIXME
 ---
-      (13) Suppose
-      Show
+      (13) Show
        (AND (IMPLIES (p x_3) (p (a))) (IMPLIES (q x_3) (p (b))))
 ---
-     (10) Suppose
+     (10) Suppose // FIXME
      Show
       (q z_1)
 ---
-      (14) Suppose
-      Show
+      (14) Show
        (AND (IMPLIES (p x_4) (p (a))) (IMPLIES (q x_4) (p (b))))
 """
                             // this proof is longer without condense
@@ -135,29 +125,18 @@ Show
 Show
  (EXISTS (x) (AND (IMPLIES (p0) (a x)) (IMPLIES (q0) (b x))))
 ---
- (1) Suppose
-  (a (x))
- Show
+ (1) Show // FIXME
 ---
-  (2) Suppose
-   (b (x_0))
-  Show
+  (2) Show // FIXME
 ---
    (3) Suppose
     (EXISTS (x) (AND (a x) (b x)))
-   Show
 ---
-    (5) Suppose
-     (a (x_1))
-     (b (x_1))
-    Show
+    (5) Show // FIXME
 ---
-     (8) Suppose
-      (r0)
-     Show
+     (8) Show // FIXME
 ---
-      (15) Suppose
-      Show
+      (15) Show
        (AND (IMPLIES (p0) (a x_6)) (IMPLIES (q0) (b x_6)))
 ---
        (22) Suppose
@@ -170,36 +149,30 @@ Show
        Show
         (b x_6)
 ---
-     (9) Suppose
-     Show
+     (9) Show
       (AND (p0) (q0))
 ---
-      (12) Suppose
+      (12) Suppose // FIXME
       Show
        (p0)
 ---
-       (18) Suppose
-       Show
+       (18) Show
         (AND (IMPLIES (p0) (a x_9)) (IMPLIES (q0) (b x_9)))
 ---
-      (13) Suppose
+      (13) Suppose // FIXME
       Show
        (q0)
 ---
-       (19) Suppose
-       Show
+       (19) Show
         (AND (IMPLIES (p0) (a x_10)) (IMPLIES (q0) (b x_10)))
 ---
-   (4) Suppose
+   (4) Suppose // FIXME
    Show
     (r0)
 ---
-    (6) Suppose
-     (r0)
-    Show
+    (6) Show // FIXME
 ---
-     (14) Suppose
-     Show
+     (14) Show
       (AND (IMPLIES (p0) (a x_5)) (IMPLIES (q0) (b x_5)))
 ---
       (20) Suppose
@@ -212,16 +185,14 @@ Show
       Show
        (b x_5)
 ---
-    (7) Suppose
-    Show
+    (7) Show
      (AND (p0) (q0))
 ---
-     (10) Suppose
+     (10) Suppose // FIXME
      Show
       (p0)
 ---
-      (16) Suppose
-      Show
+      (16) Show
        (AND (IMPLIES (p0) (a x_7)) (IMPLIES (q0) (b x_7)))
 ---
        (24) Suppose
@@ -234,12 +205,11 @@ Show
        Show
         (b x_7)
 ---
-     (11) Suppose
+     (11) Suppose // FIXME
      Show
       (q0)
 ---
-      (17) Suppose
-      Show
+      (17) Show
        (AND (IMPLIES (p0) (a x_8)) (IMPLIES (q0) (b x_8)))
 ---
        (26) Suppose
@@ -268,14 +238,36 @@ Show
                     "attempt ${formula.display(0)} expecting success" {
                         val folProofResult = TableauProver(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
-                            initialQLimit = 2,
                             formulaImplementation = this@ProofPresentationTest.formulaImplementation,
-                            addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener),
+                            tableauFactory = {
+                                BaseTableau(
+                                    initialQLimit = 2,
+                                    closingAlgorithm = { formulaUnifier: FormulaUnifier ->
+                                        with(SimplePreorderTableauClosingAlgorithm) {
+                                            attemptCloseSimplePreorder(
+                                                formulaUnifier,
+                                            )
+                                        }
+                                    },
+                                )
+                                    .apply {
+                                        ReadableDisplayTableauListener(
+                                            tableau = this,
+                                        ).also { tableauListener: ReadableDisplayTableauListener ->
+                                            addAddNodeToTableauListener(tableauListener)
+                                            addDisplayTableauListener(tableauListener)
+                                        }
+                                    }
+                            },
                         )
                             .prove(formula)
                         with(folProofResult) {
                             shouldBeInstanceOf<FolTableauProofSuccess>()
-                            tableau.display() shouldBe expectedResult
+                            StringBuilder()
+                                .also {
+                                    tableau.display(it, "readable")
+                                }
+                                .toString() shouldBe expectedResult
                             substitution.display() shouldBe expectedSubstitution
                         }
                     }
