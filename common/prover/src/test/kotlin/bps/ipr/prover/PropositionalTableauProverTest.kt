@@ -7,7 +7,6 @@ import bps.ipr.parser.WhitespaceParser
 import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
-import bps.ipr.prover.tableau.display.DisplayingAddNodeToTableauListener
 import bps.ipr.prover.tableau.TableauProver
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -48,7 +47,6 @@ class PropositionalTableauProverTest :
                         TableauProver(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             formulaImplementation = this@PropositionalTableauProverTest.formulaImplementation,
-                            addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener),
                         )
                             .prove(formula).shouldBeInstanceOf<FolTableauProofSuccess>()
                     }

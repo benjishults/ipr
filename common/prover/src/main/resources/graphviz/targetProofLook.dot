@@ -1,0 +1,302 @@
+digraph G {
+layout=dot /*
+dot
+neato
+fdp
+sfdp
+circo
+twopi
+//nop
+//nop2
+//osage
+//patchwork
+*/
+//K=0.03
+root="0"
+overlap=prism
+/*
+false
+prism
+scale
+voronoi
+scalexy
+compress
+vpsc
+orthoxy
+*/
+overlap_scaling=-2
+// ranksep="1.2 equally"
+//normalize=true
+//mode=ipsep // used by neato only
+/*
+ipsep
+major
+KK
+sgd
+*/
+sep="+25"
+//len="1"
+//diredgeconstraints=hier
+//esep="2"
+//levelsgap=0.2
+//model="mds" // circuit,subset,mds
+
+/* work pretty well:
+layout=dot
+---
+layout=neato
+overlap=prism
+sep="+3"
+mode=ipsep
+diredgeconstraints=hier
+levelsgap=0.3
+model="mds"
+--- worth playing with
+layout=circo
+overlap=prism
+overlap_scaling=-2
+sep="+20"
+--- worth playing with
+layout=twopi
+overlap=prism
+root="0" // the name of the node
+overlap_scaling=-2
+sep="+25"
+---
+layout=neato
+overlap=prism/scale
+sep="+10"
+mode=ipsep
+diredgeconstraints=hier
+levelsgap=0.3
+model="subset"/"mds"
+---
+*/
+
+node [shape=box]
+
+"0" [label="Suppose
+(b0) (IMPLIES (r0) (EXISTS ...
+(b1) (IMPLIES (AND (p0) (q0...
+(d0) (EXISTS (x) (a x))
+(d1) (EXISTS (x) (b x))
+Show
+(g0) (EXISTS (x) (AND (IMPL...
+"
+xlabel="(0)"
+//root=true
+]
+
+"1" [label="Suppose
+(L0) (a (x))
+"
+xlabel="(1)"
+]
+
+"0" -> "1" [xlabel="from d0"]
+
+"2" [label="Suppose
+(L1) (b (x_0))
+"
+xlabel="(2)"
+]
+
+"1" -> "2" [xlabel="from d1"]
+
+"3" [label="Suppose
+(d2) (EXISTS (x) (AND (a x)..."
+xlabel="(3)"
+]
+
+"2" -> "3" [xlabel="from b0"]
+
+"4" [label="Show
+(L2) (r0)
+"
+xlabel="(4)"]
+
+"2" -> "4" [xlabel="from b0"]
+
+"5" [label="Suppose
+(L3) (a (x_1))
+(L4) (b (x_1))
+"
+xlabel="(5)"]
+
+"3" -> "5" [xlabel="from d2"]
+
+"6" [label="Suppose
+(L5) (r0)
+"
+xlabel="(6)"]
+
+"4" -> "6" [xlabel="from b1"]
+
+"7" [label="Show
+(b2) (AND (p0) (q0))
+"
+xlabel="(7)"]
+
+"4" -> "7" [xlabel="from b1"]
+
+"8" [label="Suppose
+(L6) (r0)
+"
+xlabel="(8)"]
+
+"5" -> "8" [xlabel="from b1"]
+
+"9" [label="Show
+(b3) (AND (p0) (q0))
+"
+xlabel="(9)"]
+
+"5" -> "9" [xlabel="from b1"]
+
+"14" [label="Show
+(b4) (AND (IMPLIES (p0) (a ...
+"
+xlabel="(14)"]
+
+"6" -> "14" [xlabel="from g0"]
+
+"10" [label="Show
+(L7) (p0)
+"
+xlabel="(10)"]
+
+"7" -> "10" [xlabel="from b2"]
+
+"11" [label="Show
+(L8) (q0)
+"
+xlabel="(11)"]
+
+"7" -> "11" [xlabel="from b2"]
+
+"15" [label="Show
+(b5) (AND (IMPLIES (p0) (a ...
+"
+xlabel="(15)"]
+
+"8" -> "15" [xlabel="from g0"]
+
+"12" [label="Show
+(L9) (p0)
+"
+xlabel="(12)"]
+
+"9" -> "12" [xlabel="from b3"]
+
+"13" [label="Show
+(L10) (q0)
+"
+xlabel="(13)"]
+
+"9" -> "13" [xlabel="from b3"]
+
+"20" [label="Suppose
+(L11) (p0)
+Show
+(L12) (a x_5)
+"
+xlabel="(20)"]
+
+"14" -> "20" [xlabel="from b4"]
+
+"21" [label="Suppose
+(L13) (q0)
+Show
+(L14) (b x_5)
+"
+xlabel="(21)"]
+
+"14" -> "21" [xlabel="from b4"]
+
+"16" [label="Show
+(b6) (AND (IMPLIES (p0) (a ...
+"
+xlabel="(16)"]
+
+"10" -> "16" [xlabel="from g0"]
+
+"17" [label="Show
+(b7) (AND (IMPLIES (p0) (a ...
+"
+xlabel="(17)"]
+
+"11" -> "17" [xlabel="from g0"]
+
+"22" [label="Suppose
+(L15) (p0)
+Show
+(L16) (a x_6)
+"
+xlabel="(22)"]
+
+"15" -> "22" [xlabel="from b5"]
+
+"23" [label="Suppose
+(L17) (q0)
+Show
+(L18) (b x_6)
+"
+xlabel="(23)"]
+
+"15" -> "23" [xlabel="from b5"]
+
+"18" [label="Show
+(b8) (AND (IMPLIES (p0) (a ...
+"
+xlabel="(18)"]
+
+"12" -> "18" [xlabel="from g0"]
+
+"19" [label="Show
+(b9) (AND (IMPLIES (p0) (a ...
+"
+xlabel="(19)"]
+
+"13" -> "19" [xlabel="from g0"]
+
+"24" [label="Suppose
+(L19) (p0)
+Show
+(L20) (a x_7)
+"
+xlabel="(24)"]
+
+"16" -> "24" [xlabel="from b6"]
+
+"25" [label="Suppose
+(L21) (q0)
+Show
+(L22) (b x_7)
+"
+xlabel="(25)"]
+
+"16" -> "25" [xlabel="from b6"]
+
+"26" [label="Suppose
+(L23) (p0)
+Show
+(L24) (a x_8)
+"
+xlabel="(26)"]
+
+"17" -> "26" [xlabel="from b7"]
+
+"27" [label="Suppose
+(L26) (q0)
+Show
+(L27) (b x_8)
+"
+xlabel="(27)"]
+
+"17" -> "27" [xlabel="from b7"]
+
+"s1" [label="{x_6 ↦ (x_1), x_7 ↦ (x_0), x_8 ↦ (x)}"]
+
+"22" -> "s1"
+
+}

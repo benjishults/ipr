@@ -1,6 +1,7 @@
 package bps.ipr.prover.tableau.rule
 
 import bps.ipr.common.Node
+import bps.ipr.common.StringUtils
 import bps.ipr.formulas.And
 import bps.ipr.formulas.Falsity
 import bps.ipr.formulas.FolFormula
@@ -69,6 +70,16 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
     fun display(indent: Int = 0) =
         formula.display(indent)
 
+    fun displayCompact(maxChars: Int = 25): String =
+        with(StringUtils) {
+            require(maxChars > 3) { "maxChars must be greater than 3" }
+            "${
+                formula
+                    .display()
+                    .abbreviate(maxChars)
+            }\\l"
+        }
+
     fun createNodeForReducedFormulas(
         leaf: BaseTableauNode,
         reducedFormulasFactory: (BaseTableauNode) -> List<SignedFormula<*>>,
@@ -130,7 +141,10 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
 
 fun SignedFormula<*>.computeSplits(): Node<BaseTableauNode>? =
     if (isSplitting)
-        Node(birthPlace.parent!!, parentFormula!!.splits) // FIXME can I improve this since all children will have the same splits?
+        Node(
+            birthPlace.parent!!,
+            parentFormula!!.splits,
+        ) // FIXME can I improve this since all children will have the same splits?
     else
         parentFormula?.splits
 

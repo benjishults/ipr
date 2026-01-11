@@ -42,6 +42,13 @@ data class Node<T : Any>(
             }
         }
 
+    fun toSet(): Set<T> =
+        buildSet {
+            this@Node.forEach {
+                add(it)
+            }
+        }
+
 }
 
 fun <T : Any> Node<T>?.addToBeginning(element: T): Node<T> =

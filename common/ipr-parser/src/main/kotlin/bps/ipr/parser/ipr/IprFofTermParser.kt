@@ -56,7 +56,6 @@ interface IprFofTermParser : TermParser {
                     '(' ->
                         parseAtomOrNull(startIndex + 1)
                             ?.let { (functor: String, nextIndex: Int) ->
-                                // TODO parse arguments and build function or constant
                                 parseArgumentsOrNull(nextIndex)
                                     ?.let { (args: List<Term>, closedParenInArgumentsInputIndex: Int) ->
                                         val globalIndexAfterClosedParen = closedParenInArgumentsInputIndex + 1

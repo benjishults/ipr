@@ -1,5 +1,6 @@
 package bps.ipr.prover.tableau.rule
 
+import bps.ipr.common.ImpossibleError
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.prover.tableau.BaseTableauNode
@@ -9,7 +10,7 @@ sealed interface WastedSignedFormula<F : FolFormula> : SignedFormula<F> {
      * Does nothing.
      */
     override fun apply() =
-        TODO("should never be called due to the way addRule works")
+        throw ImpossibleError("should never be called due to the way addRule works")
 
     /**
      * Deletes itself.

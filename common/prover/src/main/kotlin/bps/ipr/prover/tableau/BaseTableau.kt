@@ -4,12 +4,15 @@ import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess
+import bps.ipr.prover.tableau.display.DisplayTableauListener
+import bps.ipr.prover.tableau.display.DisplayTableauTechRegistry
 import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
-import bps.ipr.prover.tableau.preorder.SimplePreorderTableauClosingAlgorithm
+import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import bps.ipr.prover.tableau.rule.FolRuleSelector
 import bps.ipr.prover.tableau.rule.RuleSelector
 import bps.ipr.prover.tableau.rule.SignedFormula
+import kotlin.reflect.KClass
 
 /**
  * This class is not thread-safe.
@@ -41,14 +44,38 @@ open class BaseTableau(
     val size: Long
         get() = _size
 
+    val displayListenersMap: MutableMap<KClass<*>, DisplayTableauListener> = mutableMapOf()
+
     private val addNodeToTableauListeners: MutableList<AddNodeToTableauListener> = mutableListOf()
+
+    fun addDisplayTableauListener(listener: DisplayTableauListener) {
+        require(displayListenersMap.contains(listener::class).not()) {
+            "Listener of type ${listener::class.simpleName} already registered on node $this"
+        }
+        displayListenersMap[listener::class] = listener
+    }
 
     fun addAddNodeToTableauListener(listener: AddNodeToTableauListener) {
         addNodeToTableauListeners.add(listener)
     }
 
+    private fun notifyDisplayListeners(appendable: Appendable, displayKey: String) {
+        DisplayTableauTechRegistry
+            .getClassForKeyOrNull(displayKey)
+            ?.let { klass: KClass<*> ->
+                displayListenersMap[klass]
+                    ?.let { listener: DisplayTableauListener ->
+                        try {
+                            listener.displayTableau(appendable)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+            }
+    }
+
     protected fun notifyAddNodeToTableauListeners(node: BaseTableauNode) =
-        addNodeToTableauListeners.forEach { listener ->
+        addNodeToTableauListeners.forEach { listener: AddNodeToTableauListener ->
             try {
                 listener.addNodeToTableau(node)
             } catch (e: Exception) {
@@ -65,69 +92,50 @@ open class BaseTableau(
         notifyAddNodeToTableauListeners(node)
     }
 
-    override fun display(): String =
-        buildString {
-            root.preOrderTraverse { node: BaseTableauNode ->
-                appendLine("---")
-                append(node.display(node.depth()))
+    override fun display(appendable: Appendable, displayKey: String) =
+        when (displayKey) {
+            "plain" ->
+                root.preOrderTraverse { node: BaseTableauNode ->
+                    appendable.appendLine("---")
+                    appendable.append(node.displayNode())
+                }
+            else -> notifyDisplayListeners(appendable, displayKey)
+        }
+
+    fun setRootForFormula(
+        formula: FolFormula,
+        formulaImplementation: FolFormulaImplementation,
+    ) {
+        BaseTableauNode()
+            .also { root: BaseTableauNode ->
+                this.root = root
+                SignedFormula
+                    .create(
+                        formula = formula,
+                        sign = false,
+                        birthPlace = root,
+                        formulaImplementation = formulaImplementation,
+                        parentFormula = null,
+                    )
+                    .reduceAlpha(
+                        birthPlace = root,
+                        parent = null,
+                    )
+                    .also {
+                        val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
+                        root.populate(
+                            newAtomicHyps = pos,
+                            newAtomicGoals = neg,
+                            closing = closing,
+                            betas = betas,
+                            deltas = deltas,
+                            gammas = gammas,
+                        )
+                    }
             }
-        }
 
-    override fun toString(): String = display()
-
-    companion object {
-        // NOTE had to do this outside a constructor because I have to have the generic function
-        operator fun <T : FolFormula> invoke(
-            formula: T,
-            formulaImplementation: FolFormulaImplementation,
-            initialQLimit: Int = 1,
-            addNodeToTableauListeners: List<AddNodeToTableauListener>? = null,
-            closingAlgorithm: (Tableau<BaseTableauNode>.(FormulaUnifier) -> FolProofSuccess?)? = null,
-        ): BaseTableau {
-            return BaseTableau(
-                initialQLimit,
-                closingAlgorithm = closingAlgorithm ?: { formulaUnifier ->
-                    with(SimplePreorderTableauClosingAlgorithm) { attemptCloseSimplePreorder(formulaUnifier) }
-                }
-            )
-                .also { tableau: BaseTableau ->
-                    addNodeToTableauListeners
-                        ?.forEach { addNodeToTableauListener ->
-                            tableau.addAddNodeToTableauListener(addNodeToTableauListener)
-                        }
-                    BaseTableauNode()
-                        .also { root: BaseTableauNode ->
-                            tableau.root = root
-                            SignedFormula
-                                .create(
-                                    formula = formula,
-                                    sign = false,
-                                    birthPlace = root,
-                                    formulaImplementation = formulaImplementation,
-                                    parentFormula = null,
-                                )
-                                .reduceAlpha(
-                                    birthPlace = root,
-                                    parent = null
-                                )
-                                .also {
-                                    val (pos, neg, closing, betas, deltas, gammas) = it.categorizeSignedFormulas()
-                                    root.populate(
-                                        newAtomicHyps = pos,
-                                        newAtomicGoals = neg,
-                                        closing = closing,
-                                        betas = betas,
-                                        deltas = deltas,
-                                        gammas = gammas,
-                                    )
-//                                root.newGoals = neg
-                                }
-//                        .forEach { signedFormula ->
-//                            applicableRules.addRule(signedFormula)
-//                        }
-                        }
-                }
-        }
     }
+
+    override fun toString(): String = StringBuilder().also { display(it) }.toString()
 
 }

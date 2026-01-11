@@ -101,16 +101,3 @@ data class GeneralRecursiveDescentTermUnifier(
             }
 
 }
-
-//class DagUnifier : Unifier {
-//    override fun unify(term1: Term, term2: Term, under: Substitution): Substitution? {
-//        TODO(
-//            """
-//        // TODO construct the union-find-compatible structure from the two terms if that's not what we're looking at
-//        // TODO unify those
-//        // TODO extract the substitution
-//        """.trimIndent(),
-//        )
-//    }
-//
-//}

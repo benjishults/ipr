@@ -11,7 +11,6 @@ fun main() {
     MenuApplicationWithQuit(
         topLevelMenu = Menu({ "IPR!" }) {
 //            add(
-//                // TODO make this a pushMenu
 //                pushMenu(
 //                    label = { "select problem set" },
 //                    shortcut = null,

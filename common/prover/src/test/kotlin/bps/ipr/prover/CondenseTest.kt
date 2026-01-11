@@ -22,7 +22,7 @@ class CondenseTest :
 
     init {
         "condense test" - {
-            // TODO implement condense and check that it has happened
+            // TODO check that condense has happened
             clear()
             val fileAsString = buildString {
                 CondenseTest::class.java.classLoader

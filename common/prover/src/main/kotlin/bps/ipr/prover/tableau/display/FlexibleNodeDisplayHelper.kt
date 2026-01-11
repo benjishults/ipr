@@ -2,8 +2,6 @@ package bps.ipr.prover.tableau.display
 
 import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.listener.PopulateNodeWithFormulasListener
-import bps.ipr.prover.tableau.listener.DisplayGoalsListener
-import bps.ipr.prover.tableau.listener.DisplayHypsListener
 import bps.ipr.prover.tableau.rule.BetaFormula
 import bps.ipr.prover.tableau.rule.ClosingFormula
 import bps.ipr.prover.tableau.rule.DeltaFormula
@@ -18,13 +16,12 @@ import bps.ipr.prover.tableau.rule.SignedFormula
  * An instance of this should be associated to a single [bps.ipr.prover.tableau.BaseTableauNode] in order to make
  * it displayable.
  */
-class DisplayableTableauNodeHelper :
-    PopulateNodeWithFormulasListener,
-    DisplayHypsListener,
-    DisplayGoalsListener {
+abstract class FlexibleNodeDisplayHelper(
+    val node: BaseTableauNode,
+) : PopulateNodeWithFormulasListener {
 
-    val nonAtomicGoals: MutableList<NegativeSignedFormula<*>> = mutableListOf()
-    val nonAtomicHyps: MutableList<PositiveSignedFormula<*>> = mutableListOf()
+    protected val nonAtomicGoals: MutableList<NegativeSignedFormula<*>> = mutableListOf()
+    protected val nonAtomicHyps: MutableList<PositiveSignedFormula<*>> = mutableListOf()
 
     private fun <T : SignedFormula<*>> distributor(formula: T) {
         when (formula) {
@@ -51,27 +48,6 @@ class DisplayableTableauNodeHelper :
             ?.forEach(::distributor)
     }
 
-    override fun displayHyps(builder: StringBuilder, indent: Int) {
-        nonAtomicHyps.forEach {
-            builder.appendLine(it.display(indent + 1))
-        }
-    }
-
-    override fun displayGoals(builder: StringBuilder, indent: Int) {
-        nonAtomicGoals.forEach {
-            builder.appendLine(it.display(indent + 1))
-        }
-    }
-
-    companion object {
-        fun addToNode(node: BaseTableauNode) {
-            DisplayableTableauNodeHelper()
-                .also {
-                    node.addPopulateListener(it)
-                    node.addDisplayHypsListener(it)
-                    node.addDisplayGoalsListener(it)
-                }
-        }
-    }
-
 }
+
+

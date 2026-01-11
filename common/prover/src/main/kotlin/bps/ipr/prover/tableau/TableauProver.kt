@@ -6,7 +6,7 @@ import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofResult
 import bps.ipr.prover.FolTableauProofIncomplete
 import bps.ipr.prover.Prover
-import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
+import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.rule.Rule
 
 /**
@@ -17,20 +17,31 @@ import bps.ipr.prover.tableau.rule.Rule
  */
 class TableauProver(
     val unifier: FormulaUnifier,
-    val initialQLimit: Int = 1,
     val formulaImplementation: FolFormulaImplementation,
-    val addNodeToTableauListeners: List<AddNodeToTableauListener>? = null,
+    val tableauFactory: () -> BaseTableau,
 ) : Prover<FolFormula, FolProofResult> {
+
+    constructor(
+        unifier: FormulaUnifier,
+        formulaImplementation: FolFormulaImplementation,
+        initialQLimit: Int = 1,
+    ) : this(
+        unifier, formulaImplementation,
+        tableauFactory = {
+            BaseTableau(
+                initialQLimit = initialQLimit,
+                closingAlgorithm = { formulaUnifier: FormulaUnifier ->
+                    with(SimplePreorderTableauClosingAlgorithm) { attemptCloseSimplePreorder(formulaUnifier) }
+                },
+            )
+        },
+    )
 
     override fun prove(formula: FolFormula): FolProofResult =
         require(formula.variablesFreeIn.isEmpty()) { "Quantify all free variables before calling prove.  Formula $formula has free variables ${formula.variablesFreeIn}." }
             .run {
-                BaseTableau(
-                    formula = formula,
-                    formulaImplementation = formulaImplementation,
-                    initialQLimit = initialQLimit,
-                    addNodeToTableauListeners = addNodeToTableauListeners,
-                )
+                tableauFactory()
+                    .apply { setRootForFormula(formula, formulaImplementation) }
                     .let { tableau: BaseTableau ->
                         var result: FolProofResult? = tableau.attemptClose(unifier)
                         while (result === null) {

@@ -1,5 +1,6 @@
 package bps.ipr.prover.tableau.rule
 
+import bps.ipr.common.ImpossibleError
 import bps.ipr.formulas.AbstractMultiFolFormula
 import bps.ipr.formulas.And
 import bps.ipr.formulas.FolFormula
@@ -19,7 +20,7 @@ sealed interface AlphaFormula<T : FolFormula> : SignedFormula<T> {
     ): MutableList<SignedFormula<*>>
 
     override fun apply() =
-        TODO("This should never be called due to the way addRule works.")
+        throw ImpossibleError("This should never be called due to the way addRule works.")
 }
 
 sealed interface SignedNotFormula : AlphaFormula<Not> {

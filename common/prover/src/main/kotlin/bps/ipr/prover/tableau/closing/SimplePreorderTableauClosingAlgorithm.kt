@@ -1,4 +1,4 @@
-package bps.ipr.prover.tableau.preorder
+package bps.ipr.prover.tableau.closing
 
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.FolProofSuccess

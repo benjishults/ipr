@@ -156,8 +156,6 @@ sealed interface NonEmptyIdempotentSubstitution : IdempotentSubstitution {
 
 }
 
-// TODO consider making specialty classes up to a certain number of variables in a substitution to avoid using a map
-//     in many cases.  Might be interesting to measure performance differences.
 data class SingletonIdempotentSubstitution(
     val key: Variable,
     val value: Term,
@@ -212,18 +210,6 @@ class MultiIdempotentSubstitution(
     mapping: Map<Variable, Term>,
 ) : NonEmptyIdempotentSubstitution {
 
-    /**
-     * Be very careful using this.  This DOES NOT COMPOSE.  This really just takes the union.
-     * If there are duplicate keys between the receiver and [other], then [other] will win.
-     */
-    fun union(other: NonEmptyIdempotentSubstitution): MultiIdempotentSubstitution =
-        when (other) {
-            is SingletonIdempotentSubstitution ->
-                MultiIdempotentSubstitution(mapping + (other.key to other.value))
-            is MultiIdempotentSubstitution ->
-                MultiIdempotentSubstitution(mapping + other.mapping)
-        }
-
     private val mapping: Map<Variable, Term> =
         mapping.toMap()
     override val domain: Set<Variable> =
@@ -241,6 +227,17 @@ class MultiIdempotentSubstitution(
         require(isIdempotent())
     }
 
+    /**
+     * Be very careful using this.  This DOES NOT COMPOSE.  This really just takes the union.
+     * If there are duplicate keys between the receiver and [other], then [other] will win.
+     */
+    fun union(other: NonEmptyIdempotentSubstitution): MultiIdempotentSubstitution =
+        when (other) {
+            is SingletonIdempotentSubstitution ->
+                MultiIdempotentSubstitution(mapping + (other.key to other.value))
+            is MultiIdempotentSubstitution ->
+                MultiIdempotentSubstitution(mapping + other.mapping)
+        }
 
     override fun map(variable: Variable): Term =
         mapping[variable]
