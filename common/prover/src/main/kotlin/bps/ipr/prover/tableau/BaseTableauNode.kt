@@ -30,16 +30,6 @@ open class BaseTableauNode(
     var populateFormulasListeners: MutableList<PopulateNodeWithFormulasListener>? = null
         private set
     val displayNodeListenersMap: MutableMap<KClass<*>, DisplayNodeListener> = mutableMapOf()
-//    var displayNodeListeners: MutableList<DisplayNodeListener>? = null
-//        private set
-//    var displayHypsListeners: MutableList<DisplayHypsListener>? = null
-//        private set
-//    var displayGoalsListeners: MutableList<DisplayGoalsListener>? = null
-//        private set
-//    var displayHypsCompactListeners: MutableList<DisplayHypsCompactListener>? = null
-//        private set
-//    var displayGoalsCompactListeners: MutableList<DisplayGoalsCompactListener>? = null
-//        private set
 
     private var _tableau: BaseTableau? = null
 
@@ -251,22 +241,6 @@ open class BaseTableauNode(
         displayNodeListenersMap[listener::class] = listener
     }
 
-//    fun addDisplayHypsListener(listener: DisplayHypsListener) {
-//        displayHypsListeners?.add(listener) ?: run { displayHypsListeners = mutableListOf(listener) }
-//    }
-//
-//    fun addDisplayGoalsListener(listener: DisplayGoalsListener) {
-//        displayGoalsListeners?.add(listener) ?: run { displayGoalsListeners = mutableListOf(listener) }
-//    }
-//
-//    fun addDisplayHypsCompactListener(listener: DisplayHypsCompactListener) {
-//        displayHypsCompactListeners?.add(listener) ?: run { displayHypsCompactListeners = mutableListOf(listener) }
-//    }
-//
-//    fun addDisplayGoalsCompactListener(listener: DisplayGoalsCompactListener) {
-//        displayGoalsCompactListeners?.add(listener) ?: run { displayGoalsCompactListeners = mutableListOf(listener) }
-//    }
-
     private fun notifyPopulateListeners(
         newAtomicHyps: List<PositiveAtomicFormula>? = null,
         newAtomicGoals: List<NegativeAtomicFormula>? = null,
@@ -305,42 +279,6 @@ open class BaseTableauNode(
             }
     }
 
-//    private fun notifyDisplayHypsListeners(builder: StringBuilder, indent: Int) =
-//        displayHypsListeners?.forEach {
-//            try {
-//                it.displayHyps(builder, indent)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-//        }
-//
-//    private fun notifyDisplayGoalsListeners(builder: StringBuilder, indent: Int) =
-//        displayGoalsListeners?.forEach {
-//            try {
-//                it.displayGoals(builder, indent)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-//        }
-//
-//    private fun notifyDisplayHypsCompactListeners(builder: StringBuilder, maxChars: Int = 25) =
-//        displayHypsCompactListeners?.forEach {
-//            try {
-//                it.displayHypsCompact(builder, maxChars)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-//        }
-//
-//    private fun notifyDisplayGoalsCompactListeners(builder: StringBuilder, maxChars: Int = 25) =
-//        displayGoalsCompactListeners?.forEach {
-//            try {
-//                it.displayGoalsCompact(builder, maxChars)
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-//        }
-
     fun displayNode(displayTechKey: String = "plain"): String =
         when (displayTechKey) {
             "plain" -> display()
@@ -370,39 +308,8 @@ open class BaseTableauNode(
             }
         }
 
-//    fun displayCompact(): String =
-//        buildString {
-////            FIXME make this whole thing handled by a listener instead of separating it out
-//            append("Suppose\\l")
-//            newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
-//                append(hyp.displayCompact())
-//            }
-//            displayHypsCompactListeners?.let {
-//                notifyDisplayHypsCompactListeners(this)
-//            }
-//            append("Show\\l")
-//            newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
-//                append(goal.displayCompact())
-//            }
-//            displayGoalsCompactListeners?.let {
-//                notifyDisplayGoalsCompactListeners(this)
-//            }
-//        }
-//
-//
-//    fun displayToDot(): String =
-//        buildString {
-//            appendLine(
-//                """"$id" [
-//                    |label="${displayCompact()}"
-//                    |]"""
-//                    .trimMargin(),
-////                    |nojustify=true
-//            )
-//        }
-
     // NOTE do not override equals and hashCode.  We want to use identity.
 
-//    override fun toString(): String = display(0)
+    override fun toString(): String = displayNode()
 
 }

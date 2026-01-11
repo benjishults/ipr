@@ -54,7 +54,6 @@ class FolTableauProverTest :
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = Q_LIMIT_TO_TRY_FOR_INVALID_FORMULAS,
                             formulaImplementation = this@FolTableauProverTest.formulaImplementation,
-//                            addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener),
                         )
                             .prove(formula)
                             .shouldBeInstanceOf<FolProofIncomplete>()

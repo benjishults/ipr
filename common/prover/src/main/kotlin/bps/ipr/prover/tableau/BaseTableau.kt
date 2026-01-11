@@ -46,7 +46,6 @@ open class BaseTableau(
 
     val displayListenersMap: MutableMap<KClass<*>, DisplayTableauListener> = mutableMapOf()
 
-    //    private val displayTableauListeners: MutableList<DisplayTableauListener> = mutableListOf()
     private val addNodeToTableauListeners: MutableList<AddNodeToTableauListener> = mutableListOf()
 
     fun addDisplayTableauListener(listener: DisplayTableauListener) {
@@ -139,28 +138,4 @@ open class BaseTableau(
 
     override fun toString(): String = StringBuilder().also { display(it) }.toString()
 
-    companion object {
-        // NOTE had to do this outside a constructor because I have to have the generic function
-        operator fun <T : FolFormula> invoke(
-            formula: T,
-            formulaImplementation: FolFormulaImplementation,
-            initialQLimit: Int = 1,
-            addNodeToTableauListeners: List<AddNodeToTableauListener>? = null,
-            closingAlgorithm: (Tableau<BaseTableauNode>.(FormulaUnifier) -> FolProofSuccess?)? = null,
-        ): BaseTableau {
-            return BaseTableau(
-                initialQLimit,
-                closingAlgorithm = closingAlgorithm ?: { formulaUnifier: FormulaUnifier ->
-                    with(SimplePreorderTableauClosingAlgorithm) { attemptCloseSimplePreorder(formulaUnifier) }
-                },
-            )
-                .also { tableau: BaseTableau ->
-                    addNodeToTableauListeners
-                        ?.forEach { addNodeToTableauListener ->
-                            tableau.addAddNodeToTableauListener(addNodeToTableauListener)
-                        }
-                    tableau.setRootForFormula(formula, formulaImplementation)
-                }
-        }
-    }
 }

@@ -7,8 +7,6 @@ import bps.ipr.prover.FolProofResult
 import bps.ipr.prover.FolTableauProofIncomplete
 import bps.ipr.prover.Prover
 import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
-import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm.attemptCloseSimplePreorder
-import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
 import bps.ipr.prover.tableau.rule.Rule
 
 /**

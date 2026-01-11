@@ -47,7 +47,6 @@ class PropositionalTableauProverTest :
                         TableauProver(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             formulaImplementation = this@PropositionalTableauProverTest.formulaImplementation,
-//                            addNodeToTableauListeners = listOf(DisplayingAddNodeToTableauListener),
                         )
                             .prove(formula).shouldBeInstanceOf<FolTableauProofSuccess>()
                     }
