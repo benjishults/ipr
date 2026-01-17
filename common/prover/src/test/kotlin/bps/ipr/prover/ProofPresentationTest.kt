@@ -10,6 +10,9 @@ import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
 import bps.ipr.prover.tableau.BaseTableau
 import bps.ipr.prover.tableau.TableauProver
+import bps.ipr.prover.tableau.closing.BranchClosingSubstitutionExtender
+import bps.ipr.prover.tableau.closing.CondensingBranchCloser
+import bps.ipr.prover.tableau.closing.CondensingFolBranchCloserImpl
 import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.display.text.ReadableDisplayTableauListener
 import io.kotest.core.spec.style.FreeSpec
@@ -53,8 +56,9 @@ class ProofPresentationTest :
                     ProverTest(
                         formula,
                         when (i) {
-                            // this proof is longer without condense
-                            0 -> """(0) Show
+                            // this proof is longer without condensing
+                            0 -> """---
+(0) Show
  (FORALL (a b) (IMPLIES (FORALL (z) (IMPLIES (q z) (p z))) (EXISTS (x) (AND (IMPLIES (p x) (p a)) (IMPLIES (q x) (p b))))))
 ---
  (1) Suppose
@@ -236,39 +240,40 @@ Show
             formulas
                 .forEach { (formula, expectedResult, expectedSubstitution) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        val folProofResult = TableauProver(
-                            unifier = GeneralRecursiveDescentFormulaUnifier(),
-                            formulaImplementation = this@ProofPresentationTest.formulaImplementation,
-                            tableauFactory = {
-                                BaseTableau(
-                                    initialQLimit = 2,
-                                    closingAlgorithm = { formulaUnifier: FormulaUnifier ->
-                                        with(SimplePreorderTableauClosingAlgorithm) {
-                                            attemptCloseSimplePreorder(
-                                                formulaUnifier,
-                                            )
-                                        }
-                                    },
-                                )
-                                    .apply {
-                                        ReadableDisplayTableauListener(
-                                            tableau = this,
-                                        ).also { tableauListener: ReadableDisplayTableauListener ->
-                                            addAddNodeToTableauListener(tableauListener)
-                                            addDisplayTableauListener(tableauListener)
-                                        }
+                        val folProofResult: FolProofResult<CondensingFolBranchCloserImpl> =
+                            TableauProver(
+                                unifier = GeneralRecursiveDescentFormulaUnifier(),
+                                formulaImplementation = this@ProofPresentationTest.formulaImplementation,
+//                                initialQLimit = 2,
+                                closingAlgorithm = { tableau, formulaUnifier: FormulaUnifier ->
+                                    with(SimplePreorderTableauClosingAlgorithm) {
+                                        tableau.attemptCloseSimplePreorder(
+                                            formulaUnifier,
+                                            branchCloserExtender = BranchClosingSubstitutionExtender,
+                                        )
                                     }
-                            },
-                        )
-                            .prove(formula)
+                                },
+                                tableauFactory = {
+                                    BaseTableau<CondensingFolBranchCloserImpl>(
+                                        initialQLimit = 2,
+                                    )
+                                        .apply {
+                                            ReadableDisplayTableauListener(
+                                                tableau = this,
+                                            ).also { tableauListener: ReadableDisplayTableauListener ->
+                                                addAddNodeToTableauListener(tableauListener)
+                                                addDisplayTableauListener(tableauListener)
+                                            }
+                                        }
+                                },
+                            )
+                                .prove(formula)
                         with(folProofResult) {
-                            shouldBeInstanceOf<FolTableauProofSuccess>()
+                            shouldBeInstanceOf<FolTableauProofSuccess<*>>()
                             StringBuilder()
-                                .also {
-                                    tableau.display(it, "readable")
-                                }
+                                .also { tableau.display(it, "readable") }
                                 .toString() shouldBe expectedResult
-                            substitution.display() shouldBe expectedSubstitution
+                            branchCloser.substitution.display() shouldBe expectedSubstitution
                         }
                     }
                 }

@@ -31,13 +31,13 @@ open class BaseTableauNode(
         private set
     val displayNodeListenersMap: MutableMap<KClass<*>, DisplayNodeListener> = mutableMapOf()
 
-    private var _tableau: BaseTableau? = null
+    private var _tableau: BaseTableau<*>? = null
 
     /**
      * Setting this registers the node in the tableau which includes incrementing the size of the tableau and
      * setting the [id] of the node.
      */
-    override var tableau: BaseTableau
+    override var tableau: BaseTableau<*>
         get() = _tableau!!
         set(value) {
             if (_tableau === null) {

@@ -5,7 +5,7 @@ import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.display.FlexibleDisplayTableauListener
 
 class DotDisplayTableauListener(
-    val tableau: BaseTableau,
+    val tableau: BaseTableau<*>,
     override val nodeListenerFactory: (BaseTableauNode) -> DotDisplayNodeListener = ::DotDisplayNodeListener,
 ) : FlexibleDisplayTableauListener<DotDisplayNodeListener> {
 

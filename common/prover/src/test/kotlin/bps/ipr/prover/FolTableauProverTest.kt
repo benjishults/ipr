@@ -8,6 +8,8 @@ import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
 import bps.ipr.prover.tableau.TableauProver
+import bps.ipr.prover.tableau.closing.CondensingFolBranchCloserImpl
+import bps.ipr.prover.tableau.closing.FolBranchCloserImpl
 import bps.ipr.substitution.EmptySubstitution
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
@@ -44,19 +46,19 @@ class FolTableauProverTest :
                     it.shouldNotBeNull()
                     val (formula, index) = it
                     startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    ProverTest(formula, FolProofSuccess(FolBranchCloserImpl(EmptySubstitution)))
                 }
                 .toList()
             formulas
-                .forEach { (formula, expectedResult) ->
+                .forEach { (formula, _) ->
                     "attempt ${formula.display(0)} expecting failure" {
-                        TableauProver(
+                        TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = Q_LIMIT_TO_TRY_FOR_INVALID_FORMULAS,
                             formulaImplementation = this@FolTableauProverTest.formulaImplementation,
                         )
                             .prove(formula)
-                            .shouldBeInstanceOf<FolProofIncomplete>()
+                            .shouldBeInstanceOf<FolProofIncomplete<*>>()
                     }
                 }
         }
@@ -81,19 +83,19 @@ class FolTableauProverTest :
                     it.shouldNotBeNull()
                     val (formula, index) = it
                     startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    ProverTest(formula, FolProofSuccess(FolBranchCloserImpl(EmptySubstitution)))
                 }
                 .toList()
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting failure" {
-                        TableauProver(
+                        TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = 2,
                             formulaImplementation = this@FolTableauProverTest.formulaImplementation,
                         )
                             .prove(formula)
-                            .shouldBeInstanceOf<FolProofIncomplete>()
+                            .shouldBeInstanceOf<FolProofIncomplete<CondensingFolBranchCloserImpl>>()
                     }
                 }
         }
@@ -119,19 +121,19 @@ class FolTableauProverTest :
                         it.shouldNotBeNull()
                         val (formula, index) = it
                         startIndex = index
-                        ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                        ProverTest(formula, FolProofSuccess(FolBranchCloserImpl(EmptySubstitution)))
                     }
                     .toList()
                 formulas
-                    .forEach { (formula, expectedResult) ->
+                    .forEach { (formula, _) ->
                         "attempt ${formula.display(0)} expecting success" {
-                            TableauProver(
+                            TableauProver<CondensingFolBranchCloserImpl>(
                                 unifier = GeneralRecursiveDescentFormulaUnifier(),
                                 initialQLimit = index + 1,
                                 formulaImplementation = this@FolTableauProverTest.formulaImplementation,
                             )
                                 .prove(formula)
-                                .shouldBeInstanceOf<FolProofSuccess>()
+                                .shouldBeInstanceOf<FolProofSuccess<CondensingFolBranchCloserImpl>>()
                         }
                     }
             }
@@ -157,19 +159,19 @@ class FolTableauProverTest :
                     it.shouldNotBeNull()
                     val (formula, index) = it
                     startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    ProverTest(formula, FolProofSuccess(FolBranchCloserImpl(EmptySubstitution)))
                 }
                 .toList()
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(
+                        TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = 2,
                             formulaImplementation = this@FolTableauProverTest.formulaImplementation,
                         )
                             .prove(formula)
-                            .shouldBeInstanceOf<FolProofSuccess>()
+                            .shouldBeInstanceOf<FolProofSuccess<CondensingFolBranchCloserImpl>>()
                     }
                 }
         }
@@ -194,19 +196,19 @@ class FolTableauProverTest :
                     it.shouldNotBeNull()
                     val (formula, index) = it
                     startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    ProverTest(formula, FolProofSuccess(FolBranchCloserImpl(EmptySubstitution)))
                 }
                 .toList()
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(
+                        TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = 2,
                             formulaImplementation = this@FolTableauProverTest.formulaImplementation,
                         )
                             .prove(formula)
-                            .shouldBeInstanceOf<FolProofSuccess>()
+                            .shouldBeInstanceOf<FolProofSuccess<*>>()
                     }
                 }
         }
@@ -231,19 +233,19 @@ class FolTableauProverTest :
                     it.shouldNotBeNull()
                     val (formula, index) = it
                     startIndex = index
-                    ProverTest(formula, FolProofSuccess(EmptySubstitution))
+                    ProverTest(formula, FolProofSuccess(FolBranchCloserImpl(EmptySubstitution)))
                 }
                 .toList()
             formulas
                 .forEach { (formula, expectedResult) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(
+                        TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             initialQLimit = 2,
                             formulaImplementation = this@FolTableauProverTest.formulaImplementation,
                         )
                             .prove(formula)
-                            .shouldBeInstanceOf<FolProofSuccess>()
+                            .shouldBeInstanceOf<FolProofSuccess<*>>()
                     }
                 }
         }

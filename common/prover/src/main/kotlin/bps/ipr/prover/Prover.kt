@@ -1,12 +1,12 @@
 package bps.ipr.prover
 
 import bps.ipr.formulas.Formula
-import bps.ipr.prover.tableau.BaseTableau
 import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.Tableau
-import bps.ipr.substitution.Substitution
+import bps.ipr.prover.tableau.closing.CondensingBranchCloser
+import bps.ipr.prover.tableau.closing.FolBranchCloser
 
-interface Prover<in F: Formula, out R: ProofResult> {
+interface Prover<in F : Formula, out R : ProofResult> {
 
     fun prove(formula: F): R
 
@@ -14,23 +14,23 @@ interface Prover<in F: Formula, out R: ProofResult> {
 
 interface ProofResult
 
-sealed interface FolProofResult : ProofResult
+sealed interface FolProofResult<C : FolBranchCloser> : ProofResult
 
-open class FolProofSuccess(
-    val substitution: Substitution,
-) : FolProofResult
+open class FolProofSuccess<C : FolBranchCloser>(
+    val branchCloser: C,
+) : FolProofResult<C>
 
-open class FolTableauProofSuccess(
-    substitution: Substitution,
-    val tableau: Tableau<BaseTableauNode>,
-) : FolProofSuccess(substitution)
+open class FolTableauProofSuccess<C>(
+    branchCloser: C,
+    val tableau: Tableau<BaseTableauNode, C>,
+) : FolProofSuccess<C>(branchCloser) where C : FolBranchCloser, C : CondensingBranchCloser
 
-data object FolProofFailure : FolProofResult
+open class FolProofFailure<C : FolBranchCloser> : FolProofResult<C>
 
-interface FolProofIncomplete: FolProofResult {
-    companion object: FolProofIncomplete
+interface FolProofIncomplete<C> : FolProofResult<C> where C : FolBranchCloser, C : CondensingBranchCloser {
+    val tableau: Tableau<BaseTableauNode, C>
 }
 
-open class FolTableauProofIncomplete(
-    val tableau: BaseTableau,
-) : FolProofIncomplete
+open class FolTableauProofIncomplete<C>(
+    override val tableau: Tableau<BaseTableauNode, C>,
+) : FolProofIncomplete<C> where C : FolBranchCloser, C : CondensingBranchCloser

@@ -8,6 +8,7 @@ import bps.ipr.parser.ipr.IprFofFormulaParser
 import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
 import bps.ipr.prover.tableau.TableauProver
+import bps.ipr.prover.tableau.closing.CondensingFolBranchCloserImpl
 import io.kotest.core.spec.style.FreeSpec
 import io.kotest.matchers.nulls.shouldNotBeNull
 import io.kotest.matchers.types.shouldBeInstanceOf
@@ -44,11 +45,11 @@ class PropositionalTableauProverTest :
             formulas
                 .forEach { (formula: FolFormula) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        TableauProver(
+                        TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             formulaImplementation = this@PropositionalTableauProverTest.formulaImplementation,
                         )
-                            .prove(formula).shouldBeInstanceOf<FolTableauProofSuccess>()
+                            .prove(formula).shouldBeInstanceOf<FolTableauProofSuccess<*>>()
                     }
                 }
         }

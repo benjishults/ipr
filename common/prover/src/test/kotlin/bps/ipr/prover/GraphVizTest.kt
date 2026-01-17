@@ -10,6 +10,8 @@ import bps.ipr.parser.ipr.IprFofTermParser
 import bps.ipr.parser.ipr.IprWhitespaceParser
 import bps.ipr.prover.tableau.BaseTableau
 import bps.ipr.prover.tableau.TableauProver
+import bps.ipr.prover.tableau.closing.BranchClosingSubstitutionExtender
+import bps.ipr.prover.tableau.closing.CondensingFolBranchCloserImpl
 import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.display.dot.DotDisplayTableauListener
 import io.kotest.core.spec.style.FreeSpec
@@ -258,17 +260,20 @@ label="Suppose\l(q0)\lShow\l(b x_8)\l"
             formulas
                 .forEach { (formula, expectedResult, expectedSubstitution) ->
                     "attempt ${formula.display(0)} expecting success" {
-                        val folProofResult = TableauProver(
+                        val folProofResult: FolProofResult<*> = TableauProver<CondensingFolBranchCloserImpl>(
                             unifier = GeneralRecursiveDescentFormulaUnifier(),
                             formulaImplementation = this@GraphVizTest.formulaImplementation,
+                            closingAlgorithm = { tableau, formulaUnifier: FormulaUnifier ->
+                                with(SimplePreorderTableauClosingAlgorithm) {
+                                    tableau.attemptCloseSimplePreorder(
+                                        formulaUnifier = formulaUnifier,
+                                        branchCloserExtender = BranchClosingSubstitutionExtender,
+                                    )
+                                }
+                            },
                             tableauFactory = {
-                                BaseTableau(
+                                BaseTableau<CondensingFolBranchCloserImpl>(
                                     initialQLimit = 2,
-                                    closingAlgorithm = { formulaUnifier: FormulaUnifier ->
-                                        with(SimplePreorderTableauClosingAlgorithm) {
-                                            attemptCloseSimplePreorder(formulaUnifier)
-                                        }
-                                    },
                                 )
                                     .apply {
                                         DotDisplayTableauListener(tableau = this)
@@ -281,13 +286,13 @@ label="Suppose\l(q0)\lShow\l(b x_8)\l"
                         )
                             .prove(formula)
                         with(folProofResult) {
-                            shouldBeInstanceOf<FolTableauProofSuccess>()
+                            shouldBeInstanceOf<FolTableauProofSuccess<*>>()
                             StringBuilder()
                                 .also {
                                     tableau.display(it, "dot")
                                 }
                                 .toString() shouldBe expectedResult
-                            substitution.display() shouldBe expectedSubstitution
+                            branchCloser.substitution.display() shouldBe expectedSubstitution
                         }
                     }
                 }
