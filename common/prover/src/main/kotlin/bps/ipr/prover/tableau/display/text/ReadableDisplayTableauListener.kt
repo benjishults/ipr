@@ -6,7 +6,7 @@ import bps.ipr.prover.tableau.display.FlexibleDisplayTableauListener
 import kotlin.text.appendLine
 
 class ReadableDisplayTableauListener(
-    val tableau: BaseTableau,
+    val tableau: BaseTableau<*>,
     override val nodeListenerFactory: (BaseTableauNode) -> ReadableDisplayNodeListener = ::ReadableDisplayNodeListener,
 ) : FlexibleDisplayTableauListener<ReadableDisplayNodeListener> {
 

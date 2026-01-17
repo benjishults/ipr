@@ -3,11 +3,15 @@ package bps.ipr.prover.tableau
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
+import bps.ipr.prover.FolProofResult
 import bps.ipr.prover.FolProofSuccess
+import bps.ipr.prover.tableau.closing.BranchCloser
+import bps.ipr.prover.tableau.closing.BranchCloserExtender
+import bps.ipr.prover.tableau.closing.CondensingBranchCloser
+import bps.ipr.prover.tableau.closing.FolBranchCloser
 import bps.ipr.prover.tableau.display.DisplayTableauListener
 import bps.ipr.prover.tableau.display.DisplayTableauTechRegistry
 import bps.ipr.prover.tableau.listener.AddNodeToTableauListener
-import bps.ipr.prover.tableau.closing.SimplePreorderTableauClosingAlgorithm
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import bps.ipr.prover.tableau.rule.FolRuleSelector
 import bps.ipr.prover.tableau.rule.RuleSelector
@@ -17,10 +21,9 @@ import kotlin.reflect.KClass
 /**
  * This class is not thread-safe.
  */
-open class BaseTableau(
+open class BaseTableau<C>(
     initialQLimit: Int = 1,
-    val closingAlgorithm: Tableau<BaseTableauNode>.(FormulaUnifier) -> FolProofSuccess?,
-) : Tableau<BaseTableauNode> {
+) : Tableau<BaseTableauNode, C> where C : FolBranchCloser, C: CondensingBranchCloser {
 
     private var _root: BaseTableauNode? = null
 
@@ -82,9 +85,6 @@ open class BaseTableau(
                 e.printStackTrace()
             }
         }
-
-    override fun attemptClose(formulaUnifier: FormulaUnifier): FolProofSuccess? =
-        closingAlgorithm(formulaUnifier)
 
     fun registerNode(node: BaseTableauNode) {
         node.tableau = this
