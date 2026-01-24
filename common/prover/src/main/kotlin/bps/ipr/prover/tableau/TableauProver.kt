@@ -3,8 +3,6 @@ package bps.ipr.prover.tableau
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
 import bps.ipr.formulas.FormulaUnifier
-import bps.ipr.prover.FolProofFailure
-import bps.ipr.prover.FolProofIncomplete
 import bps.ipr.prover.FolProofResult
 import bps.ipr.prover.FolTableauProofIncomplete
 import bps.ipr.prover.Prover

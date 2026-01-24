@@ -17,6 +17,7 @@ import bps.ipr.formulas.Truth
 import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.rule.CategorizedSignedFormulas.Companion.categorizeSignedFormulas
 import kotlin.collections.forEach
+import kotlin.math.min
 
 /**
  * An inference rule that can be applied to a [bps.ipr.prover.tableau.BaseTableau].
@@ -35,6 +36,7 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
     val sign: Boolean
     val birthPlace: BaseTableauNode
     val formulaImplementation: FolFormulaImplementation
+    // FIXME once we implement the epsilon rule, a formula will have multiple parents
     val parentFormula: SignedFormula<*>?
     val isSplitting: Boolean
         get() =
@@ -67,16 +69,18 @@ sealed interface SignedFormula<T : FolFormula> : Rule {
             }
             ?: mutableListOf(this)
 
-    fun display(indent: Int = 0) =
-        formula.display(indent)
+    // TODO make these display functions work like others with a registry of different ways of doing it
+    fun display( ) =
+        formula.display(1 + birthPlace.depth)
 
-    fun displayCompact(maxChars: Int = 25): String =
+    // TODO make these display functions work like others with a registry of different ways of doing it
+    fun displayCompact(): String =
         with(StringUtils) {
-            require(maxChars > 3) { "maxChars must be greater than 3" }
             "${
                 formula
                     .display()
-                    .abbreviate(maxChars)
+                    // TODO consider making this decrease dependent on the number of splits above
+                    .abbreviate(min(25, 100 / (birthPlace.depth + 1)))
             }\\l"
         }
 
@@ -157,7 +161,7 @@ data class CategorizedSignedFormulas(
     val gammas: List<GammaFormula<*>>?,
 ) {
     companion object {
-        fun List<SignedFormula<*>>.categorizeSignedFormulas(): CategorizedSignedFormulas {
+        fun Iterable<SignedFormula<*>>.categorizeSignedFormulas(): CategorizedSignedFormulas {
             var pos: MutableList<PositiveAtomicFormula>? = null
             var neg: MutableList<NegativeAtomicFormula>? = null
             var closing: MutableList<ClosingFormula<*>>? = null

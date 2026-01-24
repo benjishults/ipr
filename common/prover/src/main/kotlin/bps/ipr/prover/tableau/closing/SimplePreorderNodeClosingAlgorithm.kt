@@ -1,5 +1,6 @@
 package bps.ipr.prover.tableau.closing
 
+import bps.ipr.common.IdentitySet
 import bps.ipr.common.LinkedList
 import bps.ipr.formulas.FormulaUnifier
 import bps.ipr.prover.tableau.BaseTableauNode
@@ -59,9 +60,9 @@ object SimplePreorderNodeClosingAlgorithm {
                         .flatMap { branchCloser: C ->
                             if (branchCloser
                                     .splits
-                                    ?.let { splits: Set<BaseTableauNode> ->
+                                    .let { splits: IdentitySet<BaseTableauNode> ->
                                         nextChildNode.parent in splits
-                                    } == true
+                                    }
                             ) {
                                 // if this node needs to be closed
                                 nextChildNode

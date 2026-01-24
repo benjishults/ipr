@@ -1,8 +1,3 @@
-(or (and (A) (B))
-    (and (C) (D))
-    (and (implies (Q) (Q)) (implies (P) (P)))
-    (and (E) (F)))
-
 (forall ((peanuts) (john) (bill) (sue) (apples) (chicken))
         (implies
          (and (forall ((x)) (implies (food x) (likes john x)))
@@ -18,6 +13,11 @@
               (forall ((y)) (implies (alive y)
                                      (forall ((x)) (not-killed-by y x)))))
          (likes john peanuts)))
+
+(or (and (A) (B))
+    (and (C) (D))
+    (and (implies (Q) (Q)) (implies (P) (P)))
+    (and (E) (F)))
 
 ; this took over two minutes before condense was implemented
 ;;(forall ((peanuts) (john) (bill) (sue) (apples) (chicken))

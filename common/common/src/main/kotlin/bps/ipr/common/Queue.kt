@@ -13,12 +13,41 @@ fun <T : Any> queue(type: String = QUEUE_TYPE): Queue<T> =
         else -> throw IllegalArgumentException("Unknown queue type: $type")
     }
 
-class LinkedQueue<T : Any> : Queue<T> {
+class LinkedQueue<T : Any> : Queue<T>, Collection<T> {
     private var head: Node<T>? = null
     private var tail: Node<T>? = null
     private var _size: Int = 0
 
-    val size: Int get() = _size
+    override val size: Int get() = _size
+
+    override fun isEmpty(): Boolean =
+        _size == 0
+
+    override fun contains(element: T): Boolean =
+        head?.contains(element) ?: false
+
+    override fun iterator(): Iterator<T> =
+        object : Iterator<T> {
+
+            var current: Node<T>? = head
+
+            override fun next(): T =
+                if (current == null)
+                    throw NoSuchElementException()
+                else {
+                    current!!
+                        .value
+                        .also {
+                            current = current?.next
+                        }
+                }
+
+            override fun hasNext(): Boolean =
+                current != null
+        }
+
+    override fun containsAll(elements: Collection<T>): Boolean =
+        elements.all { contains(it) }
 
     override fun enqueue(element: T) {
         _size++

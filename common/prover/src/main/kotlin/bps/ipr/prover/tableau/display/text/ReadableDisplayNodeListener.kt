@@ -13,7 +13,7 @@ class ReadableDisplayNodeListener(
         if (nonAtomicHyps.isNotEmpty() || node.newAtomicGoals.isNotEmpty()) {
             appendable.appendLine("(${node.id}) Suppose")
             node.newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
-                appendable.appendLine(hyp.display(node.depth + 1))
+                appendable.appendLine(hyp.display())
             }
             displayNonAtomicHyps(appendable, node.depth)
             if (nonAtomicGoals.isNotEmpty() || node.newAtomicGoals.isNotEmpty()) {
@@ -25,21 +25,21 @@ class ReadableDisplayNodeListener(
         }
         displayNonAtomicGoals(appendable, node.depth)
         node.newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
-            appendable.appendLine(goal.display(node.depth + 1))
+            appendable.appendLine(goal.display())
         }
     }
 
     private fun displayNonAtomicHyps(appendable: Appendable, indent: Int) {
         nonAtomicHyps
             .forEach {
-                appendable.appendLine(it.display(indent + 1))
+                appendable.appendLine(it.display())
             }
     }
 
     private fun displayNonAtomicGoals(appendable: Appendable, indent: Int) {
         nonAtomicGoals
             .forEach {
-                appendable.appendLine(it.display(indent + 1))
+                appendable.appendLine(it.display())
             }
     }
 

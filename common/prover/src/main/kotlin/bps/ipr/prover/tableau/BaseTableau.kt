@@ -2,11 +2,6 @@ package bps.ipr.prover.tableau
 
 import bps.ipr.formulas.FolFormula
 import bps.ipr.formulas.FolFormulaImplementation
-import bps.ipr.formulas.FormulaUnifier
-import bps.ipr.prover.FolProofResult
-import bps.ipr.prover.FolProofSuccess
-import bps.ipr.prover.tableau.closing.BranchCloser
-import bps.ipr.prover.tableau.closing.BranchCloserExtender
 import bps.ipr.prover.tableau.closing.CondensingBranchCloser
 import bps.ipr.prover.tableau.closing.FolBranchCloser
 import bps.ipr.prover.tableau.display.DisplayTableauListener
@@ -23,7 +18,7 @@ import kotlin.reflect.KClass
  */
 open class BaseTableau<C>(
     initialQLimit: Int = 1,
-) : Tableau<BaseTableauNode, C> where C : FolBranchCloser, C: CondensingBranchCloser {
+) : Tableau<BaseTableauNode, C> where C : FolBranchCloser, C : CondensingBranchCloser {
 
     private var _root: BaseTableauNode? = null
 
@@ -40,6 +35,7 @@ open class BaseTableau<C>(
                 throw IllegalStateException("Root already set")
         }
 
+    // TODO move this to the prover
     override val applicableRules: RuleSelector = FolRuleSelector(initialQLimit)
 
     private var _size: Long = 0
@@ -101,6 +97,24 @@ open class BaseTableau<C>(
                 }
             else -> notifyDisplayListeners(appendable, displayKey)
         }
+
+    fun setRootForFormulas(
+        formulas: Iterable<SignedFormula<*>>,
+    ) {
+        BaseTableauNode()
+            .also { root: BaseTableauNode ->
+                this.root = root
+                val (pos, neg, closing, betas, deltas, gammas) = formulas.categorizeSignedFormulas()
+                root.populate(
+                    newAtomicHyps = pos,
+                    newAtomicGoals = neg,
+                    closing = closing,
+                    betas = betas,
+                    deltas = deltas,
+                    gammas = gammas,
+                )
+            }
+    }
 
     fun setRootForFormula(
         formula: FolFormula,

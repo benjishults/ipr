@@ -24,3 +24,24 @@ fun <T> Set<T>?.combineNullable(
                 ?: receiver
         }
 }
+
+@OptIn(ExperimentalContracts::class, ExperimentalExtendedContracts::class)
+fun <T: Any> IdentitySet<T>?.combineNullable(
+    rest: IdentitySet<T>?,
+): IdentitySet<T>? {
+    contract {
+        (this@combineNullable !== null) implies returnsNotNull()
+        (rest !== null) implies returnsNotNull()
+    }
+    return this
+        .let { receiver ->
+            rest
+                ?.let { rest ->
+                    if (receiver === null)
+                        rest
+                    else
+                        rest.plus(receiver)
+                }
+                ?: receiver
+        }
+}

@@ -2,8 +2,8 @@ package bps.ipr.common
 
 data class Node<T : Any>(
     val value: T,
-    var next: Node<T>?,
-) {
+    var next: Node<T>? = null,
+) : Iterable<T> {
 
     fun contains(element: T): Boolean =
         value == element ||
@@ -47,6 +47,29 @@ data class Node<T : Any>(
             this@Node.forEach {
                 add(it)
             }
+        }
+
+    fun toIdentitySet(): IdentitySet<T> =
+        MutableIdentitySet<T>().apply {
+            this@Node.forEach {
+                add(it)
+            }
+        }
+
+    override fun iterator(): Iterator<T> =
+        object : Iterator<T> {
+            /**
+             * The [Node] containing the next element to be returned by [next].
+             */
+            private var current: Node<T>? = this@Node
+            override fun next(): T =
+                current
+                    ?.value
+                    ?.also { current = current?.next }
+                    ?: throw NoSuchElementException()
+
+            override fun hasNext(): Boolean =
+                current !== null
         }
 
 }

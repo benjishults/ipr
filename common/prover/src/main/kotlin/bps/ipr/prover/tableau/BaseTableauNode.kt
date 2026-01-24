@@ -3,6 +3,7 @@ package bps.ipr.prover.tableau
 import bps.ipr.common.Node
 import bps.ipr.common.Queue
 import bps.ipr.common.queue
+import bps.ipr.prover.tableau.closing.CondensingBranchCloser
 import bps.ipr.prover.tableau.display.DisplayNodeListener
 import bps.ipr.prover.tableau.display.DisplayNodeTechRegistry
 import bps.ipr.prover.tableau.listener.PopulateNodeWithFormulasListener
@@ -61,9 +62,14 @@ open class BaseTableauNode(
                 throw IllegalStateException("Id already set")
         }
 
-    private var _parent: BaseTableauNode? = parent
-    val parent: BaseTableauNode?
-        get() = _parent
+    /**
+     * Can only be set once.
+     */
+    var parent: BaseTableauNode? = parent
+        private set(value) {
+            check(field === null)
+            field = value
+        }
 
     private var _children: List<BaseTableauNode> = emptyList()
     override val children: List<BaseTableauNode>
@@ -80,6 +86,9 @@ open class BaseTableauNode(
     private var _closables: List<ClosingFormula<*>>? = null
     override val closables: List<ClosingFormula<*>>
         get() = _closables ?: emptyList()
+
+    val root: BaseTableauNode
+        get() = parent?.root ?: this
 
     open fun populate(
         newAtomicHyps: List<PositiveAtomicFormula>?,
@@ -223,7 +232,10 @@ open class BaseTableauNode(
             negativeAtomsFromHereUp = generateNegativeAtomsFromHereUp()
             _children = newChildrenList
             newChildrenList.forEach { newChildNode: BaseTableauNode ->
-                newChildNode._parent = this@BaseTableauNode
+                if (newChildNode.parent === null)
+                    newChildNode.parent = this@BaseTableauNode
+                else if (newChildNode.parent !== this@BaseTableauNode)
+                    throw IllegalStateException("Child node ${newChildNode.id} has wrong parent ${newChildNode.parent?.id}")
             }
         } else {
             throw IllegalStateException("Children already set")
@@ -293,7 +305,7 @@ open class BaseTableauNode(
             if (newAtomicHyps.isNotEmpty()) {
                 appendLine("(${id}) Suppose")
                 newAtomicHyps.forEach { hyp: PositiveAtomicFormula ->
-                    appendLine(hyp.display(depth + 1))
+                    appendLine(hyp.display())
                 }
                 if (newAtomicGoals.isNotEmpty()) {
                     append(" ".repeat(depth))
@@ -304,7 +316,7 @@ open class BaseTableauNode(
                 appendLine("($id) Show")
             }
             newAtomicGoals.forEach { goal: NegativeAtomicFormula ->
-                appendLine(goal.display(depth + 1))
+                appendLine(goal.display())
             }
         }
 

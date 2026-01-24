@@ -1,5 +1,6 @@
 package bps.ipr.prover.tableau.closing
 
+import bps.ipr.common.IdentitySet
 import bps.ipr.common.combineNullable
 import bps.ipr.prover.tableau.BaseTableauNode
 import bps.ipr.prover.tableau.rule.ClosingFormula
@@ -21,7 +22,7 @@ data class CondensingFolBranchCloserImpl(
      *
      * These are needed for the condensing algorithm.
      */
-    override val splits: Set<BaseTableauNode>?,
+    override val splits: IdentitySet<BaseTableauNode>,
 ) : CondensingBranchCloser, FolBranchCloser
 
 fun CondensingFolBranchCloserImpl?.extendWith(
@@ -34,8 +35,8 @@ fun CondensingFolBranchCloserImpl?.extendWith(
         splits =
             hyp
                 .splits
-                ?.toSet()
-                .combineNullable(goal.splits?.toSet())
+                ?.toIdentitySet()
+                .combineNullable(goal.splits?.toIdentitySet())
                 .combineNullable(this?.splits),
     )
 
@@ -47,7 +48,7 @@ fun CondensingFolBranchCloserImpl?.extendWith(
         splits =
             closingFormula
                 .splits
-                ?.toSet()
+                ?.toIdentitySet()
                 .combineNullable(this?.splits),
     )
 

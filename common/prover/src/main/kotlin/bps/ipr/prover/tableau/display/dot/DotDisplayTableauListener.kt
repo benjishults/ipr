@@ -12,6 +12,8 @@ class DotDisplayTableauListener(
     override fun displayTableau(appendable: Appendable) {
         appendable.appendLine("digraph G {")
         appendable.appendLine("layout=dot")
+        // NOTE using a raw string here just to avoid the ugliness of escaping the `"`
+        //      and using the trimMargin to avoid having the `"` next to the `"""`
         appendable.appendLine("""
             |root="0"
             """.trimMargin())
